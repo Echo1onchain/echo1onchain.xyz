@@ -13,4 +13,8 @@ Good to know:
   Use the same computer and browser each time; helpers can't add entries
   from their own devices on this version.
 - Your settings, card background and 9 pointer badges are already built in.
+- All four games are included: BullBear Race, Duck Race, Rocket Race and Rock Paper Scissors.
+- Winner card background: in Winners, click Upload Image (or Change Image) and pick a
+  PNG, JPG or WebP file. It's saved in your browser, so it stays when you come back.
+  Use The Default switches back to the BullBears After Dark poster.
 - To update the page later, upload the folder again.
