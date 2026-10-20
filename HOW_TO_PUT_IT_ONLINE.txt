@@ -1,0 +1,16 @@
+BullBears Giveaway Wheel - website version
+
+Upload this whole folder (index.html AND the images folder together) to any website host.
+The easiest free way:
+  1. Go to app.netlify.com/drop (free; you'll make an account to keep the site).
+  2. Drag this whole folder onto the page.
+  3. Netlify gives you a web address. Open it and the giveaway wheel is there.
+Other hosts work the same way (GitHub Pages, Cloudflare Pages, or your own site):
+put index.html and the images folder side by side.
+
+Good to know:
+- Entries, winners and settings are saved in the browser you run it in.
+  Use the same computer and browser each time; helpers can't add entries
+  from their own devices on this version.
+- Your settings, card background and 9 pointer badges are already built in.
+- To update the page later, upload the folder again.
