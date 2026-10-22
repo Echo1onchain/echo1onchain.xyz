@@ -265,6 +265,19 @@ textarea{
 .spotify strong{display:block; font-size:1.1rem}
 .spotify small{display:block; color:var(--muted); font-size:.85rem}
 @media (prefers-reduced-motion: reduce){.lamp{transition:none}.live::before{animation:none}}
+/* same pink-to-cyan neon outline as the Spotify player */
+.console, .chat, .spotify, .x-link{
+  position:relative; border-color:transparent !important;
+  box-shadow:0 0 30px rgba(255,45,155,.3), 0 0 60px rgba(34,228,245,.18);
+}
+.console::before, .chat::before, .spotify::before, .x-link::before{
+  content:""; position:absolute; inset:-1px; padding:3px; border-radius:inherit; pointer-events:none; z-index:1;
+  background:linear-gradient(135deg, rgba(255,45,155,.9), rgba(34,228,245,.9));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+.spotify:hover, .x-link:hover{box-shadow:0 0 36px rgba(255,45,155,.45), 0 0 70px rgba(34,228,245,.3)}
 </style>
 </head>
 <body>
