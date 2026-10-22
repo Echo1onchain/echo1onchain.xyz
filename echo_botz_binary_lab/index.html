@@ -685,7 +685,7 @@ textarea{
     const ctl = document.getElementById('soundCtl'), sbtn = document.getElementById('soundBtn'), vol = document.getElementById('soundVol');
     const playBtn = document.getElementById('playBtn'), nextBtn = document.getElementById('nextBtn');
     const nowTrack = document.getElementById('nowTrack'), t1 = document.getElementById('nowText'), t2 = document.getElementById('nowText2');
-    const events = ['pointerdown', 'keydown', 'touchstart'];
+    const events = ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'];
     const bad = new Set();
     let idx = 0, wantMusic = true;
 
@@ -777,25 +777,37 @@ textarea{
     const still = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     // Hook the page music into an analyser. Runs on a tap/click/key so phones allow the audio engine to start.
+    // Hook the page music into an analyser, but only once the audio engine is actually running.
+    // (If it were hooked up while the engine is still asleep, the music would go silent.)
+    let hooked = false;
+    function hook(){
+      if (hooked || !actx || actx.state !== 'running') return;
+      try {
+        const src = actx.createMediaElementSource(bgm);
+        analyser = actx.createAnalyser();
+        analyser.fftSize = 2048;
+        analyser.smoothingTimeConstant = 0.72;
+        src.connect(analyser); analyser.connect(actx.destination);
+        data = new Uint8Array(analyser.frequencyBinCount);
+        const binHz = actx.sampleRate / analyser.fftSize;
+        edges = Array.from({ length:N + 1 }, (_, i) => Math.max(1, Math.round(40 * Math.pow(14000 / 40, i / N) / binHz)));
+        hooked = true;
+      } catch(e){ analyser = null; hooked = true; }
+    }
     function connect(){
       try {
+        if (!bgm) return;
         if (!actx){
           const AC = window.AudioContext || window.webkitAudioContext;
-          if (!AC || !bgm) return;
+          if (!AC) return;
           actx = new AC();
-          const src = actx.createMediaElementSource(bgm);
-          analyser = actx.createAnalyser();
-          analyser.fftSize = 2048;
-          analyser.smoothingTimeConstant = 0.72;
-          src.connect(analyser); analyser.connect(actx.destination);
-          data = new Uint8Array(analyser.frequencyBinCount);
-          const binHz = actx.sampleRate / analyser.fftSize;
-          edges = Array.from({ length:N + 1 }, (_, i) => Math.max(1, Math.round(40 * Math.pow(14000 / 40, i / N) / binHz)));
         }
-        if (actx.state === 'suspended') actx.resume();
+        if (actx.state === 'running') hook();
+        else actx.resume().then(hook).catch(() => {});
       } catch(e){ analyser = null; }
     }
-    ['pointerdown','touchstart','keydown'].forEach(t => document.addEventListener(t, connect, { capture:true, passive:true }));
+    ['pointerdown','pointerup','touchend','click','keydown'].forEach(t => document.addEventListener(t, connect, { capture:true, passive:true }));
+    if (bgm) bgm.addEventListener('play', () => { if (actx && actx.state !== 'running') actx.resume().catch(() => {}); });
 
     function size(){
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
