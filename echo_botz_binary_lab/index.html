@@ -212,21 +212,16 @@ textarea{
 body{padding-bottom:calc(110px + env(safe-area-inset-bottom, 0px))}
 body.player-min{padding-bottom:calc(56px + env(safe-area-inset-bottom, 0px))}
 
-/* wide screens: player sits beside the Botz row, in the top of the page */
+/* wide screens: player sits in the top-left corner of the page */
 @media (min-width:1100px){
   body, body.player-min{padding-bottom:0}
-  main{display:grid; grid-template-columns:minmax(0,1fr) 340px; column-gap:1.5rem; align-items:start}
-  main > *{grid-column:1 / -1}
-  main > .logo{grid-row:1}
-  main > .crew{grid-column:1; grid-row:2; margin-top:-4.75rem}
-  main > .intro{grid-column:1; grid-row:3}
   .player, .player.min{
-    position:static; grid-column:2; grid-row:2 / span 2; align-self:start; margin:-4.75rem 0 1.5rem;
-    width:auto; display:block; padding:0; background:none; border:0;
+    position:absolute; z-index:3; top:calc(env(safe-area-inset-top, 0px) + 1rem); left:1rem; right:auto; bottom:auto;
+    width:300px; display:block; padding:0; background:none; border:0;
     backdrop-filter:none; -webkit-backdrop-filter:none;
   }
-  .player-title{display:block; margin:0 0 .6rem; font-weight:700; font-size:1.1rem; text-align:center}
-  .player .player-frame, .player.min .player-frame{height:auto; padding:8px; overflow:visible}
+  .player-title{display:block; margin:0 0 .5rem; font-weight:700; font-size:1rem; text-align:left; padding-left:.25rem}
+  .player .player-frame, .player.min .player-frame{height:auto; padding:6px; overflow:visible}
   .player .player-frame iframe{height:152px}
   .player-toggle{display:none}
 }
@@ -298,13 +293,6 @@ body.player-min{padding-bottom:calc(56px + env(safe-area-inset-bottom, 0px))}
   </div>
   <p class="intro">Got a comment from ECHO Botz in ones and zeros? <strong>Paste it below</strong> to read it. Or type your own message to reply in binary.</p>
 
-  <aside class="player" id="player" aria-label="ECHO1 on Spotify">
-    <p class="player-title">ECHO1 on Spotify</p>
-    <div class="player-frame">
-      <iframe title="ECHO1 on Spotify" src="https://open.spotify.com/embed/artist/63XWxjfJb7v7pSwdn9F8u6?utm_source=generator&amp;theme=0" width="100%" height="152" frameborder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
-    </div>
-    <button class="player-toggle" id="playerToggle" type="button" aria-expanded="true" aria-controls="player">Hide player</button>
-  </aside>
 
   <section class="console">
     <div class="chainbar">
@@ -371,6 +359,14 @@ body.player-min{padding-bottom:calc(56px + env(safe-area-inset-bottom, 0px))}
     </div>
   </div>
 </main>
+
+<aside class="player" id="player" aria-label="ECHO1 on Spotify">
+  <p class="player-title">ECHO1 on Spotify</p>
+  <div class="player-frame">
+    <iframe title="ECHO1 on Spotify" src="https://open.spotify.com/embed/artist/63XWxjfJb7v7pSwdn9F8u6?utm_source=generator&amp;theme=0" width="100%" height="152" frameborder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+  </div>
+  <button class="player-toggle" id="playerToggle" type="button" aria-expanded="true" aria-controls="player">Hide player</button>
+</aside>
 
 
 
