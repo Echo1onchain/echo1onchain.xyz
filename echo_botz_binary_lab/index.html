@@ -722,11 +722,22 @@ textarea{
     function stopKick(){ events.forEach(t => document.removeEventListener(t, kick)); }
     function start(){ wantMusic = true; bgm.play().then(stopKick).catch(() => {}); sync(); }
     function kick(e){ if (wantMusic && !ctl.contains(e.target)) start(); }
+    // shuffled play order: a random song on every visit, and all 5 play before any repeats
+    function shuffled(avoidFirst){
+      const o = PLAYLIST.map((_, i) => i);
+      for (let i = o.length - 1; i > 0; i--){ const j = Math.random() * (i + 1) | 0; [o[i], o[j]] = [o[j], o[i]]; }
+      if (o.length > 1 && o[0] === avoidFirst) [o[0], o[1]] = [o[1], o[0]];
+      return o;
+    }
+    let order = shuffled(-1), pos = 0;
     function next(){
       if (bad.size >= PLAYLIST.length) return;
-      let n = idx, guard = 0;
-      do { n = (n + 1) % PLAYLIST.length; } while (bad.has(n) && ++guard < PLAYLIST.length);
-      load(n);
+      let guard = 0;
+      do {
+        pos++;
+        if (pos >= order.length){ order = shuffled(idx); pos = 0; }
+      } while (bad.has(order[pos]) && ++guard < PLAYLIST.length * 2);
+      load(order[pos]);
       if (wantMusic) start();
     }
 
@@ -761,7 +772,7 @@ textarea{
       stopKick();
     });
 
-    load(0);
+    load(order[0]);
     sync();
     events.forEach(t => document.addEventListener(t, kick, { passive:true }));
     start(); // plays right away if the browser allows it; otherwise on the first tap, click or key press
@@ -935,15 +946,15 @@ textarea{
       if (musicMode){
         const A = window.echoAudio;
         hue = (t / 12 + c.ph * 57) % 360;                               // rainbow cycle
-        if (A && A.live){ c.beat = Math.max(Math.min(1, A.bass * 1.35 + A.level * .3), (c.beat || 0) * 0.9); pulse = c.beat; }
+        if (A && A.live){ pulse = Math.min(1, beat * (0.85 + 0.3 * Math.sin(c.ph))); hue = (hue + beat * 90) % 360; }
         else pulse = (Math.sin(t / 700 * c.sp + c.ph) + 1) / 2;
       } else {
         pulse = (Math.sin(t / 700 * c.sp + c.ph) + 1) / 2;              // 0..1 neon pulse
         hue = (c.hue + Math.sin(t / 4000 + c.ph) * 35 + 360) % 360;     // slow color drift
       }
       const color = 'hsl(' + hue + ',100%,' + (55 + pulse * 15) + '%)';
-      g.shadowColor = color; g.shadowBlur = 8 + pulse * (musicMode ? 26 : 14);
-      g.globalAlpha = 0.4 + pulse * 0.45;
+      g.shadowColor = color; g.shadowBlur = 8 + pulse * (musicMode && liveA ? 36 : 14);
+      g.globalAlpha = musicMode && liveA ? Math.min(1, 0.3 + pulse * 0.75) : 0.4 + pulse * 0.45;
       g.strokeStyle = color; g.fillStyle = color;
       return pulse;
     }
@@ -1047,11 +1058,25 @@ textarea{
     });
     applyPulse();
 
+    // beat tracking for Music pulse: reacts to the bass, with an extra kick on sudden hits
+    let beat = 0, avgBass = 0, liveA = false;
+    const centerOf = c => c.type === 'bug' ? [c.x + c.s * 3.5, c.y + c.s * 3] : [c.x, c.y];
     function frame(t){
       if (!on){ running = false; return; }
+      const A = window.echoAudio;
+      liveA = musicMode && !!(A && A.live);
+      if (liveA){
+        avgBass = avgBass * 0.94 + A.bass * 0.06;
+        const kick = Math.max(0, A.bass - avgBass * 1.05) * 5;
+        beat = Math.max(Math.min(1, A.bass * 0.8 + kick), beat * 0.86);
+      } else beat = 0;
       g.clearRect(0, 0, W, H);
       for (const c of list){
         g.save();
+        if (liveA){
+          const s = 1 + beat * 0.45, [cx, cy] = centerOf(c);
+          g.translate(cx, cy); g.scale(s, s); g.translate(-cx, -cy);
+        }
         if (c.type === 'jelly') jelly(c, t); else if (c.type === 'bug') bug(c, t); else worm(c, t);
         g.restore();
       }
