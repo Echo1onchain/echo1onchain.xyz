@@ -167,6 +167,66 @@ textarea{
   box-shadow:0 0 30px rgba(255,45,155,.35), 0 0 60px rgba(34,228,245,.2);
 }
 .player-frame iframe{display:block; border:0; border-radius:12px; background:#04060E}
+
+.sound{
+  position:fixed; z-index:30; top:calc(env(safe-area-inset-top, 0px) + .75rem); right:.75rem;
+  display:flex; align-items:center; gap:.5rem; padding:4px 12px 4px 4px;
+  border-radius:999px; background:rgba(4,6,14,.88); border:1px solid var(--line);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+}
+.sound[hidden]{display:none}
+.sound.no-slider{padding-right:4px}
+.sound-btn{
+  width:38px; height:38px; padding:0; display:grid; place-items:center; cursor:pointer; flex:none;
+  border-radius:50%; background:transparent; border:1px solid var(--cyan); color:var(--cyan);
+  box-shadow:0 0 14px rgba(34,228,245,.35);
+}
+.sound-vol{width:clamp(70px, 22vw, 110px); accent-color:var(--cyan); cursor:pointer; margin:0}
+.sound-vol:focus-visible{outline:2px solid var(--pink); outline-offset:4px; border-radius:4px}
+.sound-btn svg{width:22px; height:22px}
+.sound-btn .x{display:none}
+.sound-btn.off{border-color:var(--line); color:var(--muted); box-shadow:none}
+.sound-btn.off .w1,.sound-btn.off .w2{display:none}
+.sound-btn.off .x{display:inline}
+.sound-btn:focus-visible{outline:2px solid var(--pink); outline-offset:3px}
+
+/* player: slim bar pinned to the bottom on phones and small screens */
+.player{
+  position:fixed; left:0; right:0; bottom:0; z-index:20; margin:0; max-width:none;
+  display:flex; align-items:center; gap:.6rem;
+  padding:.5rem .75rem calc(.5rem + env(safe-area-inset-bottom, 0px));
+  background:rgba(4,6,14,.94); border-top:1px solid var(--line);
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+}
+.player-title{display:none}
+.player .player-frame{flex:1; min-width:0; padding:3px; border-radius:14px}
+.player .player-frame iframe{height:80px; border-radius:11px}
+.player-toggle{
+  flex:none; font:inherit; font-size:.8rem; font-weight:600; color:var(--muted); cursor:pointer;
+  background:transparent; border:1px solid var(--line); border-radius:8px; padding:.35rem .6rem;
+}
+.player-toggle:hover{color:var(--cyan); border-color:var(--cyan)}
+.player-toggle:focus-visible{outline:2px solid var(--pink); outline-offset:2px}
+.player.min .player-frame{height:0; padding:0; overflow:hidden; flex:0}
+.player.min{justify-content:flex-end}
+body{padding-bottom:calc(110px + env(safe-area-inset-bottom, 0px))}
+body.player-min{padding-bottom:calc(56px + env(safe-area-inset-bottom, 0px))}
+
+/* wide screens: player docks to the right side, page shifts left to make room */
+@media (min-width:1100px){
+  :root{--side:max(1.25rem, calc((100vw - 64rem - 344px) / 2))}
+  body, body.player-min{padding-bottom:0}
+  main{width:min(64rem, calc(100vw - 344px - 2.5rem)); max-width:none; margin-left:var(--side); margin-right:auto}
+  .player, .player.min{
+    left:auto; right:var(--side); bottom:auto; top:50%; transform:translateY(-50%);
+    width:320px; display:block; padding:0; background:none; border:0;
+    backdrop-filter:none; -webkit-backdrop-filter:none;
+  }
+  .player-title{display:block; margin:0 0 .6rem; font-weight:700; font-size:1.1rem; text-align:center}
+  .player .player-frame, .player.min .player-frame{height:auto; padding:8px; overflow:visible}
+  .player .player-frame iframe{height:152px}
+  .player-toggle{display:none}
+}
 .chat{
   margin-top:1.5rem; background:var(--panel); border:1px solid var(--line); border-radius:20px;
   backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); overflow:hidden;
@@ -283,11 +343,6 @@ textarea{
     <span><strong>Listen to ECHO1 on Spotify</strong><small>Opens the artist page in a new tab</small></span>
   </a>
 
-  <section class="player">
-    <div class="player-frame">
-      <iframe title="ECHO1 on Spotify" src="https://open.spotify.com/embed/artist/63XWxjfJb7v7pSwdn9F8u6?utm_source=generator&amp;theme=0" width="100%" height="152" frameborder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
-    </div>
-  </section>
   <nav class="socials" aria-label="ECHO on X">
     <a class="x-link" href="https://x.com/EchoBotzSOL" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.2 2.5h3.4l-7.4 8.5 8.7 11.5h-6.8l-5.3-7-6.1 7H1.3l7.9-9.1L.9 2.5h7l4.8 6.4 5.5-6.4zm-1.2 18h1.9L7.1 4.4H5.1L17 20.5z"/></svg><span><strong>ECHO Botz</strong><small>@EchoBotzSOL</small></span></a>
     <a class="x-link" href="https://x.com/Echo1OnChain" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.2 2.5h3.4l-7.4 8.5 8.7 11.5h-6.8l-5.3-7-6.1 7H1.3l7.9-9.1L.9 2.5h7l4.8 6.4 5.5-6.4zm-1.2 18h1.9L7.1 4.4H5.1L17 20.5z"/></svg><span><strong>ECHO1</strong><small>@Echo1OnChain</small></span></a>
@@ -305,6 +360,20 @@ textarea{
     </div>
   </div>
 </main>
+
+<aside class="player" id="player" aria-label="ECHO1 on Spotify">
+  <p class="player-title">ECHO1 on Spotify</p>
+  <div class="player-frame">
+    <iframe title="ECHO1 on Spotify" src="https://open.spotify.com/embed/artist/63XWxjfJb7v7pSwdn9F8u6?utm_source=generator&amp;theme=0" width="100%" height="152" frameborder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+  </div>
+  <button class="player-toggle" id="playerToggle" type="button" aria-expanded="true" aria-controls="player">Hide player</button>
+</aside>
+
+<div class="sound" id="soundCtl">
+  <button class="sound-btn" id="soundBtn" type="button" aria-pressed="false" aria-label="Turn page music on"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="w1" d="M15.5 9a4 4 0 0 1 0 6"/><path class="w2" d="M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="x" d="M16 9.5l5 5M21 9.5l-5 5"/></svg></button>
+  <input class="sound-vol" id="soundVol" type="range" min="0" max="100" step="1" value="40" aria-label="Page music volume">
+</div>
+<audio id="bgm" src="echo1-song.mp3" preload="auto" loop></audio>
 
 <script>
 (function(){
@@ -528,6 +597,75 @@ textarea{
     for (let k = 0; k < 3; k++){ add(script[k][0], script[k][1]); }
     i = 3;
     setTimeout(next, 1500);
+  })();
+
+  /* ---------- player toggle (small screens) ---------- */
+  const player = document.getElementById('player'), ptog = document.getElementById('playerToggle');
+  ptog.addEventListener('click', () => {
+    const min = player.classList.toggle('min');
+    document.body.classList.toggle('player-min', min);
+    ptog.textContent = min ? 'Show player' : 'Hide player';
+    ptog.setAttribute('aria-expanded', String(!min));
+  });
+
+  /* ---------- page music ---------- */
+  (function(){
+    const bgm = document.getElementById('bgm');
+    const ctl = document.getElementById('soundCtl'), sbtn = document.getElementById('soundBtn'), vol = document.getElementById('soundVol');
+    const playerBox = document.getElementById('player');
+    const events = ['pointerdown', 'keydown', 'touchstart'];
+    let wantMusic = true;
+
+    // remembered volume (0-100), default 40
+    let level = 40;
+    try { const saved = localStorage.getItem('bgmVolume'); if (saved !== null && !isNaN(+saved)) level = Math.min(100, Math.max(0, +saved)); } catch(e){}
+    vol.value = level;
+    // iPhones and iPads only allow volume from the device buttons, so hide the slider there
+    bgm.volume = 0.5;
+    if (bgm.volume !== 0.5){ vol.remove(); ctl.classList.add('no-slider'); }
+    bgm.volume = level / 100;
+
+    const audible = () => !bgm.paused && !bgm.muted && bgm.volume > 0;
+    function sync(){
+      const on = audible();
+      sbtn.classList.toggle('off', !on);
+      sbtn.setAttribute('aria-pressed', String(!on));
+      sbtn.setAttribute('aria-label', on ? 'Mute page music' : 'Play page music');
+      sbtn.title = on ? 'Mute' : 'Play music';
+    }
+    function stopKick(){ events.forEach(t => document.removeEventListener(t, kick)); }
+    function start(){ wantMusic = true; bgm.muted = false; bgm.play().then(stopKick).catch(() => {}); }
+    function kick(e){ if (wantMusic && !ctl.contains(e.target)) start(); }
+
+    ['play','pause','volumechange'].forEach(t => bgm.addEventListener(t, sync));
+    bgm.addEventListener('error', () => { ctl.hidden = true; stopKick(); });
+    sync();
+    events.forEach(t => document.addEventListener(t, kick, { passive:true }));
+    start(); // plays right away if the browser allows it; otherwise on the first tap, click or key press
+
+    sbtn.addEventListener('click', () => {
+      if (audible()){ bgm.muted = true; wantMusic = false; }
+      else {
+        if (bgm.volume === 0 && document.body.contains(vol)){ vol.value = 40; bgm.volume = 0.4; }
+        start();
+      }
+      stopKick();
+    });
+    vol.addEventListener('input', () => {
+      const v = +vol.value;
+      bgm.volume = v / 100;
+      try { localStorage.setItem('bgmVolume', String(v)); } catch(e){}
+      if (v > 0 && (bgm.paused || bgm.muted)) start();
+      stopKick();
+    });
+
+    // When someone clicks into the Spotify player, focus moves into its frame: pause the page music
+    window.addEventListener('blur', () => {
+      setTimeout(() => {
+        const el = document.activeElement;
+        if (el && el.tagName === 'IFRAME' && playerBox.contains(el)){ wantMusic = false; bgm.pause(); stopKick(); }
+      }, 0);
+    });
   })();
 
   /* ---------- chain bar ---------- */
