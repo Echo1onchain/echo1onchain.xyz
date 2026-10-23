@@ -363,6 +363,11 @@ textarea{
   95%{opacity:0}}
 @media (prefers-reduced-motion: reduce){.glitch-txt::before,.glitch-txt::after{animation:none}}
 @media (max-width:720px){.glitch-txt::before,.glitch-txt::after{display:none}}
+/* Watch visuals: hide the page content so only the background show is left */
+main > *, .top-links{transition:opacity .5s ease, visibility .5s}
+body.watch main > *:not(.viz), body.watch .top-links{opacity:0; visibility:hidden; pointer-events:none}
+@media (prefers-reduced-motion: reduce){main > *, .top-links{transition:none}}
+@media (max-width:720px){main{padding-top:15.5rem}}
 </style>
 </head>
 <body>
@@ -461,6 +466,9 @@ textarea{
   </button>
   <button class="critter-switch" id="pulseSwitch" type="button" role="switch" aria-checked="false">
     <span class="track"><span class="knob"></span></span><span>Music pulse</span>
+  </button>
+  <button class="critter-switch" id="watchSwitch" type="button" role="switch" aria-checked="false">
+    <span class="track"><span class="knob"></span></span><span>Watch visuals</span>
   </button>
 </div>
 <audio id="bgm" preload="auto"></audio>
@@ -1112,6 +1120,18 @@ textarea{
   function newTx(){ txEl.textContent = '0x' + hex(4) + '…' + hex(4); }
   function tick(){ block++; blockEl.textContent = block.toLocaleString('en-US'); }
   tick(); newTx(); setInterval(tick, 12000);
+
+  /* ---------- watch visuals mode ---------- */
+  (function(){
+    const ws = document.getElementById('watchSwitch'), cs = document.getElementById('critSwitch');
+    function set(on){
+      document.body.classList.toggle('watch', on);
+      ws.setAttribute('aria-checked', String(on));
+      if (on && cs.getAttribute('aria-checked') !== 'true') cs.click();   // make sure the creatures are out
+    }
+    ws.addEventListener('click', () => set(!document.body.classList.contains('watch')));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && document.body.classList.contains('watch')) set(false); });
+  })();
 
   /* ---------- background: bots + network ---------- */
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
