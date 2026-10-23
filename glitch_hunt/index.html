@@ -429,6 +429,85 @@ textarea{
 @keyframes ghFall{to{transform:translate(var(--dx),110vh) rotate(var(--rot));opacity:.15}}
 @media (max-width:720px){.gh-board{grid-template-areas:"gate gate" "a b"}.gh-gate{position:static;grid-column:1/-1;order:-1}.gh.locked .gh-gate{display:block}.gh-card{width:100%}}
 @media (prefers-reduced-motion:reduce){.gh-miss,.gh-dot,.gh-popcard,.gh-lamprow .gh-lamp{animation:none}.gh-bit{display:none}.gh-lamp{transition:none}}
+.tl-glitch svg{color:#4DFF6A; filter:drop-shadow(0 0 4px rgba(77,255,106,.7))}
+.glitch-txt{position:relative; display:inline-block}
+.glitch-txt::before,.glitch-txt::after{
+  content:attr(data-text); position:absolute; inset:0; pointer-events:none; opacity:0;
+}
+.glitch-txt::before{color:#22E4F5; animation:glitchA 4s steps(1) infinite}
+.glitch-txt::after{color:#FF2D9B; animation:glitchB 4s steps(1) infinite}
+@keyframes glitchA{0%,86%,100%{opacity:0; transform:none}
+  88%{opacity:.85; transform:translate(-2px,-1px); clip-path:inset(0 0 55% 0)}
+  91%{opacity:.85; transform:translate(2px,1px); clip-path:inset(40% 0 20% 0)}
+  94%{opacity:0}}
+@keyframes glitchB{0%,87%,100%{opacity:0; transform:none}
+  89%{opacity:.85; transform:translate(2px,1px); clip-path:inset(50% 0 0 0)}
+  92%{opacity:.85; transform:translate(-2px,0); clip-path:inset(10% 0 60% 0)}
+  95%{opacity:0}}
+@media (prefers-reduced-motion: reduce){.glitch-txt::before,.glitch-txt::after{animation:none}}
+@media (max-width:720px){.glitch-txt::before,.glitch-txt::after{display:none}}
+button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:pointer}
+.games{position:relative}
+.games-btn .chev{width:14px; height:14px; transition:transform .2s}
+.games-btn[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.games-menu{
+  position:absolute; z-index:10; top:calc(100% + 6px); left:0; min-width:210px; padding:6px;
+  border-radius:14px; background:#0A1022; box-shadow:0 0 26px rgba(255,45,155,.3), 0 0 50px rgba(34,228,245,.15);
+}
+.games-menu[hidden]{display:none}
+.games-menu::before{
+  content:""; position:absolute; inset:0; padding:2px; border-radius:inherit; pointer-events:none;
+  background:linear-gradient(135deg, rgba(255,45,155,.9), rgba(34,228,245,.9));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+.game-item{position:relative; display:flex; align-items:center; gap:.6rem; padding:.6rem .75rem; border-radius:10px; color:var(--ink); text-decoration:none; font-weight:600; font-size:.92rem}
+.game-item svg{width:18px; height:18px; color:#4DFF6A; flex:none}
+.game-item:hover, .game-item:focus-visible{background:rgba(34,228,245,.12); color:var(--cyan); outline:none}
+@media (max-width:720px){.games-btn .chev{display:none}}
+/* dropdown items look like the top-left pill buttons */
+.games-menu{background:none; box-shadow:none; padding:0; min-width:0; display:flex; flex-direction:column; align-items:flex-start; gap:.5rem}
+@media (min-width:721px){.games-menu{position:static; margin-top:.5rem}}
+.games-menu[hidden]{display:none}
+.games-menu::before{display:none}
+.games-menu .tl{white-space:nowrap}
+@media (max-width:720px){
+  .games-menu .tl{width:auto; height:auto; padding:.45rem .9rem .45rem .7rem; justify-content:flex-start}
+  .games-menu .tl span{position:static; width:auto; height:auto; overflow:visible; clip:auto}
+  .games-menu .glitch-txt::before,.games-menu .glitch-txt::after{display:block}
+}
+/* ECHO Bot Gamez: a 2.2s glowing highlight sweeps across the letters, then rests 5.5s */
+.gamez-txt{position:relative; display:inline-block; color:var(--ink)}
+.gamez-txt::after{
+  content:attr(data-text); position:absolute; inset:0; pointer-events:none; white-space:nowrap;
+  color:transparent; -webkit-background-clip:text; background-clip:text;
+  background-image:linear-gradient(100deg, transparent 0%, transparent 38%, rgba(140,245,255,.95) 45%, #FFFFFF 50%, rgba(140,245,255,.95) 55%, transparent 62%, transparent 100%);
+  background-size:250% 100%; background-position:100% 0;
+  filter:drop-shadow(0 0 3px rgba(34,228,245,1)) drop-shadow(0 0 8px rgba(34,228,245,.8));
+  animation:gamezSheen 7.7s ease-in-out infinite;
+}
+@keyframes gamezSheen{0%{background-position:100% 0} 28.57%,100%{background-position:0% 0}}
+@media (prefers-reduced-motion: reduce){.gamez-txt::after{display:none}}
+.tl-binary svg{width:18px; height:18px; color:var(--ink)}
+.tl-binary .liquid{fill:#4DFF6A; filter:drop-shadow(0 0 3px rgba(77,255,106,.8))}
+.tl-binary .bubble{fill:rgba(220,255,225,.85)}
+/* ECHO Botz Memory Protocol menu link: cloud icon, letters zoom in a sweep, "You are here" badge */
+.tl-memory svg{width:18px; height:18px; color:#22E4F5; filter:drop-shadow(0 0 4px rgba(34,228,245,.85))}
+.mem-txt{display:inline-flex; white-space:nowrap}
+.mem-txt i{font-style:normal; display:inline-block; transform-origin:50% 70%; animation:memZoom 4.8s ease-in-out infinite; animation-delay:calc(var(--i) * 70ms)}
+@keyframes memZoom{
+  0%,70%,100%{transform:none; color:inherit; text-shadow:none}
+  78%{transform:scale(1.4) translateY(-1px); color:#FFFFFF; text-shadow:0 0 6px #22E4F5, 0 0 14px #22E4F5}
+  86%{transform:none; color:inherit; text-shadow:none}
+}
+.tl[aria-current="page"]{box-shadow:0 0 22px rgba(34,228,245,.45), 0 0 44px rgba(255,45,155,.2)}
+.tl[aria-current="page"]::after{
+  content:"You are here"; margin-left:.35rem; padding:2px 8px; border-radius:999px; white-space:nowrap;
+  background:#22E4F5; color:#04060E; font-family:"JetBrains Mono",ui-monospace,monospace;
+  font-size:.6rem; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+  box-shadow:0 0 10px rgba(34,228,245,.7);
+}
+@media (prefers-reduced-motion: reduce){.mem-txt i{animation:none}}
 </style>
 </head>
 <body>
@@ -439,7 +518,15 @@ textarea{
 
 <nav class="top-links" aria-label="ECHO Botz links">
   <a class="tl tl-mint" href="https://www.solonchain.io/mint/echo-botz" target="_blank" rel="noopener"><span class="sol-icon"><img src="data:image/webp;base64,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" alt=""></span><span>Mint ECHO Botz</span></a>
-  <a class="tl" href="https://echo1onchain.xyz/echo_botz_binary_lab/" aria-label="ECHO Botz Binary Lab"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6.2L4.8 18.4A1.8 1.8 0 0 0 6.4 21h11.2a1.8 1.8 0 0 0 1.6-2.6L14 9.2V3"/><path d="M7.5 15h9"/></svg><span>Binary Lab</span></a>
+  <div class="games">
+    <button class="tl tl-glitch games-btn" id="gamesBtn" type="button" aria-expanded="false" aria-controls="gamesMenu"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10a4 4 0 0 1 4 4v1.5a3.5 3.5 0 0 1-6.3 2.1L13.5 14h-3l-1.2 1.6A3.5 3.5 0 0 1 3 13.5V12a4 4 0 0 1 4-4z"/><path d="M7.5 10.5v3M6 12h3"/><circle cx="15.5" cy="11.2" r=".6" fill="currentColor"/><circle cx="17" cy="12.8" r=".6" fill="currentColor"/></svg><span class="gamez-txt" data-text="ECHO Bot Gamez">ECHO Bot Gamez</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5l6 6 6-6"/></svg></button>
+    <div class="games-menu" id="gamesMenu" hidden>
+      <!-- To add a game: copy the line below, change the link and the name -->
+      <a class="tl tl-glitch" href="https://echo1onchain.xyz/glitch_hunt/" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/><path d="M7.5 11h1.5l1-2 2 4 1-2h1.5"/></svg><span class="glitch-txt" data-text="Play Glitch Hunt">Play Glitch Hunt</span></a>
+      <a class="tl tl-binary" href="https://echo1onchain.xyz/echo_botz_binary_lab/"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="liquid" d="M7.6 13.6H16.4L19.2 18.4A1.6 1.6 0 0 1 17.8 20.8H6.2A1.6 1.6 0 0 1 4.8 18.4Z"/><circle class="bubble" cx="10" cy="17.5" r=".9"/><circle class="bubble" cx="13.6" cy="16" r=".65"/><circle class="bubble" cx="12.2" cy="19" r=".55"/><path d="M9 3h6M10 3v6.2L4.6 18.4A1.8 1.8 0 0 0 6.2 21h11.6a1.8 1.8 0 0 0 1.6-2.6L14 9.2V3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Binary Lab</span></a>
+      <a class="tl tl-memory" href="https://echo1onchain.xyz/echo_botz_memory_protocol/" aria-label="Play Memory Protocol"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><path d="M9.5 14.5h.01M12.5 14.5h.01M15.5 14.5h.01" stroke-width="2.6"/></svg><span class="mem-txt" aria-hidden="true"><i style="--i:0">P</i><i style="--i:1">l</i><i style="--i:2">a</i><i style="--i:3">y</i><i style="--i:4">&nbsp;</i><i style="--i:5">M</i><i style="--i:6">e</i><i style="--i:7">m</i><i style="--i:8">o</i><i style="--i:9">r</i><i style="--i:10">y</i><i style="--i:11">&nbsp;</i><i style="--i:12">P</i><i style="--i:13">r</i><i style="--i:14">o</i><i style="--i:15">t</i><i style="--i:16">o</i><i style="--i:17">c</i><i style="--i:18">o</i><i style="--i:19">l</i></span></a>
+    </div>
+  </div>
   <a class="tl" href="https://x.com/EchoBotzSOL" target="_blank" rel="noopener" aria-label="ECHO Botz on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.2 2.5h3.4l-7.4 8.5 8.7 11.5h-6.8l-5.3-7-6.1 7H1.3l7.9-9.1L.9 2.5h7l4.8 6.4 5.5-6.4zm-1.2 18h1.9L7.1 4.4H5.1L17 20.5z"/></svg><span>@EchoBotzSOL</span></a>
   <a class="tl" href="https://x.com/Echo1OnChain" target="_blank" rel="noopener" aria-label="ECHO1 on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.2 2.5h3.4l-7.4 8.5 8.7 11.5h-6.8l-5.3-7-6.1 7H1.3l7.9-9.1L.9 2.5h7l4.8 6.4 5.5-6.4zm-1.2 18h1.9L7.1 4.4H5.1L17 20.5z"/></svg><span>@Echo1OnChain</span></a>
 <a class="tl" href="https://open.spotify.com/artist/63XWxjfJb7v7pSwdn9F8u6?si=_q8RapZsSOGyA2FKauzSTQ" target="_blank" rel="noopener" aria-label="Listen to ECHO1 on Spotify"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#1ED760"/><path d="M6.5 9.3c3.6-1.1 8-.8 11 1M7 12.4c3-.9 6.6-.6 9.2.9M7.6 15.3c2.4-.6 5-.4 7.1.8" stroke="#04060E" stroke-width="1.7" stroke-linecap="round" fill="none"/></svg><span>Listen on Spotify</span></a>
@@ -1204,6 +1291,16 @@ textarea{
 
 })();
 </script>
-<script data-goatcounter="https://echobotz.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+<script data-goatcounter="https://echobotz.goatcounter.com/count" async src="https://gc.zgo.at/count.js">  /* ---------- ECHO Bot Gamez menu ---------- */
+  (function(){
+    const btn = document.getElementById('gamesBtn'), menu = document.getElementById('gamesMenu');
+    function set(open){ menu.hidden = !open; btn.setAttribute('aria-expanded', String(open)); }
+    btn.addEventListener('click', e => { e.stopPropagation(); set(menu.hidden); if (!menu.hidden) menu.querySelector('a') && menu.querySelector('a').focus(); });
+    document.addEventListener('click', e => { if (!menu.hidden && !menu.contains(e.target)) set(false); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !menu.hidden){ set(false); btn.focus(); } });
+    menu.querySelectorAll('a[href^="#"]').forEach(a => a.addEventListener('click', () => set(false)));
+  })();
+
+</script>
 </body>
 </html>
