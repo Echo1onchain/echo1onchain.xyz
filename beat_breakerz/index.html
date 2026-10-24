@@ -1683,7 +1683,8 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       const c = ac();
       const src = c.createBufferSource(); src.buffer = buf;
       const gain = c.createGain(); gain.gain.value = .9;
-      src.connect(gain); gain.connect(c.destination);
+      const an = c.createAnalyser(); an.fftSize = 512; an.smoothingTimeConstant = .7;
+      src.connect(an); an.connect(gain); gain.connect(c.destination);
       const t0 = c.currentTime + 2.2;
       src.start(t0);
       game = { tr, src, t0, notes:chart.map(n => ({ t:n.t, lane:n.lane, hit:false, miss:false })).sort((a, b) => a.t - b.t),
@@ -1692,7 +1693,8 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         holding:[null,null,null,null], holdBonus:0, glitch:[], lastSpark:0,
         deckKick:[-1e9,-1e9], vu:[0,0], xf:0, xfTarget:0,
         energy:0, odUntil:-1, odFlash:-1e9, odBonus:0, padHit:[-1e9,-1e9,-1e9,-1e9],
-        deck:[{ ang:0, spd:0, rip:[] }, { ang:0, spd:0, rip:[] }], lastFrame:performance.now() };
+        deck:[{ ang:0, spd:0, rip:[] }, { ang:0, spd:0, rip:[] }], lastFrame:performance.now(),
+        an, freq:new Uint8Array(an.frequencyBinCount), bass:0, mid:0, high:0, bassAvg:0, lastBeat:-1e9, beatN:0, sparks:[] };
       addHolds(game.notes, settings.diff);
       $('bdHudTrack').textContent = tr.name;
       $('bdHudDiff').textContent = settings.diff[0].toUpperCase() + settings.diff.slice(1) + ' · ' + game.notes.length + ' notes' + (ranked ? ' · Ranked @' + ranked.handle : '');
@@ -1856,12 +1858,24 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       // platter + strobe dots that pulse on hits from this side
       const kickAge = now - game.deckKick[side], kick = kickAge < 300 ? 1 - kickAge / 300 : 0;
       g2.beginPath(); g2.arc(rx, ry, R * 1.05, 0, Math.PI * 2); g2.fillStyle = '#1a2038'; g2.fill();
-      for (let k = 0; k < 40; k++){
-        const a = k / 40 * Math.PI * 2 + dk.ang * (.15 + Math.min(game.combo, 60) / 120);
-        g2.beginPath(); g2.arc(rx + Math.cos(a) * R * 1.1, ry + Math.sin(a) * R * 1.1, 1.6, 0, Math.PI * 2);
-        g2.fillStyle = od ? 'hsl(' + ((k * 9 + now / 6) % 360) + ',100%,62%)' : accent; g2.globalAlpha = (od ? .75 : .25) + kick * .7; g2.fill();
+      // ring of lights around the record: each light follows a slice of the music, bass at the sides, treble at top and bottom
+      const f = game.freq, NL = 48, spin = dk.ang * .12;
+      for (let k = 0; k < NL; k++){
+        const m = k < NL / 2 ? k : NL - 1 - k;
+        const bin = Math.floor(1 + Math.pow(m / (NL / 2 - 1), 1.6) * 110);
+        const v = Math.min(1, (f[bin] / 255) * 1.15), a = k / NL * Math.PI * 2 + spin;
+        const dist = R * (1.1 + v * .07);
+        const col = od ? 'hsl(' + ((k * 7.5 + now / 6) % 360) + ',100%,62%)' : accent;
+        g2.beginPath(); g2.arc(rx + Math.cos(a) * dist, ry + Math.sin(a) * dist, 1.3 + v * 2.6, 0, Math.PI * 2);
+        g2.fillStyle = col; g2.globalAlpha = Math.min(1, .15 + v * .85 + kick * .4);
+        if (v > .55){ g2.shadowColor = col; g2.shadowBlur = 10; }
+        g2.fill(); g2.shadowBlur = 0;
       }
       g2.globalAlpha = 1;
+      // the platter edge glows with the bass
+      g2.save(); g2.globalAlpha = .25 + game.bass * .6; g2.strokeStyle = od ? 'hsl(' + ((now / 5) % 360) + ',100%,62%)' : accent;
+      g2.shadowColor = g2.strokeStyle; g2.shadowBlur = 8 + game.bass * 22; g2.lineWidth = 1.5 + game.bass * 2;
+      g2.beginPath(); g2.arc(rx, ry, R * 1.045, 0, Math.PI * 2); g2.stroke(); g2.restore();
       // the record spins at 33 1/3 rpm; holding a note on this side slows it like a hand on the record,
       // overdrive makes it race, and every hit gives it a quick scratch
       const holdingHere = side ? (game.holding[2] || game.holding[3]) : (game.holding[0] || game.holding[1]);
@@ -1878,9 +1892,18 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       const sh = g2.createLinearGradient(rx - R, ry - R, rx + R, ry + R);
       sh.addColorStop(.3, 'rgba(255,255,255,0)'); sh.addColorStop(.47, 'rgba(255,255,255,.09)'); sh.addColorStop(.53, 'rgba(255,255,255,.09)'); sh.addColorStop(.7, 'rgba(255,255,255,0)');
       g2.fillStyle = sh; g2.fillRect(rx - R, ry - R, R * 2, R * 2); g2.restore();
+      g2.save(); g2.globalAlpha = game.bass * .45; g2.shadowColor = label; g2.shadowBlur = 24; g2.beginPath(); g2.arc(rx, ry, R * .33, 0, Math.PI * 2); g2.strokeStyle = label; g2.lineWidth = 2; g2.stroke(); g2.restore();
       if (kick){ g2.save(); g2.globalAlpha = kick * .5; g2.shadowColor = label; g2.shadowBlur = 30; g2.beginPath(); g2.arc(rx, ry, R * .32, 0, Math.PI * 2); g2.strokeStyle = label; g2.lineWidth = 3; g2.stroke(); g2.restore(); }
-      dk.rip = dk.rip.filter(rp => now - rp.t < 450);
+      dk.rip = dk.rip.filter(rp => now - rp.t < (rp.beat ? 760 : 450));
       for (const rp of dk.rip){
+        if (rp.beat){
+          const q = (now - rp.t) / 760, e = 1 - Math.pow(1 - q, 2);
+          const col = rp.rainbow || od ? 'hsl(' + ((now / 4 + q * 200) % 360) + ',100%,62%)' : rp.col;
+          g2.save(); g2.globalAlpha = (1 - q) * (rp.strong ? .75 : .45); g2.strokeStyle = col; g2.shadowColor = col; g2.shadowBlur = 16;
+          g2.lineWidth = (rp.strong ? 3.5 : 2) * (1 - q) + .5;
+          g2.beginPath(); g2.arc(rx, ry, R * (1.12 + e * .43), 0, Math.PI * 2); g2.stroke(); g2.restore();
+          continue;
+        }
         const q = (now - rp.t) / 450;
         g2.save(); g2.globalAlpha = (1 - q) * (rp.big ? .9 : .55); g2.strokeStyle = rp.col; g2.shadowColor = rp.col; g2.shadowBlur = 14;
         g2.lineWidth = (rp.big ? 4 : 2.5) * (1 - q) + .5;
@@ -1933,7 +1956,53 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       g2.beginPath(); g2.arc(bx2 + 14, by2 + 10, 3.5, 0, Math.PI * 2);
       g2.fillStyle = on ? '#4DFF6A' : '#2a3150'; g2.shadowColor = '#4DFF6A'; g2.shadowBlur = on ? 10 : 0; g2.fill(); g2.shadowBlur = 0;
     }
+    // Overdrive meter: a glass tube filling with flowing rainbow light, glowing with the bass
+    function drawTube(x, top, bot, level, od, ready, now){
+      const w = 12, hgt = bot - top, fillTop = bot - hgt * level;
+      rr(x, top, w, hgt, 6); g2.fillStyle = 'rgba(4,6,14,.75)'; g2.fill();
+      g2.lineWidth = 1.5;
+      g2.strokeStyle = ready || od ? 'hsl(' + ((now / 4) % 360) + ',100%,65%)' : 'rgba(242,246,255,.18)'; g2.stroke();
+      if (level > .002){
+        g2.save(); rr(x + 2, fillTop, w - 4, bot - fillTop - 2, 4); g2.clip();
+        const shift = now / (od ? 6 : 40);
+        const gr = g2.createLinearGradient(0, bot, 0, top);
+        for (let k = 0; k <= 6; k++) gr.addColorStop(k / 6, 'hsl(' + ((270 - k * 45 + shift) % 360 + 360) % 360 + ',100%,60%)');
+        g2.shadowColor = '#ffffff'; g2.shadowBlur = 6 + game.bass * 18;
+        g2.fillStyle = gr; g2.fillRect(x, top, w, hgt);
+        // bright bands flowing upward inside the light
+        g2.shadowBlur = 0; g2.fillStyle = 'rgba(255,255,255,.28)';
+        const sp = od ? 2.2 : .9;
+        for (let k = 0; k < 4; k++){ const y = bot - ((now / 10 * sp + k * hgt / 4) % hgt); g2.fillRect(x, y, w, 6); }
+        g2.restore();
+        // white-hot cap at the fill level
+        const capHue = ((270 - (1 - (fillTop - top) / hgt) * 270 + shift) % 360 + 360) % 360;
+        g2.save(); g2.fillStyle = '#ffffff'; g2.shadowColor = 'hsl(' + capHue + ',100%,60%)'; g2.shadowBlur = 14 + game.bass * 20;
+        g2.fillRect(x + 1, fillTop - 1, w - 2, 3); g2.restore();
+        if ((ready || od) && Math.random() < (od ? .5 : .25))
+          game.sparks.push({ x:x + w / 2 + (Math.random() - .5) * w, y:fillTop, vy:.6 + Math.random() * 1.4, h:capHue, ph:Math.random() * 6, born:now, life:500 + Math.random() * 500 });
+      }
+      // a small lightning bolt under the tube; it lights up when overdrive is ready
+      const bx = x + w / 2, by = bot + 12;
+      g2.beginPath(); g2.moveTo(bx + 1, by - 6); g2.lineTo(bx - 3, by + 1); g2.lineTo(bx, by + 1); g2.lineTo(bx - 1, by + 7); g2.lineTo(bx + 3, by - 1); g2.lineTo(bx, by - 1); g2.closePath();
+      g2.fillStyle = ready || od ? 'hsl(' + ((now / 4) % 360) + ',100%,65%)' : 'rgba(143,163,200,.4)';
+      if (ready || od){ g2.shadowColor = g2.fillStyle; g2.shadowBlur = 10; }
+      g2.fill(); g2.shadowBlur = 0;
+    }
+    function listen(now){
+      const f = game.freq; game.an.getByteFrequencyData(f);
+      const avg = (a, b) => { let s2 = 0; for (let i = a; i <= b; i++) s2 += f[i]; return s2 / (b - a + 1) / 255; };
+      game.bass = avg(1, 3); game.mid = avg(5, 30); game.high = avg(40, 120);
+      // a beat = the bass jumps above its recent average
+      const isBeat = game.bass > game.bassAvg * 1.18 + .04 && game.bass > .35 && now - game.lastBeat > 200 && !game.paused;
+      game.bassAvg += (game.bass - game.bassAvg) * .08;
+      if (isBeat){
+        game.lastBeat = now; game.beatN++;
+        const strong = game.bass > .62, rainbow = game.beatN % 8 === 0;
+        game.deck.forEach((dk, side) => dk.rip.push({ t:now, beat:true, strong, rainbow, col:side ? '#22E4F5' : '#FF2D9B' }));
+      }
+    }
     function drawRig(t, now, Wd, H, lw, ox, hitY){
+      listen(now);
       // turntables, only when there's room beside the lanes
       const room = ox - 30;
       if (room >= 140){
@@ -1956,19 +2025,14 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       // energy level: fills with good hits, drains during overdrive
       const level = od ? Math.max(0, (game.odUntil - t) / OD_SECS) : game.energy;
       if (pad){
-        const top = H * .16, bot = hitY - 24, segs = 22, sh = (bot - top) / segs, lit = level * segs;
-        const ready = !od && level > .85, pulse = ready ? .55 + .45 * Math.sin(now / 120) : 1;
-        for (let side = 0; side < 2; side++){
-          const mx = side ? ox + lw * 4 + 8 : ox - 18;
-          for (let k = 0; k < segs; k++){
-            const y = bot - (k + 1) * sh, hue = od ? (270 - k / (segs - 1) * 270 + now / 4) % 360 : 270 - k / (segs - 1) * 270;
-            const part = Math.max(0, Math.min(1, lit - k));
-            g2.fillStyle = 'hsl(' + hue + ',100%,' + (part ? 60 : 45) + '%)';
-            g2.globalAlpha = part ? (.35 + .6 * part) * pulse : .1;
-            if (part){ g2.shadowColor = g2.fillStyle; g2.shadowBlur = od ? 14 : 9; }
-            g2.fillRect(mx, y + 1, 10, sh - 3); g2.shadowBlur = 0;
-          }
-          g2.globalAlpha = 1;
+        const top = H * .16, bot = hitY - 30, ready = !od && level > .85;
+        for (let side = 0; side < 2; side++) drawTube(side ? ox + lw * 4 + 7 : ox - 19, top, bot, level, od, ready, now);
+        // sparks float up out of the tubes when they're close to full or in overdrive
+        game.sparks = game.sparks.filter(sp => now - sp.born < sp.life);
+        for (const sp of game.sparks){
+          const q = (now - sp.born) / sp.life; sp.y -= sp.vy; sp.x += Math.sin(now / 90 + sp.ph) * .4;
+          g2.globalAlpha = 1 - q; g2.fillStyle = 'hsl(' + sp.h + ',100%,70%)'; g2.shadowColor = g2.fillStyle; g2.shadowBlur = 8;
+          g2.fillRect(sp.x - 1, sp.y - 1, 2.5, 2.5); g2.shadowBlur = 0; g2.globalAlpha = 1;
         }
       }
       // crossfader slides toward whichever side was hit last
