@@ -561,6 +561,15 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
   .bd-acts{width:100%; justify-content:flex-start}
   .bd-range input{width:120px}
 }
+/* ---------- Beat Breakerz results: confetti + creatures pop out from behind the card, share to X ---------- */
+.bd-fx{position:absolute; inset:0; width:100%; height:100%; pointer-events:none}
+#bdResult .bd-panel{z-index:1}
+.bd-share{margin-top:.9rem; padding-top:.9rem; border-top:1px solid var(--line)}
+.bd-x{display:inline-flex; align-items:center; gap:.5rem; border-color:var(--ink); background:#000; color:#fff}
+.bd-x:hover{border-color:var(--cyan); color:#fff; box-shadow:0 0 14px rgba(34,228,245,.35)}
+.bd-x svg{width:15px; height:15px}
+.bd-share-note{margin:.5rem 0 0; color:var(--muted); font-size:.8rem}
+.bd-share-note.ok{color:var(--cyan)}
 </style>
 </head>
 <body>
@@ -651,6 +660,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
   <div class="bd-panel"><div class="bd-spin"></div><h2>Mapping beats</h2><p class="bd-psub" id="bdLoadSub" style="margin:0"></p></div>
 </div>
 <div id="bdResult" class="bd-ov bd-hide">
+  <canvas class="bd-fx" id="bdFx" aria-hidden="true"></canvas>
   <div class="bd-panel">
     <p class="bd-psub" id="bdRTrack" style="margin:0"></p>
     <div class="bd-grade" id="bdRGrade">S</div>
@@ -662,6 +672,8 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       <div><b id="bdRHits">0</b><span>Perfect / Great / Good / Miss</span></div>
     </div>
     <div class="bd-btns"><button class="bd-btn primary" id="bdRetry" type="button">Play again</button><button class="bd-btn" id="bdMenu" type="button">Back to tracks</button></div>
+    <div class="bd-share"><button class="bd-btn bd-x" id="bdShare" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.2 2.5h3.4l-7.4 8.5 8.7 11.5h-6.8l-5.3-7-6.1 7H1.3l7.9-9.1L.9 2.5h7l4.8 6.4 5.5-6.4zm-1.2 18h1.9L7.1 4.4H5.1L17 20.5z"/></svg>Share to X</button>
+      <p class="bd-share-note" id="bdShareNote" aria-live="polite"></p></div>
   </div>
 </div>
 <div id="bdErr" class="bd-ov bd-hide">
@@ -1692,7 +1704,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     }
     function stopAudio(){ if (game){ try { game.src.stop(); } catch(e){} try { game.src.disconnect(); } catch(e){} } }
     function closeGame(){
-      stopAudio(); game = null; cancelAnimationFrame(raf);
+      stopFx(); stopAudio(); game = null; cancelAnimationFrame(raf);
       try { ac().resume(); } catch(e){}
       $('bdGame').classList.add('bd-hide');
       document.documentElement.style.overflow = '';
@@ -1715,7 +1727,189 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       $('bdRCombo').textContent = game.maxCombo;
       $('bdRHits').textContent = c.perfect + ' / ' + c.great + ' / ' + c.good + ' / ' + c.miss;
       show('bdResult');
+      celebrate(isNew);
+      prepareShare({ track:game.tr.name, diff:settings.diff, grade, score:game.score, acc, maxCombo:game.maxCombo, counts:Object.assign({}, c), isNew });
     }
+
+    /* ----- results celebration: confetti + creatures pop out from behind the card ----- */
+    const fxCv = $('bdFx'), fg = fxCv.getContext('2d');
+    let fxRaf = 0;
+    const PIX_BUG = [
+      ['..XXX..', '.XXXXX.', 'XX.X.XX', 'XXXXXXX', '.X.X.X.', 'X.....X'],
+      ['..XXX..', '.XXXXX.', 'XX.X.XX', 'XXXXXXX', '.X.X.X.', '.X...X.']
+    ];
+    const rnd = (a, b) => a + Math.random() * (b - a);
+    function stopFx(){ cancelAnimationFrame(fxRaf); fg.setTransform(1, 0, 0, 1, 0, 0); fg.clearRect(0, 0, fxCv.width, fxCv.height); }
+    function celebrate(big){
+      stopFx();
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const dpr = Math.min(2, window.devicePixelRatio || 1), Wv = innerWidth, Hv = innerHeight;
+      fxCv.width = Wv * dpr; fxCv.height = Hv * dpr;
+      const r = document.querySelector('#bdResult .bd-panel').getBoundingClientRect();
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      const COLORS = LANE.concat(['#FED700', '#B67CFF']);
+      const bits = [];
+      for (let i = 0; i < (big ? 170 : 120); i++){
+        const a = rnd(0, Math.PI * 2), sp = rnd(5, 14);
+        bits.push({ x:cx + Math.cos(a) * r.width * .4, y:cy + Math.sin(a) * r.height * .4,
+          vx:Math.cos(a) * sp, vy:Math.sin(a) * sp - rnd(2, 6), w:rnd(6, 11), h:rnd(3, 6),
+          rot:rnd(0, 6.28), vr:rnd(-.25, .25), c:COLORS[i % COLORS.length], life:rnd(2.2, 3.4) });
+      }
+      const crits = [];
+      const nC = Wv < 600 ? 5 : 7;
+      for (let i = 0; i < nC; i++){
+        const a = (i / nC) * Math.PI * 2 + rnd(-.3, .3) - Math.PI / 2;
+        const reach = Math.max(r.width, r.height) * .5 + rnd(40, 120);
+        crits.push({ type:i % 2 ? 'bug' : 'jelly', dx:Math.cos(a), dy:Math.sin(a), reach,
+          delay:.15 + i * .09, hue:[185, 325, 275, 110, 45][i % 5], ph:rnd(0, 6.28), s:i % 2 ? rnd(4, 5.5) : rnd(18, 26), dir:Math.cos(a) >= 0 ? 1 : -1 });
+      }
+      const start = performance.now();
+      let last = start;
+      function frame(now){
+        const t = (now - start) / 1000, dt = Math.min(2.5, (now - last) / 16.67); last = now;
+        fg.setTransform(dpr, 0, 0, dpr, 0, 0); fg.clearRect(0, 0, Wv, Hv);
+        let alive = false;
+        for (const b of bits){
+          if (t > b.life) continue; alive = true;
+          b.vy += .22 * dt; b.vx *= Math.pow(.985, dt); b.vy *= Math.pow(.985, dt);
+          b.x += b.vx * dt; b.y += b.vy * dt; b.rot += b.vr * dt;
+          fg.save(); fg.globalAlpha = Math.min(1, (b.life - t) / .6); fg.translate(b.x, b.y); fg.rotate(b.rot);
+          fg.fillStyle = b.c; fg.fillRect(-b.w / 2, -b.h / 2, b.w, b.h * Math.abs(Math.cos(b.rot * 2)) + 1); fg.restore();
+        }
+        for (const c of crits){
+          const lt = t - c.delay; if (lt < 0 || lt > 3.8){ if (lt < 0) alive = true; continue; } alive = true;
+          const p = Math.min(1, lt / .55), s1 = 1.70158, e = 1 + (s1 + 1) * Math.pow(p - 1, 3) + s1 * Math.pow(p - 1, 2);   // pop with a little overshoot
+          let x = cx + c.dx * c.reach * e, y = cy + c.dy * c.reach * e + Math.sin(lt * 3 + c.ph) * 4;
+          let alpha = 1;
+          if (lt > 2.6){ const q = (lt - 2.6) / 1.2; y -= q * q * 60; alpha = 1 - q; }
+          const pulse = (Math.sin(lt * 5 + c.ph) + 1) / 2;
+          const col = 'hsl(' + c.hue + ',100%,' + (58 + pulse * 12) + '%)';
+          fg.save(); fg.globalAlpha = Math.max(0, alpha); fg.shadowColor = col; fg.shadowBlur = 10 + pulse * 10;
+          fg.strokeStyle = col; fg.fillStyle = col;
+          if (c.type === 'bug'){
+            const px = c.s, fr = PIX_BUG[Math.floor(lt * 4) % 2];
+            for (let rr2 = 0; rr2 < fr.length; rr2++) for (let q = 0; q < 7; q++)
+              if (fr[rr2][c.dir > 0 ? q : 6 - q] === 'X') fg.fillRect(x - 3.5 * px + q * px, y - 3 * px + rr2 * px, px - .5, px - .5);
+          } else {
+            const s = c.s, sq = 1 + Math.sin(lt * 6 + c.ph) * .12;
+            fg.lineWidth = 2; fg.beginPath();
+            fg.ellipse(x, y, s * sq, s * .8 / sq, 0, Math.PI, 0);
+            for (let k = 4; k >= 0; k--) fg.lineTo(x - s * sq + k * (s * sq * 2 / 4), y + (k % 2 ? 3 : 0));
+            fg.closePath(); fg.stroke();
+            fg.fillRect(x - s * .35, y - s * .35, 2.5, 2.5); fg.fillRect(x + s * .25, y - s * .35, 2.5, 2.5);
+            for (let k = 0; k < 4; k++){
+              const bx = x - s * .6 + k * (s * 1.2 / 3);
+              for (let d = 1; d <= 5; d++){
+                fg.globalAlpha = Math.max(0, alpha) * (1 - d / 7);
+                fg.beginPath(); fg.arc(bx + Math.sin(lt * 4 + d * .7 + k) * d * .9, y + 3 + d * s * .32, Math.max(.6, 2 - d * .25), 0, 6.28); fg.fill();
+              }
+            }
+          }
+          fg.restore();
+        }
+        if (alive) fxRaf = requestAnimationFrame(frame); else stopFx();
+      }
+      fxRaf = requestAnimationFrame(frame);
+    }
+
+    /* ----- share card for X ----- */
+    let lastResult = null;
+    const GRADE_COL = { SS:'#22E4F5', S:'#22E4F5', A:'#4DFF6A', B:'#FFC93C', C:'#FF2D9B', D:'#8FA3C8' };
+    const siteName = () => /^https?:$/.test(location.protocol) ? location.hostname.replace(/^www\./, '') : 'echo1onchain.xyz';
+    function shareText(r){
+      const url = /^https?:$/.test(location.protocol) ? location.href.split('#')[0] : 'https://echo1onchain.xyz';
+      return 'I got ' + (/^[AS]/.test(r.grade) ? 'an ' : 'a ') + r.grade + ' on ' + r.track + ' (' + r.diff + ') in Beat Breakerz 🎵 '
+        + r.score.toLocaleString() + ' points, ' + r.acc.toFixed(1) + '% accuracy. Can you beat it? via @EchoBotzSOL\n' + url;
+    }
+    function rrect(x, X, Y, w, h, rad){ x.beginPath(); x.moveTo(X + rad, Y); x.arcTo(X + w, Y, X + w, Y + h, rad); x.arcTo(X + w, Y + h, X, Y + h, rad); x.arcTo(X, Y + h, X, Y, rad); x.arcTo(X, Y, X + w, Y, rad); x.closePath(); }
+    function drawCard(r, logo){
+      const c = document.createElement('canvas'); c.width = 1200; c.height = 675;
+      const x = c.getContext('2d'), F = '"Chakra Petch", system-ui, sans-serif', M = '"JetBrains Mono", ui-monospace, monospace';
+      x.fillStyle = '#04060E'; x.fillRect(0, 0, 1200, 675);
+      let g = x.createRadialGradient(150, 80, 0, 150, 80, 620); g.addColorStop(0, 'rgba(255,45,155,.28)'); g.addColorStop(1, 'rgba(255,45,155,0)');
+      x.fillStyle = g; x.fillRect(0, 0, 1200, 675);
+      g = x.createRadialGradient(1080, 620, 0, 1080, 620, 640); g.addColorStop(0, 'rgba(34,228,245,.24)'); g.addColorStop(1, 'rgba(34,228,245,0)');
+      x.fillStyle = g; x.fillRect(0, 0, 1200, 675);
+      x.strokeStyle = 'rgba(34,228,245,.07)'; x.lineWidth = 1;
+      for (let i = 0; i <= 1200; i += 40){ x.beginPath(); x.moveTo(i + .5, 0); x.lineTo(i + .5, 675); x.stroke(); }
+      for (let j = 0; j <= 675; j += 40){ x.beginPath(); x.moveTo(0, j + .5); x.lineTo(1200, j + .5); x.stroke(); }
+      // card
+      rrect(x, 60, 50, 1080, 575, 28); x.fillStyle = 'rgba(10,16,34,.92)'; x.fill();
+      const bg = x.createLinearGradient(60, 50, 1140, 625); bg.addColorStop(0, '#FF2D9B'); bg.addColorStop(1, '#22E4F5');
+      x.save(); x.shadowColor = 'rgba(255,45,155,.6)'; x.shadowBlur = 24; x.lineWidth = 4; x.strokeStyle = bg; x.stroke(); x.restore();
+      // title: each letter in a lane color
+      x.font = '700 60px ' + F; x.textBaseline = 'alphabetic';
+      let tx = 110; const title = 'BEAT BREAKERZ';
+      [...title].forEach((ch, i) => {
+        const col = LANE[[...title.slice(0, i)].filter(k => k !== ' ').length % 4];
+        if (ch !== ' '){ x.save(); x.fillStyle = col; x.shadowColor = col; x.shadowBlur = 16; x.fillText(ch, tx, 150); x.restore(); }
+        tx += x.measureText(ch).width + 2;
+      });
+      x.fillStyle = '#F2F6FF'; x.font = '600 34px ' + F;
+      x.fillText(r.track, 110, 210);
+      x.fillStyle = '#8FA3C8'; x.font = '600 24px ' + F;
+      x.fillText(r.diff.toUpperCase() + (r.isNew ? '  ·  NEW BEST' : ''), 110, 248);
+      if (logo){
+        const s = Math.min(130 / logo.naturalWidth, 130 / logo.naturalHeight);
+        const w = logo.naturalWidth * s, h = logo.naturalHeight * s;
+        x.drawImage(logo, 1080 - w, 92, w, h);
+      }
+      // grade
+      const gc = GRADE_COL[r.grade];
+      x.save(); x.font = '700 230px ' + F; x.fillStyle = gc; x.shadowColor = gc; x.shadowBlur = 40; x.fillText(r.grade, 104, 520); x.restore();
+      x.fillStyle = '#8FA3C8'; x.font = '600 22px ' + F; x.fillText('GRADE', 112, 562);
+      // stats
+      const stats = [[r.score.toLocaleString(), 'SCORE'], [r.acc.toFixed(1) + '%', 'ACCURACY'], [String(r.maxCombo), 'MAX COMBO'], [r.counts.perfect + ' / ' + r.counts.great + ' / ' + r.counts.good + ' / ' + r.counts.miss, 'PERFECT / GREAT / GOOD / MISS']];
+      stats.forEach((st, i) => {
+        const bx = 520 + (i % 2) * 300, by = 300 + Math.floor(i / 2) * 140;
+        rrect(x, bx, by, 280, 120, 16); x.fillStyle = 'rgba(2,4,12,.75)'; x.fill();
+        x.lineWidth = 1.5; x.strokeStyle = 'rgba(34,228,245,.25)'; x.stroke();
+        const fit = (txt, size, fam) => { let z = size; do { x.font = '600 ' + z + 'px ' + fam; } while (x.measureText(txt).width > 236 && --z > 10); };
+        x.fillStyle = '#F2F6FF'; fit(st[0], 44, M); x.fillText(st[0], bx + 22, by + 62);
+        x.fillStyle = '#8FA3C8'; fit(st[1], 18, F); x.fillText(st[1], bx + 22, by + 96);
+      });
+      x.fillStyle = '#22E4F5'; x.font = '600 24px ' + F; x.textAlign = 'right';
+      x.fillText('Play at ' + siteName(), 1080, 588);
+      return c;
+    }
+    const canvasBlob = c => new Promise((res, rej) => { try { c.toBlob(b => b ? res(b) : rej(new Error('no image')), 'image/png'); } catch(e){ rej(e); } });
+    async function makeCard(r){
+      try { await document.fonts.ready; } catch(e){}
+      const logo = document.querySelector('img.logo');
+      const useLogo = logo && logo.complete && logo.naturalWidth > 0 && logo.style.display !== 'none';
+      try { return await canvasBlob(drawCard(r, useLogo ? logo : null)); }
+      catch(e){ return await canvasBlob(drawCard(r, null)); }   // logo couldn't be used (e.g. opened from a local file)
+    }
+    function prepareShare(r){
+      lastResult = r;
+      r.blobP = makeCard(r);
+      r.blobP.then(b => { try { r.file = new File([b], 'beat-breakerz-score.png', { type:'image/png' }); } catch(e){} }, () => {});
+      const note = $('bdShareNote'); note.classList.remove('ok');
+      note.textContent = useShareSheet() ? 'Opens your share menu with your score card. Pick X.' : 'Copies your score card, then opens X. Paste it into your post.';
+    }
+    const useShareSheet = () => window.matchMedia('(pointer: coarse)').matches && !!navigator.canShare;
+    function shareNote(msg){ const n = $('bdShareNote'); n.textContent = msg; n.classList.add('ok'); }
+    function downloadBlob(b){
+      const u = URL.createObjectURL(b), a = document.createElement('a');
+      a.href = u; a.download = 'beat-breakerz-score.png'; document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(u), 4000);
+    }
+    $('bdShare').addEventListener('click', () => {
+      const r = lastResult; if (!r) return;
+      const text = shareText(r);
+      if (useShareSheet() && r.file && navigator.canShare({ files:[r.file] })){
+        navigator.share({ files:[r.file], text }).catch(() => {});
+        return;
+      }
+      let copied;
+      try { copied = navigator.clipboard.write([new ClipboardItem({ 'image/png': r.blobP })]); }
+      catch(e){ copied = Promise.reject(e); }
+      window.open('https://x.com/intent/post?text=' + encodeURIComponent(text), '_blank', 'noopener');
+      copied.then(
+        () => shareNote('Card copied. In the X tab, click in the post and paste (Ctrl+V, or ⌘V on a Mac).'),
+        () => r.blobP.then(b => { downloadBlob(b); shareNote('Your card was saved as an image. Attach it to your post on X.'); }, () => shareNote('Couldn’t make the card image here, but X is open with your score.'))
+      );
+    });
 
     /* ----- input ----- */
     document.addEventListener('keydown', e => {
