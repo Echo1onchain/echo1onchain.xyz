@@ -650,6 +650,13 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 .bd-lb-dots button[aria-pressed="true"]{background:#FF2D9B; box-shadow:0 0 8px #FF2D9B}
 .bd-lb-dots button:focus-visible{outline:2px solid #22E4F5; outline-offset:2px}
 @media (prefers-reduced-motion: reduce){.bd-lb, .bd-give{animation:none} .bd-lb-list{transition:none}}
+
+/* DJ bot picker */
+.bd-bots{display:flex; gap:.4rem; flex-wrap:wrap}
+.bd-bots button{width:48px; height:48px; padding:0; border-radius:10px; border:2px solid var(--line); background:rgba(2,4,12,.8); cursor:pointer; overflow:hidden}
+.bd-bots button img{width:100%; height:100%; display:block; object-fit:cover}
+.bd-bots button[aria-pressed="true"]{border-color:#FF2D9B; box-shadow:0 0 12px rgba(255,45,155,.6)}
+.bd-bots button:focus-visible{outline:2px solid #22E4F5; outline-offset:2px}
 </style>
 </head>
 <body>
@@ -719,11 +726,12 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     <div id="bdRemoved"></div>
     <h3 class="bd-sub">Setup</h3>
     <div class="bd-setup">
+      <div class="bd-row" id="bdBotRow"><span>Your DJ bot</span><div class="bd-bots" id="bdBots" role="group" aria-label="Pick your DJ bot"></div></div>
       <div class="bd-row"><span>Hit keys</span><div class="bd-keys" id="bdKeys"></div></div>
       <div class="bd-row"><span>Note speed</span><div class="bd-range"><input type="range" id="bdSpeed" min="0.6" max="2.2" step="0.1" aria-label="Note speed"><output id="bdSpeedOut"></output></div></div>
       <div class="bd-row"><span>Audio offset</span><div class="bd-range"><input type="range" id="bdOffset" min="-150" max="150" step="5" aria-label="Audio offset in milliseconds"><output id="bdOffsetOut"></output></div></div>
     </div>
-    <p class="bd-hint">Notes are mapped from the beats in each song. Long notes with a tail are holds: keep the key down while the line lights up, then let go before the next note for bonus points. Good hits fill the rainbow meters; when they’re full, Overdrive gives double points for 8 seconds. Click a key box to rebind it, tap the lanes on a phone, and press Esc to pause. The page music pauses while you play.</p>
+    <p class="bd-hint">Notes are mapped from the beats in each song. Long notes with a tail are holds: keep the key down while the line lights up, then let go before the next note for bonus points. Your DJ bot dances when you’re on a streak and glitches when you miss. Good hits fill the rainbow meters; when they’re full, Overdrive gives double points for 8 seconds. Click a key box to rebind it, tap the lanes on a phone, and press Esc to pause. The page music pauses while you play.</p>
     </div>
     </div></div>
   </section>
@@ -1707,7 +1715,8 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         deckKick:[-1e9,-1e9], vu:[0,0], xf:0, xfTarget:0,
         energy:0, odUntil:-1, odFlash:-1e9, odBonus:0, padHit:[-1e9,-1e9,-1e9,-1e9],
         deck:[{ ang:0, spd:0, rip:[] }, { ang:0, spd:0, rip:[] }], lastFrame:performance.now(),
-        an, freq:new Uint8Array(an.frequencyBinCount), bass:0, mid:0, high:0, bassAvg:0, lastBeat:-1e9, beatN:0, sparks:[] };
+        an, freq:new Uint8Array(an.frequencyBinCount), bass:0, mid:0, high:0, bassAvg:0, lastBeat:-1e9, beatN:0, sparks:[],
+        bot:{ glitch:0, say:null, notes:[] }, botPos:null };
       addHolds(game.notes, settings.diff);
       $('bdHudTrack').textContent = tr.name;
       $('bdHudDiff').textContent = settings.diff[0].toUpperCase() + settings.diff.slice(1) + ' · ' + game.notes.length + ' notes' + (ranked ? ' · Ranked @' + ranked.handle : '');
@@ -1727,6 +1736,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       game.counts[kind]++;
       const od = inOverdrive();
       if (kind === 'miss'){
+        botOnMiss(game.combo);
         game.combo = 0;
         if (!od) game.energy = Math.max(0, game.energy - OD_MISS);
       } else {
@@ -1740,6 +1750,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         const side = lane < 2 ? 0 : 1;
         game.deckKick[side] = now; game.xfTarget = side ? 1 : -1; game.padHit[lane] = now;
         game.deck[side].rip.push({ t:now, col:LANE[lane], big:kind === 'perfect' });
+        botOnHit();
       }
       game.judge = { kind, t:performance.now() };
       $('bdScore').textContent = game.score.toLocaleString();
@@ -1770,7 +1781,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     function addEnergy(v){
       if (inOverdrive()) return;
       game.energy = Math.min(1, game.energy + v);
-      if (game.energy >= 1){ game.odUntil = songT() + OD_SECS; game.odFlash = performance.now(); }
+      if (game.energy >= 1){ game.odUntil = songT() + OD_SECS; game.odFlash = performance.now(); botSay(pick(BOT_LINES.od)); }
     }
     function flashJudge(kind){ game.judge = { kind, t:performance.now() }; }
     function tickHold(n, t){
@@ -2001,6 +2012,166 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       if (ready || od){ g2.shadowColor = g2.fillStyle; g2.shadowBlur = 10; }
       g2.fill(); g2.shadowBlur = 0;
     }
+
+    /* ----- ECHO Botz DJ: one of your crew dances when you're on a streak and glitches when you miss ----- */
+    const BOT_IMGS = Array.from(document.querySelectorAll('.crew-card img'));
+    const BOT_NAMES = BOT_IMGS.map(im => ((im.closest('figure') || {}).textContent || '').trim());
+    let botIdx = store.get('echoBeatBot', 2);
+    if (!(botIdx >= 0 && botIdx < BOT_IMGS.length)) botIdx = Math.max(0, Math.min(2, BOT_IMGS.length - 1));
+    const botParts = {};
+    function cutBot(i){
+      if (botParts[i]) return botParts[i];
+      const im = BOT_IMGS[i]; if (!im || !im.complete || !im.naturalWidth) return null;
+      const S = 240, c = document.createElement('canvas'); c.width = c.height = S;
+      const x = c.getContext('2d'); x.drawImage(im, 0, 0, S, S);
+      let d; try { d = x.getImageData(0, 0, S, S); } catch(e){ return null; }
+      // remove the card background: flood in from the edges through similar colors
+      const px = d.data, seen = new Uint8Array(S * S), q = [];
+      for (let k = 0; k < S; k++){ q.push(k, (S - 1) * S + k, k * S, k * S + S - 1); }
+      q.forEach(k => seen[k] = 1);
+      while (q.length){
+        const k = q.pop(), kx = k % S, ky = (k - kx) / S, o = k * 4;
+        const nb = [kx > 0 ? k - 1 : -1, kx < S - 1 ? k + 1 : -1, ky > 0 ? k - S : -1, ky < S - 1 ? k + S : -1];
+        for (const n of nb){
+          if (n < 0 || seen[n]) continue;
+          const p2 = n * 4;
+          if (Math.abs(px[p2] - px[o]) + Math.abs(px[p2+1] - px[o+1]) + Math.abs(px[p2+2] - px[o+2]) < 20){ seen[n] = 1; q.push(n); }
+        }
+      }
+      for (let k = 0; k < S * S; k++) if (seen[k]) px[k * 4 + 3] = 0;
+      x.putImageData(d, 0, 0);
+      // split into head, body and two hands so they can move on their own
+      const piece = (sx, sy, sw, sh) => { const pc = document.createElement('canvas'); pc.width = pc.height = S; pc.getContext('2d').drawImage(c, sx * S, sy * S, sw * S, sh * S, sx * S, sy * S, sw * S, sh * S); return pc; };
+      const cut = .645;
+      return (botParts[i] = { S, whole:c, head:piece(0, 0, 1, cut), body:piece(.32, cut, .36, 1 - cut), lh:piece(0, cut, .32, 1 - cut), rh:piece(.68, cut, .32, 1 - cut) });
+    }
+    function renderBots(){
+      const box = $('bdBots'); if (!box) return;
+      if (!BOT_IMGS.length){ $('bdBotRow').style.display = 'none'; return; }
+      box.innerHTML = '';
+      BOT_IMGS.forEach((im, i) => {
+        const b = document.createElement('button'); b.type = 'button';
+        b.setAttribute('aria-pressed', String(i === botIdx)); b.setAttribute('aria-label', 'DJ bot ' + (BOT_NAMES[i] || i + 1));
+        const th = document.createElement('img'); th.src = im.src; th.alt = ''; b.append(th);
+        b.addEventListener('click', () => { botIdx = i; store.set('echoBeatBot', i); renderBots(); });
+        box.append(b);
+      });
+    }
+    const BOT_LINES = {
+      10:'Let’s go!', 25:'On fire!', 50:'Unstoppable!', 75:'Too clean!', 100:'LEGEND!',
+      miss:['System error!', 'Rebooting…', 'Glitch!', 'Nooo!', 'Signal lost!'], od:['OVERDRIVE!!', 'Max power!', 'Turn it up!']
+    };
+    const pick = a => a[Math.floor(Math.random() * a.length)];
+    function botSay(text){ game.bot.say = { text, t:performance.now() }; }
+    function botOnHit(){
+      const c = game.combo;
+      if (BOT_LINES[c]) botSay(BOT_LINES[c]); else if (c > 100 && c % 50 === 0) botSay(c + ' combo!');
+    }
+    function botOnMiss(lostCombo){
+      const now = performance.now();
+      game.bot.glitch = now + (lostCombo >= 10 ? 700 : 320);
+      game.bot.glitchStart = now;
+      if (lostCombo >= 10) botSay(pick(BOT_LINES.miss));
+    }
+    function drawBot(t, now){
+      const pos = game.botPos; if (!pos) return;
+      const parts = cutBot(botIdx); if (!parts) return;
+      const { x, y, size } = pos, S = parts.S, sc = size / S, bt = game.bot;
+      const sinceBeat = now - game.lastBeat, b = Math.max(0, 1 - sinceBeat / 260), even = game.beatN % 2 === 0;
+      const od = inOverdrive(), streak = game.combo >= 10 || od, glitching = now < bt.glitch;
+      const power = od ? 1 : Math.min(1, (game.combo - 5) / 45);
+      // pick the dance move: changes every 8 beats while on a streak
+      const move = od ? 3 : Math.floor(game.beatN / 8) % 3;
+      let rot = 0, dy = 0, headDy = 0, headRot = 0, lhx = 0, lhy = 0, rhx = 0, rhy = 0, sq = 1;
+      if (!streak){
+        dy = -b * 3; rot = Math.sin(now / 700) * .03; lhy = -b * 3; rhy = -b * 3;
+      } else if (move === 0){                       // bop: head nods, hands pump one at a time
+        headDy = b * 8 * (.5 + power); dy = -b * 6 * power;
+        lhy = even ? -b * 22 * (.5 + power) : 0; rhy = even ? 0 : -b * 22 * (.5 + power);
+        sq = 1 - b * .05;
+      } else if (move === 1){                       // sway: lean side to side on the beat
+        const dir = even ? 1 : -1, ease = 1 - Math.pow(1 - Math.min(1, sinceBeat / 200), 3);
+        rot = dir * (.16 * power + .05) * (1 - ease * .3); headRot = -rot * .4;
+        lhy = dir > 0 ? -16 * power : 0; rhy = dir < 0 ? -16 * power : 0; dy = -b * 4;
+      } else if (move === 2){                       // shuffle: slide sideways, hands out
+        const dir = even ? 1 : -1;
+        dy = -b * 10 * power; rot = dir * .05; lhx = -b * 10; rhx = b * 10; lhy = -b * 8; rhy = -b * 8; headRot = dir * .08 * b;
+      } else {                                       // overdrive: raise the roof
+        const up = -30 - b * 14; lhy = up; rhy = up; lhx = -6; rhx = 6; dy = -b * 12; headDy = b * 6;
+        headRot = Math.sin(now / 160) * .08; sq = 1 - b * .06;
+      }
+      if (glitching){ const k = (bt.glitch - now) / 700; rot += (Math.random() - .5) * .3 * k; dy += (Math.random() - .5) * 10 * k; }
+      // stage light under the bot, pulsing with the bass
+      g2.save(); g2.globalAlpha = .35 + game.bass * .5;
+      const col = od ? 'hsl(' + ((now / 5) % 360) + ',100%,62%)' : streak ? '#FF2D9B' : '#22E4F5';
+      g2.fillStyle = col; g2.shadowColor = col; g2.shadowBlur = 20 + game.bass * 20;
+      g2.beginPath(); g2.ellipse(x, y, size * .42, size * .07, 0, 0, Math.PI * 2); g2.fill(); g2.restore();
+      if (od){
+        g2.save(); const ag = g2.createRadialGradient(x, y - size * .55, 0, x, y - size * .55, size * .75);
+        ag.addColorStop(0, 'hsla(' + ((now / 4) % 360) + ',100%,60%,.35)'); ag.addColorStop(1, 'hsla(' + ((now / 4 + 120) % 360) + ',100%,60%,0)');
+        g2.fillStyle = ag; g2.fillRect(x - size, y - size * 1.4, size * 2, size * 1.5); g2.restore();
+      }
+      // build the bot into an offscreen layer so it can be glitched as one piece
+      const L2 = game.botLayer || (game.botLayer = document.createElement('canvas'));
+      const LW = Math.ceil(size * 1.6), LH = Math.ceil(size * 1.6);
+      if (L2.width !== LW || L2.height !== LH){ L2.width = LW; L2.height = LH; }
+      const lx = L2.getContext('2d'); lx.setTransform(1, 0, 0, 1, 0, 0); lx.clearRect(0, 0, LW, LH);
+      lx.translate(LW / 2, LH - size * .05); lx.rotate(rot); lx.scale(1 / sq, sq); lx.translate(-size / 2, -size);
+      const piece = (cv2, ox2, oy2, r, px, py) => { lx.save(); lx.translate(px + ox2, py + oy2); lx.rotate(r); lx.drawImage(cv2, -px, -py, size, size); lx.restore(); };
+      piece(parts.body, 0, headDy * .3, 0, size / 2, size * .8);
+      piece(parts.head, 0, headDy, headRot, size / 2, size * .62);
+      piece(parts.lh, lhx, lhy, lhy * -.004, size * .16, size * .82);
+      piece(parts.rh, rhx, rhy, rhy * .004, size * .84, size * .82);
+      const dx0 = x - LW / 2, dy0 = y + dy - LH + size * .05;
+      if (glitching){
+        const k = Math.max(0, (bt.glitch - now) / 700), bands = 9, bh = LH / bands;
+        // pink and cyan ghost copies + sliced, shifted bands
+        const ghost = game.botGhost || (game.botGhost = document.createElement('canvas'));
+        ghost.width = LW; ghost.height = LH; const gx = ghost.getContext('2d');
+        for (const [gc, off] of [['#FF2D9B', -6], ['#22E4F5', 6]]){
+          gx.globalCompositeOperation = 'source-over'; gx.clearRect(0, 0, LW, LH); gx.drawImage(L2, 0, 0);
+          gx.globalCompositeOperation = 'source-in'; gx.fillStyle = gc; gx.fillRect(0, 0, LW, LH);
+          g2.globalAlpha = .55 * (.4 + k); g2.drawImage(ghost, dx0 + off * (.5 + k), dy0); g2.globalAlpha = 1;
+        }
+        for (let i = 0; i < bands; i++){
+          const sh = Math.random() < .5 ? (Math.random() - .5) * 26 * (.3 + k) : 0;
+          g2.drawImage(L2, 0, i * bh, LW, bh, dx0 + sh, dy0 + i * bh, LW, bh);
+        }
+        g2.fillStyle = 'rgba(255,255,255,.08)';
+        for (let yy = dy0; yy < dy0 + LH; yy += 4) g2.fillRect(dx0, yy, LW, 1);
+        if (Math.random() < .5){ g2.font = '700 ' + Math.round(size * .11) + 'px "JetBrains Mono", monospace'; g2.fillStyle = '#FF2D9B'; g2.textAlign = 'center'; g2.fillText('ERR', x + (Math.random() - .5) * 20, y - size * .5); }
+      } else {
+        if (streak){ g2.save(); g2.shadowColor = od ? 'hsl(' + ((now / 5) % 360) + ',100%,60%)' : '#FF2D9B'; g2.shadowBlur = 10 + b * 18; g2.drawImage(L2, dx0, dy0); g2.restore(); }
+        else g2.drawImage(L2, dx0, dy0);
+      }
+      // little music notes float up while dancing
+      if (streak && sinceBeat < 30 && (!bt.lastNote || now - bt.lastNote > 250)){
+        bt.lastNote = now; bt.notes.push({ x:x + (Math.random() - .5) * size * .7, y:y - size * .9, born:now, h:Math.random() * 360 });
+      }
+      bt.notes = bt.notes.filter(n => now - n.born < 1100);
+      g2.textAlign = 'center'; g2.textBaseline = 'middle';
+      for (const n of bt.notes){
+        const q = (now - n.born) / 1100;
+        g2.globalAlpha = 1 - q; g2.fillStyle = od ? 'hsl(' + n.h + ',100%,66%)' : '#22E4F5';
+        g2.font = '700 ' + Math.round(size * .15) + 'px ' + FONT; g2.fillText(n.h > 180 ? '♪' : '♫', n.x + Math.sin(q * 6) * 6, n.y - q * size * .5);
+      }
+      g2.globalAlpha = 1;
+      // speech bubble
+      if (bt.say && now - bt.say.t < 1600){
+        const q = (now - bt.say.t) / 1600, pop = Math.min(1, (now - bt.say.t) / 120);
+        const fs = Math.max(11, Math.round(size * .12));
+        g2.font = '700 ' + fs + 'px ' + FONT;
+        const tw = g2.measureText(bt.say.text).width + 18, bh2 = fs + 12;
+        const bx = Math.max(6, Math.min(x - tw / 2, (game.botMaxX || 9999) - tw)), by = y + dy - size * 1.12 - bh2;
+        g2.save(); g2.globalAlpha = q > .8 ? (1 - q) / .2 : 1;
+        g2.translate(bx + tw / 2, by + bh2 / 2); g2.scale(pop, pop); g2.translate(-(bx + tw / 2), -(by + bh2 / 2));
+        rr(bx, by, tw, bh2, 9); g2.fillStyle = '#0A1022'; g2.fill();
+        const bc = glitching ? '#FF2D9B' : od ? 'hsl(' + ((now / 5) % 360) + ',100%,62%)' : '#22E4F5';
+        g2.strokeStyle = bc; g2.lineWidth = 2; g2.shadowColor = bc; g2.shadowBlur = 10; g2.stroke(); g2.shadowBlur = 0;
+        g2.fillStyle = '#F2F6FF'; g2.fillText(bt.say.text, bx + tw / 2, by + bh2 / 2 + 1);
+        g2.restore();
+      }
+    }
     function listen(now){
       const f = game.freq; game.an.getByteFrequencyData(f);
       const avg = (a, b) => { let s2 = 0; for (let i = a; i <= b; i++) s2 += f[i]; return s2 / (b - a + 1) / 255; };
@@ -2022,6 +2193,12 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         const w = Math.min(room - 10, 360), cy = Math.max(120 + w * .51, Math.min(hitY - w * .2, H * .52));
         drawDeck(ox / 2 - 6, cy, w, 0, t, now);
         drawDeck(Wd - ox / 2 + 6, cy, w, 1, t, now);
+        const top = cy - w * .51, space = top - 74;
+        game.botPos = space >= 70 ? { x:ox / 2 - 6, y:top - 6, size:Math.min(150, space * .82) } : null;
+        game.botMaxX = ox - 30;
+      } else {
+        game.botPos = H - hitY > 90 ? { x:Math.max(34, ox / 2 + lw * .45), y:H - 10, size:Math.min(64, (H - hitY) * .55) } : null;
+        game.botMaxX = Wd - 6;
       }
       // mixer housing around the lanes, with level meters on both sides
       const pad = ox >= 40 ? 26 : 0;
@@ -2165,6 +2342,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         g2.beginPath(); g2.ellipse(cx, hitY, lw*.35 + p*lw*.5, 10 + p*28, 0, 0, Math.PI*2); g2.stroke();
         g2.globalAlpha = 1;
       }
+      drawBot(t, now);
       // overdrive: one rainbow shockwave + title when it kicks in, then a small timer above the lanes
       const odAge = now - game.odFlash;
       if (odAge < 900){
@@ -2640,6 +2818,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     });
     $('bdHandle').addEventListener('change', () => { const h = cleanHandle($('bdHandle').value); if (h && !goodHandle(h)) giveMsg('X handles use letters, numbers and _ only, up to 15 characters.'); loadTop(); });
 
+    renderBots();
     renderSettings(); renderTracks();
     getChartBook().then(renderTracks);
     loadTop();
