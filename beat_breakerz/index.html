@@ -710,7 +710,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       <div class="bd-row"><span>Note speed</span><div class="bd-range"><input type="range" id="bdSpeed" min="0.6" max="2.2" step="0.1" aria-label="Note speed"><output id="bdSpeedOut"></output></div></div>
       <div class="bd-row"><span>Audio offset</span><div class="bd-range"><input type="range" id="bdOffset" min="-150" max="150" step="5" aria-label="Audio offset in milliseconds"><output id="bdOffsetOut"></output></div></div>
     </div>
-    <p class="bd-hint">Notes are mapped from the beats in each song. Click a key box to rebind it, tap the lanes on a phone, and press Esc to pause. The page music pauses while you play.</p>
+    <p class="bd-hint">Notes are mapped from the beats in each song. Long notes with a tail are holds: keep the key down while the line lights up, then let go before the next note for bonus points. Click a key box to rebind it, tap the lanes on a phone, and press Esc to pause. The page music pauses while you play.</p>
     </div>
     </div></div>
   </section>
@@ -751,7 +751,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     <div class="bd-grade" id="bdRGrade">S</div>
     <p class="bd-psub" id="bdRNew" style="margin:0"></p>
     <div class="bd-stats">
-      <div><b id="bdRScore">0</b><span>Score</span></div>
+      <div><b id="bdRScore">0</b><span id="bdRScoreLbl">Score</span></div>
       <div><b id="bdRAcc">0%</b><span>Accuracy</span></div>
       <div><b id="bdRCombo">0</b><span>Max combo</span></div>
       <div><b id="bdRHits">0</b><span>Perfect / Great / Good / Miss</span></div>
@@ -1300,7 +1300,31 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
   (function(){
     const $ = id => document.getElementById(id);
     const LANE = ['#FF2D9B','#FFC93C','#4DFF6A','#22E4F5'];
-    const JUDGE = { perfect:'#22E4F5', great:'#4DFF6A', good:'#FFC93C', miss:'#8FA3C8' };
+    const JUDGE = { perfect:'#22E4F5', great:'#4DFF6A', good:'#FFC93C', miss:'#8FA3C8', hold:'#FF2D9B', early:'#8FA3C8', late:'#FFC93C' };
+    const JUDGE_LABEL = { hold:'Hold!', early:'Let go early', late:'Too late' };
+
+    /* ----- hold notes: the longest gaps in a chart become holds. Hold the key down, then let go before the next note.
+       (The leaderboard server uses the same rule to know each song's highest possible hold bonus.) ----- */
+    const HOLD_MIN_GAP = { easy:.9, normal:.7, hard:.55 };
+    const HOLD_SHARE = .05;           // about 1 in 20 notes, picked from the longest gaps
+    const HOLD_TICK = 10, HOLD_DONE = 100;
+    function addHolds(ns, diff){
+      const cand = [];
+      ns.forEach((n, i) => {
+        const chord = (i > 0 && Math.abs(ns[i-1].t - n.t) < .001) || (i + 1 < ns.length && Math.abs(ns[i+1].t - n.t) < .001);
+        if (chord) return;
+        const gap = i + 1 < ns.length ? ns[i+1].t - n.t : 5;
+        if (gap < HOLD_MIN_GAP[diff]) return;
+        cand.push({ n, gap, key:Math.floor(gap * 100 + 1e-6) });
+      });
+      cand.sort((a, b) => (b.key - a.key) || (a.n.t - b.n.t));
+      cand.slice(0, Math.round(ns.length * HOLD_SHARE)).forEach(c => {
+        const dur = Math.min(c.gap - .25, 4);
+        c.n.end = c.n.t + dur;
+        c.n.relBy = c.n.t + c.gap;              // the moment the next note arrives
+        c.n.ticks = 0;
+      });
+    }
     const FONT = '"Chakra Petch", system-ui, sans-serif';
 
     /* saved choices (keys start with "echo", like the rest of the page) */
@@ -1664,7 +1688,10 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       src.start(t0);
       game = { tr, src, t0, notes:chart.map(n => ({ t:n.t, lane:n.lane, hit:false, miss:false })).sort((a, b) => a.t - b.t),
         head:0, score:0, combo:0, maxCombo:0, counts:{ perfect:0, great:0, good:0, miss:0 }, judge:null,
-        pressed:[0,0,0,0], glow:[0,0,0,0], fx:[], dur:buf.duration, paused:false, ended:false, ranked:ranked || null, rankNote:rankNote || '' };
+        pressed:[0,0,0,0], glow:[0,0,0,0], fx:[], dur:buf.duration, paused:false, ended:false, ranked:ranked || null, rankNote:rankNote || '',
+        holding:[null,null,null,null], holdBonus:0, glitch:[], lastSpark:0,
+        deckKick:[-1e9,-1e9], vu:[0,0], xf:0, xfTarget:0 };
+      addHolds(game.notes, settings.diff);
       $('bdHudTrack').textContent = tr.name;
       $('bdHudDiff').textContent = settings.diff[0].toUpperCase() + settings.diff.slice(1) + ' · ' + game.notes.length + ' notes' + (ranked ? ' · Ranked @' + ranked.handle : '');
       $('bdScore').textContent = '0'; $('bdAcc').textContent = '100.0%';
@@ -1686,6 +1713,8 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         game.combo++; game.maxCombo = Math.max(game.maxCombo, game.combo);
         game.score += Math.round({ perfect:300, great:200, good:100 }[kind] * (1 + Math.min(game.combo, 100) / 100));
         game.fx.push({ lane, t:performance.now() });
+        const side = lane < 2 ? 0 : 1;
+        game.deckKick[side] = performance.now(); game.vu[side] = Math.min(1, game.vu[side] + .35); game.xfTarget = side ? 1 : -1;
       }
       game.judge = { kind, t:performance.now() };
       $('bdScore').textContent = game.score.toLocaleString();
@@ -1703,11 +1732,39 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         const d = Math.abs(n.t - t);
         if (d < bd){ bd = d; best = n; }
       }
-      if (best && bd <= W8.good){ best.hit = true; judge(bd <= W8.perfect ? 'perfect' : bd <= W8.great ? 'great' : 'good', lane); }
+      if (best && bd <= W8.good){
+        best.hit = true; judge(bd <= W8.perfect ? 'perfect' : bd <= W8.great ? 'great' : 'good', lane);
+        if (best.end){ best.holding = true; game.holding[lane] = best; }
+      }
     }
-    const release = lane => { if (game) game.pressed[lane] = 0; };
+    function flashJudge(kind){ game.judge = { kind, t:performance.now() }; }
+    function tickHold(n, t){
+      const tk = Math.max(0, Math.floor((Math.min(t, n.end) - n.t) * 10 + 1e-9));
+      if (tk > n.ticks){ const add = (tk - n.ticks) * HOLD_TICK; n.ticks = tk; game.score += add; game.holdBonus += add; $('bdScore').textContent = game.score.toLocaleString(); }
+    }
+    function endHold(lane, how){
+      const n = game.holding[lane]; if (!n) return;
+      game.holding[lane] = null; n.holding = false;
+      if (how === 'done'){
+        n.done = true; game.score += HOLD_DONE; game.holdBonus += HOLD_DONE;
+        $('bdScore').textContent = game.score.toLocaleString();
+        game.fx.push({ lane, t:performance.now() }); flashJudge('hold');
+      } else { n.broke = true; flashJudge(how); }
+    }
+    function release(lane){
+      if (!game) return;
+      game.pressed[lane] = 0;
+      const n = game.holding[lane]; if (!n || game.ended) return;
+      const t = songT(); tickHold(n, t);
+      endHold(lane, t >= n.end - .2 ? 'done' : 'early');
+    }
 
     function update(t){
+      for (let l = 0; l < 4; l++){
+        const n = game.holding[l]; if (!n) continue;
+        tickHold(n, t);
+        if (t > n.relBy) endHold(l, 'late');
+      }
       const ns = game.notes;
       while (game.head < ns.length){
         const n = ns[game.head];
@@ -1735,10 +1792,147 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       const lw = Math.min(104, (Wd - 24) / 4), ox = (Wd - lw*4) / 2;
       return { Wd, H, lw, ox, hitY:H - Math.max(96, H * .15) };
     }
+
+    /* ----- DJ rig on the play screen: a turntable on each side, a mixer housing around the lanes ----- */
+    const vinylCache = {};
+    function vinylImg(R, col){
+      const key = Math.round(R) + col + dpr;
+      if (vinylCache[key]) return vinylCache[key];
+      const c = document.createElement('canvas'), size = Math.ceil((R * 2 + 4) * dpr);
+      c.width = c.height = size;
+      const x = c.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const m = R + 2;
+      x.beginPath(); x.arc(m, m, R, 0, Math.PI * 2); x.fillStyle = '#07080f'; x.fill();
+      for (let r = R * .36, k = 0; r < R * .97; r += R / 26, k++){
+        x.beginPath(); x.arc(m, m, r, 0, Math.PI * 2);
+        x.strokeStyle = k % 2 ? 'rgba(255,255,255,.045)' : 'rgba(255,255,255,.075)'; x.lineWidth = 1; x.stroke();
+      }
+      x.beginPath(); x.arc(m, m, R * .66, 0, Math.PI * 2); x.strokeStyle = 'rgba(255,255,255,.14)'; x.lineWidth = 2; x.stroke();
+      x.beginPath(); x.arc(m, m, R - 1, 0, Math.PI * 2); x.strokeStyle = 'rgba(255,255,255,.16)'; x.lineWidth = 2; x.stroke();
+      const lg = x.createRadialGradient(m, m, 0, m, m, R * .32);
+      lg.addColorStop(0, '#ffffff'); lg.addColorStop(.18, col); lg.addColorStop(1, col);
+      x.beginPath(); x.arc(m, m, R * .32, 0, Math.PI * 2); x.fillStyle = lg; x.fill();
+      x.fillStyle = 'rgba(4,6,14,.85)'; x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.font = '700 ' + Math.round(R * .1) + 'px ' + FONT; x.fillText('ECHO1', m, m - R * .17);
+      x.font = '600 ' + Math.round(R * .055) + 'px ' + FONT; x.fillText('BEAT BREAKERZ', m, m + R * .17);
+      x.fillRect(m - R * .2, m + R * .07, R * .4, R * .018);
+      x.beginPath(); x.arc(m, m, R * .035, 0, Math.PI * 2); x.fillStyle = '#d7dce8'; x.fill();
+      return (vinylCache[key] = c);
+    }
+    function drawDeck(cx, cy, w, side, t, now){
+      const h = w * 1.02, L = cx - w / 2, T = cy - h / 2, R = w * .36;
+      const accent = side ? '#22E4F5' : '#FF2D9B', label = side ? '#22E4F5' : '#FF2D9B';
+      // plinth
+      rr(L, T, w, h, 18);
+      const pg = g2.createLinearGradient(L, T, L + w, T + h); pg.addColorStop(0, '#111733'); pg.addColorStop(1, '#070a17');
+      g2.fillStyle = pg; g2.fill();
+      g2.save(); g2.shadowColor = accent; g2.shadowBlur = 14; g2.strokeStyle = accent; g2.globalAlpha = .55; g2.lineWidth = 2; g2.stroke(); g2.restore();
+      for (const [sx, sy] of [[L + 10, T + 10], [L + w - 10, T + 10], [L + 10, T + h - 10], [L + w - 10, T + h - 10]]){
+        g2.beginPath(); g2.arc(sx, sy, 2.2, 0, Math.PI * 2); g2.fillStyle = 'rgba(143,163,200,.35)'; g2.fill();
+      }
+      const rx = L + w * .08 + R, ry = T + h * .46;
+      // platter + strobe dots that pulse on hits from this side
+      const kickAge = now - game.deckKick[side], kick = kickAge < 300 ? 1 - kickAge / 300 : 0;
+      g2.beginPath(); g2.arc(rx, ry, R * 1.05, 0, Math.PI * 2); g2.fillStyle = '#1a2038'; g2.fill();
+      for (let k = 0; k < 40; k++){
+        const a = k / 40 * Math.PI * 2 + (t > 0 ? t * .25 : 0);
+        g2.beginPath(); g2.arc(rx + Math.cos(a) * R * 1.1, ry + Math.sin(a) * R * 1.1, 1.6, 0, Math.PI * 2);
+        g2.fillStyle = accent; g2.globalAlpha = .25 + kick * .7; g2.fill();
+      }
+      g2.globalAlpha = 1;
+      // the record spins at 33 1/3 rpm with the song, with a little scratch wiggle on hits
+      const base = Math.max(0, t) * Math.PI * 2 * (100 / 3 / 60);
+      const wig = kickAge < 260 ? Math.sin(kickAge / 26) * .22 * (1 - kickAge / 260) : 0;
+      const img = vinylImg(R, label);
+      g2.save(); g2.translate(rx, ry); g2.rotate(base - wig);
+      g2.drawImage(img, -(R + 2), -(R + 2), (R + 2) * 2, (R + 2) * 2); g2.restore();
+      // light reflection (doesn't spin)
+      g2.save(); g2.beginPath(); g2.arc(rx, ry, R, 0, Math.PI * 2); g2.clip();
+      const sh = g2.createLinearGradient(rx - R, ry - R, rx + R, ry + R);
+      sh.addColorStop(.3, 'rgba(255,255,255,0)'); sh.addColorStop(.47, 'rgba(255,255,255,.09)'); sh.addColorStop(.53, 'rgba(255,255,255,.09)'); sh.addColorStop(.7, 'rgba(255,255,255,0)');
+      g2.fillStyle = sh; g2.fillRect(rx - R, ry - R, R * 2, R * 2); g2.restore();
+      if (kick){ g2.save(); g2.globalAlpha = kick * .5; g2.shadowColor = label; g2.shadowBlur = 30; g2.beginPath(); g2.arc(rx, ry, R * .32, 0, Math.PI * 2); g2.strokeStyle = label; g2.lineWidth = 3; g2.stroke(); g2.restore(); }
+      // tonearm: the needle walks inward as the song plays
+      const px = L + w * .89, py = T + h * .13;
+      const prog = Math.max(0, Math.min(1, t / game.dur));
+      const armLen = Math.hypot(rx + R * .93 * Math.cos(-.35) - px, ry + R * .93 * Math.sin(-.35) - py);
+      const rr2 = R * (.93 - .5 * prog), d = Math.hypot(rx - px, ry - py);
+      let nx = rx + rr2, ny = ry;
+      if (d < armLen + rr2 && d > Math.abs(armLen - rr2)){
+        const a = (armLen * armLen - rr2 * rr2 + d * d) / (2 * d), hh = Math.sqrt(Math.max(0, armLen * armLen - a * a));
+        const mx = px + a * (rx - px) / d, my = py + a * (ry - py) / d;
+        const ax = mx + hh * (ry - py) / d, ay = my - hh * (rx - px) / d, bx = mx - hh * (ry - py) / d, by = my + hh * (rx - px) / d;
+        if (ay > by){ nx = ax; ny = ay; } else { nx = bx; ny = by; }
+      }
+      const ang = Math.atan2(ny - py, nx - px);
+      g2.save(); g2.translate(px, py); g2.rotate(ang);
+      g2.fillStyle = '#2a3150'; g2.fillRect(-w * .1, -5, w * .06, 10);
+      g2.strokeStyle = '#c9d2e8'; g2.lineWidth = 3; g2.lineCap = 'round';
+      g2.beginPath(); g2.moveTo(-w * .04, 0); g2.lineTo(armLen - 12, 0); g2.stroke();
+      g2.fillStyle = '#c9d2e8'; g2.fillRect(armLen - 14, -5, 16, 10);
+      g2.restore();
+      g2.beginPath(); g2.arc(px, py, w * .045, 0, Math.PI * 2); g2.fillStyle = '#1a2038'; g2.fill();
+      g2.strokeStyle = 'rgba(201,210,232,.6)'; g2.lineWidth = 2; g2.stroke();
+      // pitch fader
+      const fx = L + w * .92, fy1 = T + h * .48, fy2 = T + h * .9;
+      g2.fillStyle = '#05070f'; rr(fx - 3, fy1, 6, fy2 - fy1, 3); g2.fill();
+      for (let k = 0; k <= 8; k++){ g2.fillStyle = 'rgba(143,163,200,.3)'; g2.fillRect(fx - 11, fy1 + k * (fy2 - fy1) / 8, 5, 1); }
+      g2.fillStyle = '#c9d2e8'; rr(fx - 9, (fy1 + fy2) / 2 - 6, 18, 12, 3); g2.fill();
+      g2.fillStyle = accent; g2.fillRect(fx - 7, (fy1 + fy2) / 2 - 1, 14, 2);
+      // start button with a play light
+      const on = t >= 0 && !game.paused;
+      const bx2 = L + w * .06, by2 = T + h * .9 - 16;
+      g2.fillStyle = '#1a2038'; rr(bx2, by2, 34, 20, 4); g2.fill();
+      g2.beginPath(); g2.arc(bx2 + 44, by2 + 10, 3.5, 0, Math.PI * 2);
+      g2.fillStyle = on ? '#4DFF6A' : '#2a3150'; g2.shadowColor = '#4DFF6A'; g2.shadowBlur = on ? 10 : 0; g2.fill(); g2.shadowBlur = 0;
+    }
+    function drawRig(t, now, Wd, H, lw, ox, hitY){
+      // turntables, only when there's room beside the lanes
+      const room = ox - 30;
+      if (room >= 140){
+        const w = Math.min(room - 10, 360), cy = Math.max(120 + w * .51, Math.min(hitY - w * .2, H * .52));
+        drawDeck(ox / 2 - 6, cy, w, 0, t, now);
+        drawDeck(Wd - ox / 2 + 6, cy, w, 1, t, now);
+      }
+      // mixer housing around the lanes, with level meters on both sides
+      const pad = ox >= 40 ? 26 : 0;
+      const hx = ox - pad, hw = lw * 4 + pad * 2;
+      const hg = g2.createLinearGradient(hx, 0, hx + hw, 0);
+      hg.addColorStop(0, '#0c1128'); hg.addColorStop(.5, '#090d1f'); hg.addColorStop(1, '#0c1128');
+      g2.fillStyle = hg; g2.fillRect(hx, 0, hw, H);
+      g2.fillStyle = 'rgba(182,124,255,.35)'; g2.fillRect(hx, 0, 1.5, H); g2.fillRect(hx + hw - 1.5, 0, 1.5, H);
+      for (let side = 0; side < 2; side++) game.vu[side] *= .93;
+      if (pad){
+        const top = H * .16, bot = hitY - 24, segs = 18, sh = (bot - top) / segs;
+        for (let side = 0; side < 2; side++){
+          const mx = side ? ox + lw * 4 + 8 : ox - 18, lit = Math.round(game.vu[side] * segs);
+          for (let k = 0; k < segs; k++){
+            const y = bot - (k + 1) * sh, on = k < lit;
+            const col = k > segs * .82 ? '#FF2D9B' : k > segs * .6 ? '#FFC93C' : '#4DFF6A';
+            g2.fillStyle = col; g2.globalAlpha = on ? .95 : .12;
+            if (on){ g2.shadowColor = col; g2.shadowBlur = 8; }
+            g2.fillRect(mx, y + 1, 10, sh - 3); g2.shadowBlur = 0;
+          }
+          g2.globalAlpha = 1;
+        }
+      }
+      // crossfader slides toward whichever side was hit last
+      if (H - hitY > 100){
+        game.xf += (game.xfTarget - game.xf) * .12;
+        const cxm = ox + lw * 2, sw = Math.min(lw * 1.8, 170), sy = hitY + 72;
+        g2.fillStyle = '#05070f'; rr(cxm - sw / 2, sy - 3, sw, 6, 3); g2.fill();
+        g2.fillStyle = 'rgba(143,163,200,.35)';
+        for (let k = 0; k <= 6; k++) g2.fillRect(cxm - sw / 2 + k * sw / 6, sy + 9, 1, 5);
+        const kx = cxm + game.xf * (sw / 2 - 12);
+        g2.fillStyle = '#c9d2e8'; rr(kx - 12, sy - 9, 24, 18, 4); g2.fill();
+        g2.fillStyle = game.xf < 0 ? '#FF2D9B' : '#22E4F5'; g2.fillRect(kx - 1, sy - 7, 2, 14);
+      }
+    }
     function draw(t){
       const { Wd, H, lw, ox, hitY } = layout(), now = performance.now();
       g2.setTransform(dpr, 0, 0, dpr, 0, 0);
       g2.clearRect(0, 0, Wd, H);
+      drawRig(t, now, Wd, H, lw, ox, hitY);
       for (let i = 0; i < 4; i++){
         const x = ox + i*lw;
         g2.fillStyle = i % 2 ? 'rgba(18,26,52,.78)' : 'rgba(12,18,38,.78)'; g2.fillRect(x, 0, lw, H);
@@ -1761,6 +1955,60 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         g2.fillText(keyLabel(keys[i]), ox + i*lw + lw/2, hitY + 40);
       }
       const pps = H * .62 * settings.speed, ns = game.notes;
+      // hold tails (drawn first so the note heads sit on top)
+      for (let i = Math.max(0, game.head - 8); i < ns.length; i++){
+        const n = ns[i]; if (!n.end || n.holding || n.done) continue;
+        const yHead = hitY - (n.t - t) * pps, yEnd = hitY - (n.end - t) * pps;
+        if (yHead < -30) break;
+        if (yEnd > H + 30) continue;
+        const cx = ox + n.lane*lw + lw/2, tw = Math.max(8, lw * .22);
+        g2.globalAlpha = n.miss || n.broke ? .12 : .32; g2.fillStyle = LANE[n.lane];
+        rr(cx - tw/2, yEnd, tw, Math.max(0, yHead - yEnd), tw/2); g2.fill();
+        g2.globalAlpha = n.miss || n.broke ? .1 : .5; g2.strokeStyle = LANE[n.lane]; g2.lineWidth = 1.5; g2.stroke();
+        g2.globalAlpha = 1;
+      }
+      for (let l = 0; l < 4; l++){
+        const n = game.holding[l]; if (!n) continue;
+        const yEnd = Math.min(hitY, hitY - (n.end - t) * pps), cx = ox + l*lw + lw/2, tw = Math.max(10, lw * .26);
+        const col = LANE[l], len = hitY - yEnd;
+        if (len > 1){
+          // lit tail: bright neon with a white core, sliced sideways now and then like a glitch
+          const slices = 6, sh = len / slices;
+          for (let k = 0; k < slices; k++){
+            const jit = Math.random() < .12 ? (Math.random() - .5) * tw * .9 : 0;
+            g2.shadowColor = col; g2.shadowBlur = 22; g2.fillStyle = col;
+            g2.fillRect(cx - tw/2 + jit, yEnd + k*sh, tw, sh + .5);
+            g2.shadowBlur = 0; g2.fillStyle = '#ffffff'; g2.globalAlpha = .75;
+            g2.fillRect(cx - tw*.14 + jit, yEnd + k*sh, tw*.28, sh + .5); g2.globalAlpha = 1;
+          }
+        }
+        // neon glitch bits flying off the lit line
+        if (now - game.lastSpark > 16 && len > 4){
+          game.lastSpark = now;
+          const GC = [col, '#FF2D9B', '#22E4F5', '#ffffff'];
+          for (let k = 0; k < 2; k++){
+            const side = Math.random() < .5 ? -1 : 1;
+            game.glitch.push({ x:cx + side * tw/2, y:yEnd + Math.random() * len, vx:side * (1 + Math.random() * 3), vy:(Math.random() - .5) * .6,
+              w:3 + Math.random() * 12, h:2 + Math.random() * 2.5, c:GC[Math.floor(Math.random() * GC.length)], born:now, life:280 + Math.random() * 220 });
+          }
+        }
+        // the head stays glowing on the hit bar while held
+        g2.shadowColor = col; g2.shadowBlur = 24; rr(ox + l*lw + 6, hitY - 10, lw - 12, 20, 10); g2.fillStyle = col; g2.fill(); g2.shadowBlur = 0;
+        if (t >= n.end - .2){
+          const blink = .55 + .45 * Math.sin(now / 70);
+          g2.globalAlpha = blink; g2.fillStyle = '#ffffff'; g2.shadowColor = col; g2.shadowBlur = 14;
+          g2.font = '700 14px ' + FONT; g2.fillText('LET GO', cx, hitY - 34); g2.shadowBlur = 0; g2.globalAlpha = 1;
+        }
+      }
+      game.glitch = game.glitch.filter(gp => now - gp.born < gp.life);
+      for (const gp of game.glitch){
+        const a = 1 - (now - gp.born) / gp.life;
+        gp.x += gp.vx; gp.y += gp.vy;
+        g2.globalAlpha = a * .55; g2.fillStyle = '#FF2D9B'; g2.fillRect(gp.x - 2, gp.y, gp.w, gp.h);
+        g2.fillStyle = '#22E4F5'; g2.fillRect(gp.x + 2, gp.y, gp.w, gp.h);
+        g2.globalAlpha = a; g2.fillStyle = gp.c; g2.fillRect(gp.x, gp.y, gp.w, gp.h);
+        g2.globalAlpha = 1;
+      }
       for (let i = Math.max(0, game.head - 8); i < ns.length; i++){
         const n = ns[i]; if (n.hit) continue;
         const y = hitY - (n.t - t) * pps;
@@ -1793,7 +2041,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
           g2.globalAlpha = Math.min(1, (.6 - age) * 4);
           g2.fillStyle = JUDGE[k]; g2.shadowColor = JUDGE[k]; g2.shadowBlur = 14;
           g2.font = '700 ' + Math.round(30*s) + 'px ' + FONT;
-          g2.fillText(k[0].toUpperCase() + k.slice(1), Wd/2, H*.38);
+          g2.fillText(JUDGE_LABEL[k] || (k[0].toUpperCase() + k.slice(1)), Wd/2, H*.38);
           g2.shadowBlur = 0; g2.globalAlpha = 1;
         }
       }
@@ -1838,13 +2086,14 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       $('bdRGrade').style.color = gc; $('bdRGrade').style.textShadow = '0 0 18px ' + gc;
       $('bdRNew').textContent = isNew ? (prev ? 'New best score' : 'First clear on this difficulty') : 'Best: ' + prev.score.toLocaleString();
       $('bdRScore').textContent = game.score.toLocaleString();
+      $('bdRScoreLbl').textContent = game.holdBonus ? 'Score (+' + game.holdBonus.toLocaleString() + ' from holds)' : 'Score';
       $('bdRAcc').textContent = acc.toFixed(1) + '%';
       $('bdRCombo').textContent = game.maxCombo;
       $('bdRHits').textContent = c.perfect + ' / ' + c.great + ' / ' + c.good + ' / ' + c.miss;
       show('bdResult');
       celebrate(isNew);
       $('bdREntry').textContent = game.rankNote || '';
-      if (game.ranked) submitRanked(game.ranked, { score:game.score, maxCombo:game.maxCombo, counts:Object.assign({}, c) });
+      if (game.ranked) submitRanked(game.ranked, { score:game.score, maxCombo:game.maxCombo, counts:Object.assign({}, c), holdBonus:game.holdBonus });
       prepareShare({ track:game.tr.name, diff:settings.diff, grade, score:game.score, acc, maxCombo:game.maxCombo, counts:Object.assign({}, c), isNew });
     }
 
@@ -2134,7 +2383,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     }
     function submitRanked(rk, res){
       $('bdREntry').textContent = 'Saving your score to the Top 10…';
-      post({ action:'bb_end', session:rk.session, score:res.score, maxCombo:res.maxCombo, counts:res.counts }).then(r => {
+      post({ action:'bb_end', session:rk.session, score:res.score, maxCombo:res.maxCombo, counts:res.counts, holdBonus:res.holdBonus }).then(r => {
         $('bdGive').classList.remove('on');
         if (r && r.ok){
           const msg = 'Entered! @' + rk.handle + ' scored ' + r.score.toLocaleString() + '.' + (r.rank ? ' You’re #' + r.rank + ' on the Top 10!' : '');
