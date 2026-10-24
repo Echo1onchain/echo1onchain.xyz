@@ -614,6 +614,29 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 .bd-give-msg:empty{display:none}
 .bd-entry{margin:0 0 .9rem; font-size:.92rem; color:#22E4F5; min-height:0}
 .bd-entry:empty{display:none}
+
+/* ---------- Top 10 + "Get on the Top 10": glowing outlines so they stand out ---------- */
+.bd-lb, .bd-give{position:relative; isolation:isolate}
+.bd-lb::before, .bd-give::before{
+  content:""; position:absolute; inset:0; padding:2px; border-radius:inherit; pointer-events:none;
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+.bd-lb::before{background:linear-gradient(135deg, #FF2D9B, #B67CFF 50%, #22E4F5)}
+.bd-give::before{background:linear-gradient(135deg, #22E4F5, #B67CFF 50%, #FF2D9B)}
+.bd-lb{box-shadow:0 0 16px rgba(182,124,255,.5), 0 0 34px rgba(34,228,245,.22); animation:bdGlowLb 3.4s ease-in-out infinite}
+.bd-give{background:rgba(34,228,245,.08); box-shadow:0 0 16px rgba(34,228,245,.5), 0 0 34px rgba(255,45,155,.2); animation:bdGlowGive 3.4s ease-in-out infinite}
+.bd-give.on{animation:none; box-shadow:0 0 22px rgba(255,45,155,.7), 0 0 44px rgba(255,45,155,.3)}
+@keyframes bdGlowLb{50%{box-shadow:0 0 24px rgba(255,45,155,.6), 0 0 48px rgba(34,228,245,.32)}}
+@keyframes bdGlowGive{50%{box-shadow:0 0 24px rgba(34,228,245,.75), 0 0 48px rgba(255,45,155,.3)}}
+.bd-give-title{font-size:.9rem; color:#fff; text-shadow:0 0 8px #22E4F5, 0 0 16px #22E4F5}
+.bd-lb-list{transition:opacity .25s ease}
+.bd-lb-list.swap{opacity:0}
+.bd-lb-dots{display:flex; justify-content:center; gap:6px; margin:8px 0 2px}
+.bd-lb-dots button{width:9px; height:9px; padding:0; border:0; border-radius:50%; background:rgba(143,163,200,.35); cursor:pointer}
+.bd-lb-dots button[aria-pressed="true"]{background:#FF2D9B; box-shadow:0 0 8px #FF2D9B}
+.bd-lb-dots button:focus-visible{outline:2px solid #22E4F5; outline-offset:2px}
+@media (prefers-reduced-motion: reduce){.bd-lb, .bd-give{animation:none} .bd-lb-list{transition:none}}
 </style>
 </head>
 <body>
@@ -654,9 +677,10 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
   <!-- ===== Beat Breakerz: track list and setup ===== -->
   <section class="console bd" id="content" aria-label="Beat Breakerz">
     <div class="bd-host"><div class="bd-layout">
-    <section class="bd-lb" aria-labelledby="bdLbTitle">
+    <section class="bd-lb" id="bdLb" aria-labelledby="bdLbTitle">
       <div class="bd-lb-head"><h3 id="bdLbTitle">Top 10</h3><span class="bd-lb-col">Score</span></div>
       <label class="bd-lb-pick"><span class="sr">Song for the Top 10</span><select id="bdLbSong"></select></label>
+      <div class="bd-lb-dots" id="bdLbDots" role="group" aria-label="Pick a song’s Top 10"></div>
       <div class="bd-lb-set" id="bdLbDiff"></div>
       <ol class="bd-lb-list" id="bdLbList"><li class="bd-lb-empty">Loading scores…</li></ol>
       <p class="bd-lb-foot">Best score per player, from games played with an X handle.</p>
@@ -2047,7 +2071,33 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     SITE.forEach(t => { const o = document.createElement('option'); o.value = t.src; o.textContent = t.name; lbSongSel.append(o); });
     const savedLb = store.get('echoBeatLbSong', '');
     if (SITE.some(t => t.src === savedLb)) lbSongSel.value = savedLb;
-    lbSongSel.addEventListener('change', () => { store.set('echoBeatLbSong', lbSongSel.value); loadTop(); });
+    const lbCache = {};                       // song:diff -> { t, top } so rotating doesn't keep asking the server
+    let holdUntil = 0, lbHover = false;
+    const holdCycle = () => { holdUntil = Date.now() + 30000; };   // after someone picks a song, stay on it for 30 seconds
+    lbSongSel.addEventListener('change', () => { store.set('echoBeatLbSong', lbSongSel.value); holdCycle(); loadTop(); });
+    function renderDots(){
+      const box = $('bdLbDots'); box.innerHTML = '';
+      if (SITE.length < 2){ box.style.display = 'none'; return; }
+      SITE.forEach((t, i) => {
+        const b = document.createElement('button'); b.type = 'button';
+        b.setAttribute('aria-label', 'Show Top 10 for ' + t.name);
+        b.setAttribute('aria-pressed', String(i === lbSongSel.selectedIndex));
+        b.addEventListener('click', () => { lbSongSel.selectedIndex = i; store.set('echoBeatLbSong', lbSongSel.value); holdCycle(); loadTop(); });
+        box.append(b);
+      });
+    }
+    const lbEl = $('bdLb');
+    lbEl.addEventListener('mouseenter', () => { lbHover = true; });
+    lbEl.addEventListener('mouseleave', () => { lbHover = false; });
+    lbEl.addEventListener('focusin', () => { lbHover = true; });
+    lbEl.addEventListener('focusout', () => { lbHover = false; });
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    setInterval(() => {
+      if (SITE.length < 2 || lbHover || document.hidden || Date.now() < holdUntil) return;
+      const list = $('bdLbList');
+      const next = () => { lbSongSel.selectedIndex = (lbSongSel.selectedIndex + 1) % SITE.length; loadTop(); list.classList.remove('swap'); };
+      if (calm) next(); else { list.classList.add('swap'); setTimeout(next, 250); }
+    }, 6000);
     function giveMsg(t){ $('bdGiveMsg').textContent = t || ''; }
     function lbMsg(t){ const l = $('bdLbList'); l.innerHTML = ''; l.append(el('li', 'bd-lb-empty', t)); }
     function renderTop(top){
@@ -2066,13 +2116,16 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     }
     function loadTop(){
       if (!SITE.length) return;
-      const my = ++lbToken, song = lbSongSel.value, diff = settings.diff;
+      const my = ++lbToken, song = lbSongSel.value, diff = settings.diff, key = song + ':' + diff;
       $('bdLbDiff').textContent = diff[0].toUpperCase() + diff.slice(1);
-      lbMsg('Loading scores…');
+      renderDots();
+      const have = lbCache[key];
+      if (have) renderTop(have.top); else lbMsg('Loading scores…');
+      if (have && Date.now() - have.t < 60000) return;      // fresh enough, no need to ask again
       post({ action:'bb_top', song, diff }).then(r => {
-        if (my !== lbToken) return;
-        if (r && Array.isArray(r.top)) renderTop(r.top); else lbMsg('The leaderboard is unavailable right now.');
-      }).catch(() => { if (my === lbToken) lbMsg('The leaderboard is unavailable right now.'); });
+        if (r && Array.isArray(r.top)){ lbCache[key] = { t:Date.now(), top:r.top }; if (my === lbToken) renderTop(r.top); }
+        else if (my === lbToken && !have) lbMsg('The leaderboard is unavailable right now.');
+      }).catch(() => { if (my === lbToken && !have) lbMsg('The leaderboard is unavailable right now.'); });
     }
     function submitRanked(rk, res){
       $('bdREntry').textContent = 'Saving your score to the Top 10…';
@@ -2084,8 +2137,8 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
           if (lastResult) lastResult.rank = r.rank || 0;
           if (rk.diff === settings.diff){
             lbSongSel.value = rk.song; store.set('echoBeatLbSong', rk.song);
-            lbToken++; $('bdLbDiff').textContent = rk.diff[0].toUpperCase() + rk.diff.slice(1);
-            renderTop(r.top);
+            lbCache[rk.song + ':' + rk.diff] = { t:Date.now(), top:r.top };
+            holdCycle(); loadTop();
           }
         } else {
           const msg = 'That game couldn’t be checked, so it wasn’t entered. Please try again.';
