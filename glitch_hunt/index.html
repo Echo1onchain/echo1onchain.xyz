@@ -561,6 +561,41 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 .gh-tab:focus-visible{outline:2px solid var(--ink);outline-offset:3px}
 .gh-live{width:8px;height:8px;border-radius:50%;background:var(--pink);box-shadow:0 0 8px var(--pink);animation:pulse 1.6s infinite}
 .gh-card form[hidden]{display:none}
+
+/* ---------- Glitch Hunt daily Top 10: same look as Beat Breakerz / Memory Protocol.
+   Wide screens: sits outside the game box on the left, game stays centered. Narrow screens: below the game. ---------- */
+.gh-stage{position:relative}
+.gh-lb{position:relative; isolation:isolate; width:100%; max-width:440px; margin:1.5rem auto 0; padding:14px 16px 12px; border-radius:16px; background:rgba(10,16,34,.7);
+  box-shadow:0 0 16px rgba(182,124,255,.5), 0 0 34px rgba(34,228,245,.22); animation:ghGlowLb 3.4s ease-in-out infinite}
+.gh-lb[hidden]{display:none}
+.gh-lb::before{content:""; position:absolute; inset:0; padding:2px; border-radius:inherit; pointer-events:none; background:linear-gradient(135deg, #FF2D9B, #B67CFF 50%, #22E4F5);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0)}
+@keyframes ghGlowLb{50%{box-shadow:0 0 24px rgba(255,45,155,.6), 0 0 48px rgba(34,228,245,.32)}}
+.gh-lb-head{display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:4px}
+.gh-lb h3{margin:0; font-size:.95rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase; color:#22E4F5; text-shadow:0 0 8px #22E4F588}
+.gh-lb-col{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.68rem; letter-spacing:.14em; text-transform:uppercase; color:var(--muted)}
+.gh-lb-set{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.72rem; color:var(--muted); margin:2px 0 8px}
+.gh-lb-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:5px}
+.gh-lb-list li{display:grid; grid-template-columns:2.2em minmax(0,1fr) auto; align-items:center; gap:8px; padding:6px 10px; border-radius:10px; background:rgba(2,4,12,.6); border:1px solid rgba(143,163,200,.15); font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.85rem}
+.gh-lb-list li:nth-child(1) .gh-lb-rk{color:#FFC93C; text-shadow:0 0 8px rgba(255,201,60,.7)}
+.gh-lb-list li:nth-child(2) .gh-lb-rk{color:#E6EEFF}
+.gh-lb-list li:nth-child(3) .gh-lb-rk{color:#FF9A5C}
+.gh-lb-list li.me{border-color:#FF2D9B; box-shadow:0 0 12px #FF2D9B55}
+.gh-lb-rk{font-weight:700; color:var(--muted)}
+.gh-lb-h{color:var(--ink); text-decoration:none; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0}
+.gh-lb-h:hover{color:#22E4F5; text-decoration:underline}
+.gh-lb-h:focus-visible{outline:2px solid #22E4F5; outline-offset:2px}
+.gh-lb-sc{font-weight:700; color:#22E4F5; text-align:right}
+.gh-lb-who{display:flex; flex-direction:column; min-width:0; line-height:1.2}
+.gh-lb-who small{font-size:.66rem; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.gh-lb-list li.gh-lb-empty{display:block; text-align:center; color:var(--muted); font-family:"Chakra Petch",system-ui,sans-serif}
+.gh-lb-foot{margin:8px 0 0; font-size:.75rem; color:var(--muted); text-align:center}
+@media (min-width:1400px){
+  .gh-lb{position:absolute; top:0; right:calc(100% + 14px); margin:0; max-width:none; width:clamp(180px, calc((100vw - 64rem) / 2 - 14px), 270px); padding:12px 12px 10px}
+  .gh-lb-list li{grid-template-columns:1.9em minmax(0,1fr) auto; gap:5px; padding:6px 8px; font-size:.78rem}
+}
+@media (prefers-reduced-motion: reduce){.gh-lb{animation:none}}
 </style>
 </head>
 <body>
@@ -601,6 +636,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
   <!-- ===== GLITCH HUNT GAME GOES HERE =====
        This panel already has the page's neon outline and glow (class "console").
        Put the game's HTML inside it, and the game's JavaScript in the marked spot near the end of the script. -->
+  <div class="gh-stage" id="ghStage">
   <section class="console game" id="game" aria-label="Glitch Hunt">
     <div class="gh locked" id="gh">
       <div class="gh-top">
@@ -642,6 +678,13 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     </div>
   
 </section>
+  <aside class="gh-lb" id="ghLb" aria-labelledby="ghLbTitle" hidden>
+    <div class="gh-lb-head"><h3 id="ghLbTitle">Top 10</h3><span class="gh-lb-col">Time</span></div>
+    <div class="gh-lb-set" id="ghLbSet">Daily glitch</div>
+    <ol class="gh-lb-list" id="ghLbList" aria-live="polite"><li class="gh-lb-empty">Loading times…</li></ol>
+    <p class="gh-lb-foot">Fastest time per player on today’s daily puzzle.</p>
+  </aside>
+  </div>
 
   <div class="bugwrap">
     <button class="bug-btn" id="bugBtn" aria-expanded="false" aria-controls="bugPop" title="Report a bug"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><ellipse cx="12" cy="14" rx="5" ry="6.2"/><path d="M9.2 8.6a2.8 2.8 0 0 1 5.6 0"/><path d="M12 8.5v11.6"/><path d="M7 11.5 3.5 10M7 15H3M7.6 18.4 4.5 20.5M17 11.5l3.5-1.5M17 15h4M16.4 18.4l3.1 2.1M10 5.8 8.6 3.6M14 5.8l1.4-2.2"/></svg><span class="sr">Report a bug</span></button>
@@ -1394,6 +1437,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     function local(body){
       var B=C.preview.puzzle.boxes;
       if(body.action==="today"){var o={daily:null,giveaway:null,maxMisses:10};o[C.preview.type]={id:C.preview.puzzle.id,date:C.preview.date||""};return o}
+      if(body.action==="leaderboard")return{top:[]};
       if(body.action==="start"){demo={t:Date.now(),found:[],misses:0};return{session:"preview",total:B.length,maxMisses:10}}
       var x=body.x,y=body.y,pad=m*0.035,best=-1,bd=1e12;
       B.forEach(function(b,i){if(demo.found.indexOf(i)>=0)return;
@@ -1433,7 +1477,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     function select(t){
       type=t;var my=++token;
       rings=[];session="";total=0;misses=0;over=false;busy=false;P=null;
-      blank(cA);blank(cB);setTabs();count();msg.textContent="";
+      blank(cA);blank(cB);setTabs();count();msg.textContent="";lbSync();
       gate(t==="giveaway"?"Loading the giveaway puzzle…":"Loading today’s puzzle…","",false);
       loadPuzzle(info[t].id).then(function(p){
         if(my!==token)return;
@@ -1446,6 +1490,33 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         imgA.onerror=imgB.onerror=function(){if(my===token)gate("Couldn’t load this puzzle","Try reloading the page.",false)};
         imgA.src=P.a;imgB.src=P.b;
       }).catch(function(){if(my===token)gate("Couldn’t load this puzzle","Try reloading the page. If it keeps happening, the puzzle file may be missing.",false)})}
+    /* daily Top 10 (fastest finish per handle on today's daily puzzle; hidden for giveaways) */
+    var lbEl=document.getElementById("ghLb"),lbList=document.getElementById("ghLbList"),lbTok=0;
+    function lbMsg(t){lbList.innerHTML="";var li=document.createElement("li");li.className="gh-lb-empty";li.textContent=t;lbList.appendChild(li)}
+    function lbTime(v){var n=Number(v);if(!(n>=0))return"";if(n<60)return n.toFixed(1)+"s";var mm=Math.floor(n/60),ss=n-mm*60;return mm+":"+(ss<10?"0":"")+ss.toFixed(1)}
+    function lbRender(top){
+      if(!top||!top.length){lbMsg("No times yet today. Be the first!");return}
+      var me=(handle||document.getElementById("ghHandle").value||"").trim().replace(/^@/,"").toLowerCase();
+      lbList.innerHTML="";
+      top.slice(0,10).forEach(function(e,i){
+        var h=String(e.handle||"").replace(/^@/,""),li=document.createElement("li");if(me&&h.toLowerCase()===me)li.className="me";
+        var rk=document.createElement("span");rk.className="gh-lb-rk";rk.textContent="#"+(i+1);
+        var a=document.createElement("a");a.className="gh-lb-h";a.textContent="@"+h;a.title="@"+h;a.href="https://x.com/"+encodeURIComponent(h);a.target="_blank";a.rel="noopener";
+        var who=document.createElement("span");who.className="gh-lb-who";who.appendChild(a);
+        if(e.misses!=null&&e.misses!==""){var w=document.createElement("small"),n=Number(e.misses);w.textContent=n+" wrong";w.title=n===1?"1 wrong tap":n+" wrong taps";who.appendChild(w)}
+        var sc=document.createElement("span");sc.className="gh-lb-sc";sc.textContent=lbTime(e.seconds);
+        li.append(rk,who,sc);lbList.appendChild(li)})}
+    function lbLoad(){
+      if(!info.daily)return;var my=++lbTok;
+      call({action:"leaderboard",puzzle:info.daily.id}).then(function(r){
+        if(my!==lbTok)return;
+        if(r&&Array.isArray(r.top))lbRender(r.top);
+        else if(r&&r.error==="unknown")lbMsg("Leaderboard coming soon.");
+        else lbMsg("The leaderboard is unavailable right now.");
+      }).catch(function(){if(my===lbTok)lbMsg("The leaderboard is unavailable right now.")})}
+    function lbSync(){
+      var on=type==="daily"&&!!info.daily;lbEl.hidden=!on;
+      if(on){document.getElementById("ghLbSet").textContent="Daily glitch"+(info.daily.date?" · "+fmtDate(info.daily.date):"");lbLoad()}}
     Array.prototype.forEach.call(document.querySelectorAll("#ghTabs .gh-tab"),function(b){b.addEventListener("click",function(){var t=b.getAttribute("data-type");if(t!==type&&info[t])select(t)})});
 
     blank(cA);blank(cB);count();
@@ -1504,7 +1575,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         if(r.error){over=r.error==="over"||r.error==="session";msg.textContent=ERR[r.error]||ERR.server;return}
         misses=r.misses;
         if(r.hit){rings.push(r.box);ghFinds.push(tt);draw()}else{ghFails.push(tt);mark(c,x,y,"gh-miss","✕",750);count()}
-        if(r.done){over=true;msg.textContent="Glitch cleared in "+r.seconds+"s, @"+handle+"!";showPop(r.seconds)}
+        if(r.done){over=true;msg.textContent="Glitch cleared in "+r.seconds+"s, @"+handle+"!";showPop(r.seconds);if(type==="daily")setTimeout(lbLoad,1500)}
         else if(r.out){over=true;msg.textContent="Out of guesses, @"+handle+". Reload the page to try again."}
       }).catch(function(){if(my===token)msg.textContent="That tap didn’t reach the game server. Tap again."})
       .then(function(){busy=false;root.classList.remove("busy");dot.remove()})}
