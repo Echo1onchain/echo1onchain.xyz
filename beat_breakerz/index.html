@@ -2349,51 +2349,114 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     function drawCard(r, logo){
       const c = document.createElement('canvas'); c.width = 1200; c.height = 675;
       const x = c.getContext('2d'), F = '"Chakra Petch", system-ui, sans-serif', M = '"JetBrains Mono", ui-monospace, monospace';
+      const INK = '#F2F6FF', MUTED = '#8FA3C8', CY = '#22E4F5', PK = '#FF2D9B';
+      // spaced caps text (canvas letterSpacing isn't everywhere yet)
+      const spaced = (txt, X, Y, tr, align) => {
+        let w = 0; for (const ch of txt) w += x.measureText(ch).width + tr; w -= tr;
+        let tx = align === 'center' ? X - w / 2 : align === 'right' ? X - w : X;
+        x.textAlign = 'left'; for (const ch of txt){ x.fillText(ch, tx, Y); tx += x.measureText(ch).width + tr; } return w;
+      };
+      const glowText = (fn, col, blur) => { x.save(); x.shadowColor = col; x.shadowBlur = blur; fn(); x.restore(); };
+      x.textBaseline = 'alphabetic';
+      // backdrop
       x.fillStyle = '#04060E'; x.fillRect(0, 0, 1200, 675);
-      let g = x.createRadialGradient(150, 80, 0, 150, 80, 620); g.addColorStop(0, 'rgba(255,45,155,.28)'); g.addColorStop(1, 'rgba(255,45,155,0)');
+      let g = x.createRadialGradient(170, 90, 0, 170, 90, 640); g.addColorStop(0, 'rgba(255,45,155,.20)'); g.addColorStop(1, 'rgba(255,45,155,0)');
       x.fillStyle = g; x.fillRect(0, 0, 1200, 675);
-      g = x.createRadialGradient(1080, 620, 0, 1080, 620, 640); g.addColorStop(0, 'rgba(34,228,245,.24)'); g.addColorStop(1, 'rgba(34,228,245,0)');
+      g = x.createRadialGradient(1060, 610, 0, 1060, 610, 660); g.addColorStop(0, 'rgba(34,228,245,.16)'); g.addColorStop(1, 'rgba(34,228,245,0)');
       x.fillStyle = g; x.fillRect(0, 0, 1200, 675);
-      x.strokeStyle = 'rgba(34,228,245,.07)'; x.lineWidth = 1;
+      x.strokeStyle = 'rgba(34,228,245,.045)'; x.lineWidth = 1;
       for (let i = 0; i <= 1200; i += 40){ x.beginPath(); x.moveTo(i + .5, 0); x.lineTo(i + .5, 675); x.stroke(); }
       for (let j = 0; j <= 675; j += 40){ x.beginPath(); x.moveTo(0, j + .5); x.lineTo(1200, j + .5); x.stroke(); }
-      // card
-      rrect(x, 60, 50, 1080, 575, 28); x.fillStyle = 'rgba(10,16,34,.92)'; x.fill();
-      const bg = x.createLinearGradient(60, 50, 1140, 625); bg.addColorStop(0, '#FF2D9B'); bg.addColorStop(1, '#22E4F5');
-      x.save(); x.shadowColor = 'rgba(255,45,155,.6)'; x.shadowBlur = 24; x.lineWidth = 4; x.strokeStyle = bg; x.stroke(); x.restore();
-      // title: each letter in a lane color
-      x.font = '700 60px ' + F; x.textBaseline = 'alphabetic';
-      let tx = 110; const title = 'BEAT BREAKERZ';
-      [...title].forEach((ch, i) => {
-        const col = LANE[[...title.slice(0, i)].filter(k => k !== ' ').length % 4];
-        if (ch !== ' '){ x.save(); x.fillStyle = col; x.shadowColor = col; x.shadowBlur = 16; x.fillText(ch, tx, 150); x.restore(); }
-        tx += x.measureText(ch).width + 2;
-      });
-      x.fillStyle = '#F2F6FF'; x.font = '600 34px ' + F;
-      x.fillText(r.track, 110, 210);
-      x.fillStyle = '#8FA3C8'; x.font = '600 24px ' + F;
-      x.fillText(r.diff.toUpperCase() + (r.isNew ? '  ·  NEW BEST' : ''), 110, 248);
+      // main panel, like the results panel: dark fill, pink to cyan edge, soft double glow
+      const PX = 48, PY = 40, PW = 1104, PH = 595;
+      x.save(); rrect(x, PX, PY, PW, PH, 26); x.fillStyle = '#0A1022'; x.shadowColor = 'rgba(255,45,155,.28)'; x.shadowBlur = 34; x.fill(); x.restore();
+      x.save(); rrect(x, PX, PY, PW, PH, 26); x.shadowColor = 'rgba(34,228,245,.18)'; x.shadowBlur = 50; x.fillStyle = '#0A1022'; x.fill(); x.restore();
+      const edge = x.createLinearGradient(PX, PY, PX + PW, PY + PH); edge.addColorStop(0, 'rgba(255,45,155,.9)'); edge.addColorStop(1, 'rgba(34,228,245,.9)');
+      rrect(x, PX + 1.5, PY + 1.5, PW - 3, PH - 3, 25); x.lineWidth = 3; x.strokeStyle = edge; x.stroke();
+      // hero: the logo, centered
       if (logo){
-        const s = Math.min(130 / logo.naturalWidth, 130 / logo.naturalHeight);
-        const w = logo.naturalWidth * s, h = logo.naturalHeight * s;
-        x.drawImage(logo, 1080 - w, 92, w, h);
+        const w = 640, h = w * logo.naturalHeight / logo.naturalWidth, lx = (1200 - w) / 2, ly = 54;
+        x.save(); x.translate(600, ly + h / 2); x.scale(1, .36);
+        const lg = x.createRadialGradient(0, 0, 0, 0, 0, w * .6);
+        lg.addColorStop(0, 'rgba(34,228,245,.13)'); lg.addColorStop(.6, 'rgba(255,45,155,.06)'); lg.addColorStop(1, 'rgba(255,45,155,0)');
+        x.fillStyle = lg; x.fillRect(-w * .65, -w * .65, w * 1.3, w * 1.3); x.restore();
+        x.save(); x.globalCompositeOperation = 'lighten'; x.drawImage(logo, lx, ly, w, h); x.restore();
+      } else {
+        x.font = '600 17px ' + M; x.fillStyle = MUTED; spaced('ECHO BOTZ', 600, 118, 7, 'center');
+        x.font = '700 58px ' + F; const t = 'BEAT BREAKERZ';
+        let w = 0; for (const ch of t) w += x.measureText(ch).width + 6; w -= 6;
+        let tx = 600 - w / 2, n = 0;
+        for (const ch of t){ if (ch !== ' '){ const col = LANE[n++ % 4]; x.fillStyle = col; glowText(() => x.fillText(ch, tx, 186), col, 12); } tx += x.measureText(ch).width + 6; }
       }
-      // grade
-      const gc = GRADE_COL[r.grade];
-      x.save(); x.font = '700 230px ' + F; x.fillStyle = gc; x.shadowColor = gc; x.shadowBlur = 40; x.fillText(r.grade, 104, 520); x.restore();
-      x.fillStyle = '#8FA3C8'; x.font = '600 22px ' + F; x.fillText('GRADE', 112, 562);
-      // stats
-      const stats = [[r.score.toLocaleString(), 'SCORE'], [r.acc.toFixed(1) + '%', 'ACCURACY'], [String(r.maxCombo), 'MAX COMBO'], [r.counts.perfect + ' / ' + r.counts.great + ' / ' + r.counts.good + ' / ' + r.counts.miss, 'PERFECT / GREAT / GOOD / MISS']];
-      stats.forEach((st, i) => {
-        const bx = 520 + (i % 2) * 300, by = 300 + Math.floor(i / 2) * 140;
-        rrect(x, bx, by, 280, 120, 16); x.fillStyle = 'rgba(2,4,12,.75)'; x.fill();
-        x.lineWidth = 1.5; x.strokeStyle = 'rgba(34,228,245,.25)'; x.stroke();
-        const fit = (txt, size, fam) => { let z = size; do { x.font = '600 ' + z + 'px ' + fam; } while (x.measureText(txt).width > 236 && --z > 10); };
-        x.fillStyle = '#F2F6FF'; fit(st[0], 44, M); x.fillText(st[0], bx + 22, by + 62);
-        x.fillStyle = '#8FA3C8'; fit(st[1], 18, F); x.fillText(st[1], bx + 22, by + 96);
+      // hairline divider
+      const dv = x.createLinearGradient(110, 0, 1090, 0); dv.addColorStop(0, 'rgba(34,228,245,0)'); dv.addColorStop(.5, 'rgba(34,228,245,.45)'); dv.addColorStop(1, 'rgba(34,228,245,0)');
+      x.fillStyle = dv; x.fillRect(110, 252, 980, 1);
+      // grade badge: gradient ring, thin inner ring, moderate letter
+      const gc = GRADE_COL[r.grade], BX = 220, BY = 426, BR = 98;
+      const halo = x.createRadialGradient(BX, BY, 0, BX, BY, BR + 40); halo.addColorStop(0, gc + '26'); halo.addColorStop(.7, gc + '0d'); halo.addColorStop(1, gc + '00');
+      x.fillStyle = halo; x.beginPath(); x.arc(BX, BY, BR + 40, 0, 6.2832); x.fill();
+      x.beginPath(); x.arc(BX, BY, BR, 0, 6.2832); x.fillStyle = 'rgba(2,4,12,.7)'; x.fill();
+      const ring = x.createLinearGradient(BX - BR, BY - BR, BX + BR, BY + BR); ring.addColorStop(0, PK); ring.addColorStop(1, CY);
+      x.save(); x.shadowColor = 'rgba(255,45,155,.45)'; x.shadowBlur = 16; x.lineWidth = 3.5; x.strokeStyle = ring; x.beginPath(); x.arc(BX, BY, BR, 0, 6.2832); x.stroke(); x.restore();
+      x.lineWidth = 1; x.strokeStyle = 'rgba(143,163,200,.22)'; x.beginPath(); x.arc(BX, BY, BR - 12, 0, 6.2832); x.stroke();
+      for (let k = 0; k < 60; k++){ const a = k / 60 * 6.2832, l = k % 5 ? 3 : 7; x.strokeStyle = k % 5 ? 'rgba(143,163,200,.18)' : 'rgba(34,228,245,.45)';
+        x.beginPath(); x.moveTo(BX + Math.cos(a) * (BR - 12), BY + Math.sin(a) * (BR - 12)); x.lineTo(BX + Math.cos(a) * (BR - 12 - l), BY + Math.sin(a) * (BR - 12 - l)); x.stroke(); }
+      x.font = '600 13px ' + M; x.fillStyle = MUTED; spaced('GRADE', BX, BY - 42, 4, 'center');
+      x.font = '600 ' + (r.grade.length > 1 ? 82 : 92) + 'px ' + F; x.fillStyle = gc;
+      glowText(() => spaced(r.grade, BX, BY + 40, r.grade.length > 1 ? 2 : 0, 'center'), gc, 14);
+      // hype line under the badge: small, spaced, one color
+      const hype = /^S/.test(r.grade) ? 'BEAT BROKEN!!' : r.grade === 'A' ? 'LOCKED IN' : 'RUN IT BACK';
+      x.font = '600 18px ' + F; x.fillStyle = gc === MUTED ? INK : gc;
+      glowText(() => spaced(hype, BX, BY + BR + 42, 5, 'center'), gc, 8);
+      // right column
+      const CX = 392, CW = 720;
+      x.font = '600 13px ' + M; x.fillStyle = MUTED; spaced('TRACK', CX, 296, 4);
+      let z = 36; do { x.font = '600 ' + z + 'px ' + F; } while (x.measureText(r.track).width > CW - 250 && --z > 18);
+      x.fillStyle = INK; x.textAlign = 'left'; x.fillText(r.track, CX, 336);
+      // difficulty and NEW BEST as pills, right aligned on the track row
+      const pill = (txt, right, fill, stroke, col) => {
+        x.font = '600 14px ' + M; let w = 0; for (const ch of txt) w += x.measureText(ch).width + 2.5; w += 26 - 2.5;
+        const X = right - w; rrect(x, X, 310, w, 32, 9);
+        if (fill){ x.save(); x.fillStyle = fill; x.shadowColor = fill; x.shadowBlur = 12; x.fill(); x.restore(); }
+        else { x.fillStyle = 'rgba(2,4,12,.7)'; x.fill(); x.lineWidth = 1.5; x.strokeStyle = stroke; x.stroke(); }
+        x.fillStyle = col; spaced(txt, X + 13, 331, 2.5); return X;
+      };
+      let pr = CX + CW;
+      if (r.isNew) pr = pill('NEW BEST', pr, null, '#FFC93C', '#FFC93C') - 10;
+      pill(r.diff.toUpperCase(), pr, CY, null, '#04060E');
+      // stat tiles, like the page's stat boxes
+      const tiles = [[r.score.toLocaleString(), 'SCORE'], [r.acc.toFixed(1) + '%', 'ACCURACY'], [String(r.maxCombo), 'MAX COMBO']];
+      const TW = (CW - 32) / 3, TY = 364, TH = 104;
+      tiles.forEach((t, i) => {
+        const X = CX + i * (TW + 16);
+        rrect(x, X, TY, TW, TH, 12); x.fillStyle = 'rgba(2,4,12,.7)'; x.fill(); x.lineWidth = 1; x.strokeStyle = 'rgba(34,228,245,.28)'; x.stroke();
+        x.font = '600 12px ' + M; x.fillStyle = MUTED; spaced(t[1], X + 20, TY + 32, 3);
+        let s = 38; do { x.font = '600 ' + s + 'px ' + M; } while (x.measureText(t[0]).width > TW - 40 && --s > 14);
+        x.fillStyle = INK; x.textAlign = 'left'; glowText(() => x.fillText(t[0], X + 20, TY + 80), 'rgba(34,228,245,.55)', 10);
       });
-      x.fillStyle = '#22E4F5'; x.font = '600 24px ' + F; x.textAlign = 'right';
-      x.fillText('Play at ' + siteName(), 1080, 588);
+      // hit breakdown: one panel, four counts, a proportional bar
+      const HY = 484, HH = 82, cnt = r.counts;
+      rrect(x, CX, HY, CW, HH, 12); x.fillStyle = 'rgba(2,4,12,.7)'; x.fill(); x.lineWidth = 1; x.strokeStyle = 'rgba(182,124,255,.4)'; x.stroke();
+      const parts = [['PERFECT', cnt.perfect, CY], ['GREAT', cnt.great, '#4DFF6A'], ['GOOD', cnt.good, '#FFC93C'], ['MISS', cnt.miss, PK]];
+      const tot = Math.max(1, parts.reduce((a, p) => a + p[1], 0));
+      let bx = CX + 20; const BW = CW - 40;
+      x.save(); rrect(x, bx, HY + HH - 18, BW, 5, 2.5); x.clip(); x.fillStyle = 'rgba(143,163,200,.12)'; x.fillRect(bx, HY + HH - 18, BW, 5);
+      parts.forEach(p => { const w = BW * p[1] / tot; x.fillStyle = p[2]; x.fillRect(bx, HY + HH - 18, w, 5); bx += w; }); x.restore();
+      const CWd = BW / 4;
+      parts.forEach((p, i) => {
+        const X = CX + 20 + i * CWd;
+        x.save(); x.fillStyle = p[2]; x.shadowColor = p[2]; x.shadowBlur = 8; x.beginPath(); x.arc(X + 5, HY + 30, 4.5, 0, 6.2832); x.fill(); x.restore();
+        x.font = '600 12px ' + M; x.fillStyle = MUTED; spaced(p[0], X + 18, HY + 35, 3);
+        x.font = '600 24px ' + M; x.fillStyle = INK; x.textAlign = 'right'; x.fillText(String(p[1]), X + CWd - 22, HY + 38); x.textAlign = 'left';
+        if (i){ x.fillStyle = 'rgba(143,163,200,.16)'; x.fillRect(X - 12, HY + 14, 1, 32); }
+      });
+      // footer
+      x.fillStyle = 'rgba(34,228,245,.16)'; x.fillRect(CX, 590, CW, 1);
+      x.font = '600 21px ' + F; const site = siteName(); const sw = x.measureText(site).width;
+      x.fillStyle = CY; glowText(() => { x.textAlign = 'right'; x.fillText(site, CX + CW, 620); }, 'rgba(34,228,245,.6)', 10);
+      x.font = '400 21px ' + F; x.fillStyle = MUTED; x.textAlign = 'right'; x.fillText('Beat my score at ', CX + CW - sw, 620);
+      x.font = '600 12px ' + M; x.fillStyle = 'rgba(143,163,200,.7)'; spaced('ECHO BOTZ · SCORE CARD', CX, 616, 3);
+      x.textAlign = 'left';
       return c;
     }
     const canvasBlob = c => new Promise((res, rej) => { try { c.toBlob(b => b ? res(b) : rej(new Error('no image')), 'image/png'); } catch(e){ rej(e); } });
