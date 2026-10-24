@@ -629,6 +629,16 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 .el-x svg{width:15px;height:15px}
 .el-share-note{margin:.5rem 0 0;color:#8FA3C8;font-size:.8rem}
 .el-share-note.ok{color:#22E4F5}
+
+/* Top 10 + handle box: match Beat Breakerz outline and pulsing glow */
+.el-give.el-outline::before{background:linear-gradient(135deg,#22E4F5,#B67CFF 50%,#FF2D9B)}
+.el-lb{box-shadow:0 0 16px rgba(182,124,255,.5),0 0 34px rgba(34,228,245,.22);animation:elGlowLb 3.4s ease-in-out infinite}
+.el-give{background:rgba(34,228,245,.08);box-shadow:0 0 16px rgba(34,228,245,.5),0 0 34px rgba(255,45,155,.2);animation:elGlowGive 3.4s ease-in-out infinite}
+.el-give.on{animation:none;box-shadow:0 0 22px rgba(255,45,155,.7),0 0 44px rgba(255,45,155,.3)}
+@keyframes elGlowLb{50%{box-shadow:0 0 24px rgba(255,45,155,.6),0 0 48px rgba(34,228,245,.32)}}
+@keyframes elGlowGive{50%{box-shadow:0 0 24px rgba(34,228,245,.75),0 0 48px rgba(255,45,155,.3)}}
+.el-give-title{color:#fff;text-shadow:0 0 8px #22E4F5,0 0 16px #22E4F5}
+@media (prefers-reduced-motion:reduce){.el-lb,.el-give{animation:none}}
 </style>
 </head>
 <body>
