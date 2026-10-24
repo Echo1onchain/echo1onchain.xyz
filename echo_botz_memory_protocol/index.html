@@ -1552,8 +1552,8 @@ function onSite(){ return /^https?:$/.test(location.protocol); }
 function siteName(){ return onSite()?location.hostname.replace(/^www[.]/,''):'echo1onchain.xyz'; }
 function pageUrl(){ return onSite()?location.href.split('#')[0]:'https://echo1onchain.xyz/echo_botz_memory_protocol/'; }
 function shareText(r){
-  return 'I cleared '+r.rounds+' round'+(r.rounds===1?'':'s')+' in ECHO Botz Memory Protocol \ud83e\udde0'
-    +(SETS.length>1?' ('+r.set+')':'')+(r.forgiving?' in forgiving mode ('+r.retries+'/'+MAX_RETRIES+' retries used)':'')+'. Rank: '+r.rank.name+'. Can you beat it? via @EchoBotzSOL'+NL+pageUrl();
+  return '\ud83e\udde0 Memory locked in!! I cleared '+r.rounds+' round'+(r.rounds===1?'':'s')+' of ECHO Botz Memory Protocol'
+    +(SETS.length>1?' ('+r.set+')':'')+(r.forgiving?' in forgiving mode ('+r.retries+'/'+MAX_RETRIES+' retries used)':'')+' and hit '+r.rank.name+'. Think your brain can keep up? Prove it \ud83d\udc47 @EchoBotzSOL'+NL+pageUrl();
 }
 function rrect(x,X,Y,w,h,rad){ x.beginPath(); x.moveTo(X+rad,Y); x.arcTo(X+w,Y,X+w,Y+h,rad); x.arcTo(X+w,Y+h,X,Y+h,rad); x.arcTo(X,Y+h,X,Y,rad); x.arcTo(X,Y,X+w,Y,rad); x.closePath(); }
 function drawCard(r,logo){
