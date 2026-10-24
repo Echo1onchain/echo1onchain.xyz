@@ -538,6 +538,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 .el-foot{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:0 30px 2px;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.56rem;letter-spacing:.18em;text-transform:uppercase;color:#22E4F5aa}
 .el-dots{display:flex;gap:6px}
 .el-dots i{width:6px;height:6px;border-radius:50%;background:var(--c);box-shadow:0 0 6px var(--c)}
+@media (max-width:420px){.el-brand{font-size:.72rem;letter-spacing:.1em}.el-sys{display:none}}
 @keyframes elSpin{to{transform:rotate(360deg)}}
 @keyframes elBlink{50%{opacity:.4}}
 @keyframes elEq{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
@@ -560,10 +561,21 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 .el-give-row button:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .el-give-msg{min-height:1.3em;margin-top:8px;font-size:.92rem;color:var(--ink)}
 .el-give.on{box-shadow:inset 0 0 0 1px #FF2D9B,0 0 24px #FF2D9B55}
-.el-lb{width:100%;max-width:440px;padding:14px 16px 12px;border-radius:16px;background:rgba(10,16,34,.7);box-shadow:inset 0 0 0 1px #B67CFF66,0 0 18px #B67CFF22;text-align:left}
+.el-host{width:100%;container-type:inline-size}
+.el-layout{display:flex;flex-direction:column;align-items:center;gap:20px;width:100%}
+.el-layout>.el-lb{order:2}
+.el-layout>.el-wrap{min-width:0}
+@container (min-width:760px){
+  .el-layout{flex-direction:row;align-items:flex-start;justify-content:center;gap:28px}
+  .el-layout>.el-lb{order:0;flex:0 0 300px;margin-top:4px}
+  .el-layout>.el-wrap{flex:0 1 440px}
+}
+.el-lb{width:100%;max-width:440px;box-sizing:border-box;padding:14px 16px 12px;border-radius:16px;background:rgba(10,16,34,.7);box-shadow:inset 0 0 0 1px #B67CFF66,0 0 18px #B67CFF22;text-align:left}
 .el-lb-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px}
 .el-lb h3{margin:0;font-size:.95rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#22E4F5;text-shadow:0 0 8px #22E4F588}
-.el-lb-set{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.75rem;color:var(--muted)}
+.el-lb-col{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.el-lb-set{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.75rem;color:var(--muted);margin:-4px 0 8px}
+.el-lb-set:empty{display:none}
 .el-lb-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
 .el-lb-list li{display:grid;grid-template-columns:2.6em 1fr auto;align-items:center;gap:8px;padding:6px 10px;border-radius:10px;background:rgba(2,4,12,.6);border:1px solid rgba(34,228,245,.14);font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.92rem}
 .el-lb-list li:nth-child(1) .el-lb-rk{color:#FFC93C;text-shadow:0 0 8px rgba(255,201,60,.7)}
@@ -646,6 +658,14 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
        This panel already has the page's neon outline and glow (class "console").
        Put the page's HTML inside it. Copy the panel for more sections. -->
   <section class="console content" id="content" aria-label="ECHO Botz Memory Protocol">
+<div class="el-host"><div class="el-layout">
+
+<section class="el-lb" id="elLb" aria-labelledby="elLbTitle">
+<div class="el-lb-head"><h3 id="elLbTitle">Top 10</h3><span class="el-lb-col">Rounds</span></div>
+<div class="el-lb-set" id="elLbSet"></div>
+<ol class="el-lb-list" id="elLbList"><li class="el-lb-empty">Loading scores…</li></ol>
+<p class="el-lb-foot">Best score per player, from games played with an X handle.</p>
+</section>
 <div class="el-wrap">
 <div class="el-sets" id="elSets" role="group" aria-label="Choose a game"></div>
 <div class="el-frame"><div class="el-device"><div class="el-shell">
@@ -668,11 +688,6 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 <div class="el-give-row"><span class="el-at" aria-hidden="true">@</span><input id="elHandle" maxlength="16" placeholder="yourhandle" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your X handle"><button id="elGiveBtn" type="button">Play ranked</button></div>
 <div class="el-give-msg" id="elGiveMsg" aria-live="polite"></div>
 </div>
-<section class="el-lb" id="elLb" aria-labelledby="elLbTitle">
-<div class="el-lb-head"><h3 id="elLbTitle">Top 10</h3><span class="el-lb-set" id="elLbSet"></span></div>
-<ol class="el-lb-list" id="elLbList"><li class="el-lb-empty">Loading scores…</li></ol>
-<p class="el-lb-foot">Best score per player, from games played with an X handle.</p>
-</section>
 <div class="el-ov" id="elRes" hidden>
 <canvas class="el-fx" id="elFx" aria-hidden="true"></canvas>
 <div class="el-panel" role="dialog" aria-modal="true" aria-labelledby="elResTitle">
@@ -694,6 +709,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 </div>
 </div>
 </div>
+</div></div>
   </section>
 
   <div class="bugwrap">
@@ -1639,7 +1655,7 @@ function renderTop(top,me){
     if(me&&e.handle.toLowerCase()===me.toLowerCase()) li.className='me';
     var rk=document.createElement('span'); rk.className='el-lb-rk'; rk.textContent='#'+(i+1);
     var a=document.createElement('a'); a.className='el-lb-h'; a.href='https://x.com/'+encodeURIComponent(e.handle); a.target='_blank'; a.rel='noopener'; a.textContent='@'+e.handle;
-    var sc=document.createElement('span'); sc.className='el-lb-sc'; sc.textContent=e.rounds+(e.rounds===1?' round':' rounds');
+    var sc=document.createElement('span'); sc.className='el-lb-sc'; sc.textContent=e.rounds; sc.setAttribute('aria-label',e.rounds+(e.rounds===1?' round':' rounds'));
     li.appendChild(rk); li.appendChild(a); li.appendChild(sc); l.appendChild(li);
   });
 }
