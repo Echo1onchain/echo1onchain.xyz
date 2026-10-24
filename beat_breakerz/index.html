@@ -710,7 +710,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       <div class="bd-row"><span>Note speed</span><div class="bd-range"><input type="range" id="bdSpeed" min="0.6" max="2.2" step="0.1" aria-label="Note speed"><output id="bdSpeedOut"></output></div></div>
       <div class="bd-row"><span>Audio offset</span><div class="bd-range"><input type="range" id="bdOffset" min="-150" max="150" step="5" aria-label="Audio offset in milliseconds"><output id="bdOffsetOut"></output></div></div>
     </div>
-    <p class="bd-hint">Notes are mapped from the beats in each song. Long notes with a tail are holds: keep the key down while the line lights up, then let go before the next note for bonus points. Click a key box to rebind it, tap the lanes on a phone, and press Esc to pause. The page music pauses while you play.</p>
+    <p class="bd-hint">Notes are mapped from the beats in each song. Long notes with a tail are holds: keep the key down while the line lights up, then let go before the next note for bonus points. Good hits fill the rainbow meters; when they’re full, Overdrive gives double points for 8 seconds. Click a key box to rebind it, tap the lanes on a phone, and press Esc to pause. The page music pauses while you play.</p>
     </div>
     </div></div>
   </section>
@@ -1690,7 +1690,9 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         head:0, score:0, combo:0, maxCombo:0, counts:{ perfect:0, great:0, good:0, miss:0 }, judge:null,
         pressed:[0,0,0,0], glow:[0,0,0,0], fx:[], dur:buf.duration, paused:false, ended:false, ranked:ranked || null, rankNote:rankNote || '',
         holding:[null,null,null,null], holdBonus:0, glitch:[], lastSpark:0,
-        deckKick:[-1e9,-1e9], vu:[0,0], xf:0, xfTarget:0 };
+        deckKick:[-1e9,-1e9], vu:[0,0], xf:0, xfTarget:0,
+        energy:0, odUntil:-1, odFlash:-1e9, odBonus:0, padHit:[-1e9,-1e9,-1e9,-1e9],
+        deck:[{ ang:0, spd:0, rip:[] }, { ang:0, spd:0, rip:[] }], lastFrame:performance.now() };
       addHolds(game.notes, settings.diff);
       $('bdHudTrack').textContent = tr.name;
       $('bdHudDiff').textContent = settings.diff[0].toUpperCase() + settings.diff.slice(1) + ' · ' + game.notes.length + ' notes' + (ranked ? ' · Ranked @' + ranked.handle : '');
@@ -1708,13 +1710,21 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     }
     function judge(kind, lane){
       game.counts[kind]++;
-      if (kind === 'miss') game.combo = 0;
-      else {
+      const od = inOverdrive();
+      if (kind === 'miss'){
+        game.combo = 0;
+        if (!od) game.energy = Math.max(0, game.energy - OD_MISS);
+      } else {
         game.combo++; game.maxCombo = Math.max(game.maxCombo, game.combo);
-        game.score += Math.round({ perfect:300, great:200, good:100 }[kind] * (1 + Math.min(game.combo, 100) / 100));
-        game.fx.push({ lane, t:performance.now() });
+        const add = Math.round({ perfect:300, great:200, good:100 }[kind] * (1 + Math.min(game.combo, 100) / 100));
+        game.score += add;
+        if (od){ game.score += add; game.odBonus += add; }          // overdrive: double points
+        else addEnergy(OD_GAIN[kind]);
+        const now = performance.now();
+        game.fx.push({ lane, t:now });
         const side = lane < 2 ? 0 : 1;
-        game.deckKick[side] = performance.now(); game.vu[side] = Math.min(1, game.vu[side] + .35); game.xfTarget = side ? 1 : -1;
+        game.deckKick[side] = now; game.xfTarget = side ? 1 : -1; game.padHit[lane] = now;
+        game.deck[side].rip.push({ t:now, col:LANE[lane], big:kind === 'perfect' });
       }
       game.judge = { kind, t:performance.now() };
       $('bdScore').textContent = game.score.toLocaleString();
@@ -1723,6 +1733,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     function press(lane){
       if (!game || game.paused || game.ended) return;
       game.pressed[lane] = 1; game.glow[lane] = performance.now();
+      game.deckKick[lane < 2 ? 0 : 1] = Math.max(game.deckKick[lane < 2 ? 0 : 1], performance.now() - 180);   // a small nudge even on a press
       const t = songT();
       let best = null, bd = 1e9;
       for (let i = game.head; i < game.notes.length; i++){
@@ -1737,6 +1748,15 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         if (best.end){ best.holding = true; game.holding[lane] = best; }
       }
     }
+
+    /* ----- overdrive: the rainbow meters fill with good hits; when full, 8 seconds of double points ----- */
+    const OD_GAIN = { perfect:.045, great:.03, good:.015 }, OD_MISS = .15, OD_HOLD = .06, OD_SECS = 8;
+    const inOverdrive = () => game && songT() < game.odUntil;
+    function addEnergy(v){
+      if (inOverdrive()) return;
+      game.energy = Math.min(1, game.energy + v);
+      if (game.energy >= 1){ game.odUntil = songT() + OD_SECS; game.odFlash = performance.now(); }
+    }
     function flashJudge(kind){ game.judge = { kind, t:performance.now() }; }
     function tickHold(n, t){
       const tk = Math.max(0, Math.floor((Math.min(t, n.end) - n.t) * 10 + 1e-9));
@@ -1748,7 +1768,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       if (how === 'done'){
         n.done = true; game.score += HOLD_DONE; game.holdBonus += HOLD_DONE;
         $('bdScore').textContent = game.score.toLocaleString();
-        game.fx.push({ lane, t:performance.now() }); flashJudge('hold');
+        game.fx.push({ lane, t:performance.now() }); flashJudge('hold'); addEnergy(OD_HOLD);
       } else { n.broke = true; flashJudge(how); }
     }
     function release(lane){
@@ -1821,12 +1841,14 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     }
     function drawDeck(cx, cy, w, side, t, now){
       const h = w * 1.02, L = cx - w / 2, T = cy - h / 2, R = w * .36;
+      const dk = game.deck[side], od = inOverdrive();
       const accent = side ? '#22E4F5' : '#FF2D9B', label = side ? '#22E4F5' : '#FF2D9B';
       // plinth
       rr(L, T, w, h, 18);
       const pg = g2.createLinearGradient(L, T, L + w, T + h); pg.addColorStop(0, '#111733'); pg.addColorStop(1, '#070a17');
       g2.fillStyle = pg; g2.fill();
-      g2.save(); g2.shadowColor = accent; g2.shadowBlur = 14; g2.strokeStyle = accent; g2.globalAlpha = .55; g2.lineWidth = 2; g2.stroke(); g2.restore();
+      const odNow = inOverdrive(), trim = odNow ? 'hsl(' + ((now / 8 + side * 180) % 360) + ',100%,62%)' : accent;
+      g2.save(); g2.shadowColor = trim; g2.shadowBlur = odNow ? 22 : 14; g2.strokeStyle = trim; g2.globalAlpha = odNow ? .9 : .55; g2.lineWidth = 2; g2.stroke(); g2.restore();
       for (const [sx, sy] of [[L + 10, T + 10], [L + w - 10, T + 10], [L + 10, T + h - 10], [L + w - 10, T + h - 10]]){
         g2.beginPath(); g2.arc(sx, sy, 2.2, 0, Math.PI * 2); g2.fillStyle = 'rgba(143,163,200,.35)'; g2.fill();
       }
@@ -1835,14 +1857,19 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       const kickAge = now - game.deckKick[side], kick = kickAge < 300 ? 1 - kickAge / 300 : 0;
       g2.beginPath(); g2.arc(rx, ry, R * 1.05, 0, Math.PI * 2); g2.fillStyle = '#1a2038'; g2.fill();
       for (let k = 0; k < 40; k++){
-        const a = k / 40 * Math.PI * 2 + (t > 0 ? t * .25 : 0);
+        const a = k / 40 * Math.PI * 2 + dk.ang * (.15 + Math.min(game.combo, 60) / 120);
         g2.beginPath(); g2.arc(rx + Math.cos(a) * R * 1.1, ry + Math.sin(a) * R * 1.1, 1.6, 0, Math.PI * 2);
-        g2.fillStyle = accent; g2.globalAlpha = .25 + kick * .7; g2.fill();
+        g2.fillStyle = od ? 'hsl(' + ((k * 9 + now / 6) % 360) + ',100%,62%)' : accent; g2.globalAlpha = (od ? .75 : .25) + kick * .7; g2.fill();
       }
       g2.globalAlpha = 1;
-      // the record spins at 33 1/3 rpm with the song, with a little scratch wiggle on hits
-      const base = Math.max(0, t) * Math.PI * 2 * (100 / 3 / 60);
-      const wig = kickAge < 260 ? Math.sin(kickAge / 26) * .22 * (1 - kickAge / 260) : 0;
+      // the record spins at 33 1/3 rpm; holding a note on this side slows it like a hand on the record,
+      // overdrive makes it race, and every hit gives it a quick scratch
+      const holdingHere = side ? (game.holding[2] || game.holding[3]) : (game.holding[0] || game.holding[1]);
+      const target = (t < 0 || game.paused) ? 0 : holdingHere ? .35 : od ? 2.2 : 1;
+      dk.spd += (target - dk.spd) * .08;
+      dk.ang += game.frameDt * Math.PI * 2 * (100 / 3 / 60) * dk.spd;
+      const base = dk.ang;
+      const wig = kickAge < 260 ? Math.sin(kickAge / 26) * .3 * (1 - kickAge / 260) : 0;
       const img = vinylImg(R, label);
       g2.save(); g2.translate(rx, ry); g2.rotate(base - wig);
       g2.drawImage(img, -(R + 2), -(R + 2), (R + 2) * 2, (R + 2) * 2); g2.restore();
@@ -1852,6 +1879,13 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       sh.addColorStop(.3, 'rgba(255,255,255,0)'); sh.addColorStop(.47, 'rgba(255,255,255,.09)'); sh.addColorStop(.53, 'rgba(255,255,255,.09)'); sh.addColorStop(.7, 'rgba(255,255,255,0)');
       g2.fillStyle = sh; g2.fillRect(rx - R, ry - R, R * 2, R * 2); g2.restore();
       if (kick){ g2.save(); g2.globalAlpha = kick * .5; g2.shadowColor = label; g2.shadowBlur = 30; g2.beginPath(); g2.arc(rx, ry, R * .32, 0, Math.PI * 2); g2.strokeStyle = label; g2.lineWidth = 3; g2.stroke(); g2.restore(); }
+      dk.rip = dk.rip.filter(rp => now - rp.t < 450);
+      for (const rp of dk.rip){
+        const q = (now - rp.t) / 450;
+        g2.save(); g2.globalAlpha = (1 - q) * (rp.big ? .9 : .55); g2.strokeStyle = rp.col; g2.shadowColor = rp.col; g2.shadowBlur = 14;
+        g2.lineWidth = (rp.big ? 4 : 2.5) * (1 - q) + .5;
+        g2.beginPath(); g2.arc(rx, ry, R * (1.06 + q * (rp.big ? .26 : .16)), 0, Math.PI * 2); g2.stroke(); g2.restore();
+      }
       // tonearm: the needle walks inward as the song plays
       const px = L + w * .89, py = T + h * .13;
       const prog = Math.max(0, Math.min(1, t / game.dur));
@@ -1879,11 +1913,24 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       for (let k = 0; k <= 8; k++){ g2.fillStyle = 'rgba(143,163,200,.3)'; g2.fillRect(fx - 11, fy1 + k * (fy2 - fy1) / 8, 5, 1); }
       g2.fillStyle = '#c9d2e8'; rr(fx - 9, (fy1 + fy2) / 2 - 6, 18, 12, 3); g2.fill();
       g2.fillStyle = accent; g2.fillRect(fx - 7, (fy1 + fy2) / 2 - 1, 14, 2);
-      // start button with a play light
+      // performance pads: one per lane on this side, they light when you press and flash on hits
+      const ps = Math.max(18, w * .085), py2 = T + h * .9 - ps;
+      for (let k = 0; k < 2; k++){
+        const lane = side * 2 + k, padX = L + w * .06 + k * (ps + 8);
+        const hitAge = now - game.padHit[lane], flash = hitAge < 260 ? 1 - hitAge / 260 : 0;
+        rr(padX, py2, ps, ps, 5); g2.fillStyle = '#141a33'; g2.fill();
+        if (game.pressed[lane] || flash){
+          g2.save(); g2.fillStyle = LANE[lane]; g2.shadowColor = LANE[lane]; g2.shadowBlur = 10 + flash * 16;
+          g2.globalAlpha = Math.min(1, (game.pressed[lane] ? .55 : 0) + flash * .6); g2.fill(); g2.restore();
+          if (flash){ g2.fillStyle = '#ffffff'; g2.globalAlpha = flash * .5; rr(padX + ps * .2, py2 + ps * .2, ps * .6, ps * .6, 3); g2.fill(); g2.globalAlpha = 1; }
+        }
+        g2.strokeStyle = LANE[lane]; g2.globalAlpha = .6; g2.lineWidth = 1.5; rr(padX, py2, ps, ps, 5); g2.stroke(); g2.globalAlpha = 1;
+        g2.fillStyle = game.pressed[lane] ? '#04060E' : 'rgba(242,246,255,.7)'; g2.font = '700 ' + Math.round(ps * .42) + 'px ' + FONT;
+        g2.textAlign = 'center'; g2.textBaseline = 'middle'; g2.fillText(keyLabel(keys[lane]), padX + ps / 2, py2 + ps / 2 + 1);
+      }
       const on = t >= 0 && !game.paused;
-      const bx2 = L + w * .06, by2 = T + h * .9 - 16;
-      g2.fillStyle = '#1a2038'; rr(bx2, by2, 34, 20, 4); g2.fill();
-      g2.beginPath(); g2.arc(bx2 + 44, by2 + 10, 3.5, 0, Math.PI * 2);
+      const bx2 = L + w * .06 + 2 * (ps + 8) - 8, by2 = py2 + ps / 2 - 10;
+      g2.beginPath(); g2.arc(bx2 + 14, by2 + 10, 3.5, 0, Math.PI * 2);
       g2.fillStyle = on ? '#4DFF6A' : '#2a3150'; g2.shadowColor = '#4DFF6A'; g2.shadowBlur = on ? 10 : 0; g2.fill(); g2.shadowBlur = 0;
     }
     function drawRig(t, now, Wd, H, lw, ox, hitY){
@@ -1900,17 +1947,25 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       const hg = g2.createLinearGradient(hx, 0, hx + hw, 0);
       hg.addColorStop(0, '#0c1128'); hg.addColorStop(.5, '#090d1f'); hg.addColorStop(1, '#0c1128');
       g2.fillStyle = hg; g2.fillRect(hx, 0, hw, H);
-      g2.fillStyle = 'rgba(182,124,255,.35)'; g2.fillRect(hx, 0, 1.5, H); g2.fillRect(hx + hw - 1.5, 0, 1.5, H);
-      for (let side = 0; side < 2; side++) game.vu[side] *= .93;
+      const od = inOverdrive();
+      if (od){
+        const tg = g2.createLinearGradient(0, 0, 0, H);
+        for (let k = 0; k <= 6; k++) tg.addColorStop(k / 6, 'hsl(' + ((k * 60 + now / 5) % 360) + ',100%,62%)');
+        g2.fillStyle = tg; g2.fillRect(hx, 0, 2, H); g2.fillRect(hx + hw - 2, 0, 2, H);
+      } else { g2.fillStyle = 'rgba(182,124,255,.35)'; g2.fillRect(hx, 0, 1.5, H); g2.fillRect(hx + hw - 1.5, 0, 1.5, H); }
+      // energy level: fills with good hits, drains during overdrive
+      const level = od ? Math.max(0, (game.odUntil - t) / OD_SECS) : game.energy;
       if (pad){
-        const top = H * .16, bot = hitY - 24, segs = 18, sh = (bot - top) / segs;
+        const top = H * .16, bot = hitY - 24, segs = 22, sh = (bot - top) / segs, lit = level * segs;
+        const ready = !od && level > .85, pulse = ready ? .55 + .45 * Math.sin(now / 120) : 1;
         for (let side = 0; side < 2; side++){
-          const mx = side ? ox + lw * 4 + 8 : ox - 18, lit = Math.round(game.vu[side] * segs);
+          const mx = side ? ox + lw * 4 + 8 : ox - 18;
           for (let k = 0; k < segs; k++){
-            const y = bot - (k + 1) * sh, on = k < lit;
-            const col = k > segs * .82 ? '#FF2D9B' : k > segs * .6 ? '#FFC93C' : '#4DFF6A';
-            g2.fillStyle = col; g2.globalAlpha = on ? .95 : .12;
-            if (on){ g2.shadowColor = col; g2.shadowBlur = 8; }
+            const y = bot - (k + 1) * sh, hue = od ? (270 - k / (segs - 1) * 270 + now / 4) % 360 : 270 - k / (segs - 1) * 270;
+            const part = Math.max(0, Math.min(1, lit - k));
+            g2.fillStyle = 'hsl(' + hue + ',100%,' + (part ? 60 : 45) + '%)';
+            g2.globalAlpha = part ? (.35 + .6 * part) * pulse : .1;
+            if (part){ g2.shadowColor = g2.fillStyle; g2.shadowBlur = od ? 14 : 9; }
             g2.fillRect(mx, y + 1, 10, sh - 3); g2.shadowBlur = 0;
           }
           g2.globalAlpha = 1;
@@ -1932,6 +1987,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       const { Wd, H, lw, ox, hitY } = layout(), now = performance.now();
       g2.setTransform(dpr, 0, 0, dpr, 0, 0);
       g2.clearRect(0, 0, Wd, H);
+      game.frameDt = Math.min(.1, (now - game.lastFrame) / 1000); game.lastFrame = now;
       drawRig(t, now, Wd, H, lw, ox, hitY);
       for (let i = 0; i < 4; i++){
         const x = ox + i*lw;
@@ -1943,8 +1999,11 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
           g2.globalAlpha = game.pressed[i] ? .3 : .3 * (1 - age); g2.fillStyle = gr; g2.fillRect(x, 0, lw, hitY); g2.globalAlpha = 1;
         }
       }
-      g2.fillStyle = 'rgba(34,228,245,.22)';
-      for (let i = 0; i <= 4; i++) g2.fillRect(ox + i*lw - 1, 0, 2, H);
+      const odOn = inOverdrive();
+      for (let i = 0; i <= 4; i++){
+        g2.fillStyle = odOn ? 'hsla(' + ((i * 50 + now / 5) % 360) + ',100%,62%,.55)' : 'rgba(34,228,245,.22)';
+        g2.fillRect(ox + i*lw - 1, 0, 2, H);
+      }
       g2.textAlign = 'center'; g2.textBaseline = 'middle';
       for (let i = 0; i < 4; i++){
         rr(ox + i*lw + 6, hitY - 11, lw - 12, 22, 11);
@@ -2029,6 +2088,33 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         g2.beginPath(); g2.ellipse(cx, hitY, lw*.35 + p*lw*.5, 10 + p*28, 0, 0, Math.PI*2); g2.stroke();
         g2.globalAlpha = 1;
       }
+      // overdrive: one rainbow shockwave + title when it kicks in, then a small timer above the lanes
+      const odAge = now - game.odFlash;
+      if (odAge < 900){
+        const q = odAge / 900, cx0 = ox + lw * 2, maxR = Math.hypot(Wd, H) * .6;
+        if (odAge < 220){ g2.fillStyle = '#ffffff'; g2.globalAlpha = .12 * (1 - odAge / 220); g2.fillRect(0, 0, Wd, H); g2.globalAlpha = 1; }
+        for (let k = 0; k < 3; k++){
+          g2.beginPath(); g2.arc(cx0, hitY, Math.max(1, maxR * q - k * 14), 0, Math.PI * 2);
+          g2.strokeStyle = 'hsl(' + ((k * 120 + now / 3) % 360) + ',100%,62%)'; g2.globalAlpha = (1 - q) * .8; g2.lineWidth = 4; g2.stroke();
+        }
+        g2.globalAlpha = 1;
+      }
+      if (odAge < 1500){
+        const q = odAge / 1500, sc = 1 + Math.max(0, .15 - q) * 2, txt = 'OVERDRIVE ×2';
+        g2.font = '700 ' + Math.round(40 * sc) + 'px ' + FONT;
+        let tx = ox + lw * 2 - g2.measureText(txt).width / 2;
+        g2.textAlign = 'left'; g2.globalAlpha = Math.min(1, (1 - q) * 3);
+        for (let k = 0; k < txt.length; k++){
+          const col = 'hsl(' + ((k * 30 + now / 4) % 360) + ',100%,64%)';
+          g2.fillStyle = col; g2.shadowColor = col; g2.shadowBlur = 18; g2.fillText(txt[k], tx, H * .27);
+          tx += g2.measureText(txt[k]).width;
+        }
+        g2.shadowBlur = 0; g2.globalAlpha = 1; g2.textAlign = 'center';
+      } else if (odOn){
+        const left = Math.ceil(game.odUntil - t);
+        g2.font = '700 15px ' + FONT; g2.fillStyle = 'hsl(' + ((now / 5) % 360) + ',100%,66%)';
+        g2.shadowColor = g2.fillStyle; g2.shadowBlur = 10; g2.fillText('×2 OVERDRIVE · ' + left + 's', ox + lw * 2, 84); g2.shadowBlur = 0;
+      }
       if (t < 0){
         g2.fillStyle = '#F2F6FF'; g2.font = '700 64px ' + FONT;
         g2.shadowColor = '#22E4F5'; g2.shadowBlur = 20;
@@ -2086,14 +2172,17 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       $('bdRGrade').style.color = gc; $('bdRGrade').style.textShadow = '0 0 18px ' + gc;
       $('bdRNew').textContent = isNew ? (prev ? 'New best score' : 'First clear on this difficulty') : 'Best: ' + prev.score.toLocaleString();
       $('bdRScore').textContent = game.score.toLocaleString();
-      $('bdRScoreLbl').textContent = game.holdBonus ? 'Score (+' + game.holdBonus.toLocaleString() + ' from holds)' : 'Score';
+      const extras = [];
+      if (game.holdBonus) extras.push('+' + game.holdBonus.toLocaleString() + ' holds');
+      if (game.odBonus) extras.push('+' + game.odBonus.toLocaleString() + ' overdrive');
+      $('bdRScoreLbl').textContent = extras.length ? 'Score (' + extras.join(', ') + ')' : 'Score';
       $('bdRAcc').textContent = acc.toFixed(1) + '%';
       $('bdRCombo').textContent = game.maxCombo;
       $('bdRHits').textContent = c.perfect + ' / ' + c.great + ' / ' + c.good + ' / ' + c.miss;
       show('bdResult');
       celebrate(isNew);
       $('bdREntry').textContent = game.rankNote || '';
-      if (game.ranked) submitRanked(game.ranked, { score:game.score, maxCombo:game.maxCombo, counts:Object.assign({}, c), holdBonus:game.holdBonus });
+      if (game.ranked) submitRanked(game.ranked, { score:game.score, maxCombo:game.maxCombo, counts:Object.assign({}, c), holdBonus:game.holdBonus, odBonus:game.odBonus });
       prepareShare({ track:game.tr.name, diff:settings.diff, grade, score:game.score, acc, maxCombo:game.maxCombo, counts:Object.assign({}, c), isNew });
     }
 
@@ -2383,7 +2472,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     }
     function submitRanked(rk, res){
       $('bdREntry').textContent = 'Saving your score to the Top 10…';
-      post({ action:'bb_end', session:rk.session, score:res.score, maxCombo:res.maxCombo, counts:res.counts, holdBonus:res.holdBonus }).then(r => {
+      post({ action:'bb_end', session:rk.session, score:res.score, maxCombo:res.maxCombo, counts:res.counts, holdBonus:res.holdBonus, odBonus:res.odBonus }).then(r => {
         $('bdGive').classList.remove('on');
         if (r && r.ok){
           const msg = 'Entered! @' + rk.handle + ' scored ' + r.score.toLocaleString() + '.' + (r.rank ? ' You’re #' + r.rank + ' on the Top 10!' : '');
