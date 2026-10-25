@@ -661,6 +661,19 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 .bd-bots button[aria-pressed="true"]{border-color:#FF2D9B; box-shadow:0 0 12px rgba(255,45,155,.6)}
 .bd-bots button:focus-visible{outline:2px solid #22E4F5; outline-offset:2px}
 .bd-deckname{display:block; font-weight:500; font-size:.78rem; opacity:.7}
+.bd-speedwarn{display:block; font-weight:500; font-size:.74rem; color:var(--err)}
+.bd-speedwarn[hidden]{display:none}
+.bd-howto{margin-left:.5rem; padding:.15rem .55rem; border:1px solid var(--pink); border-radius:999px; background:rgba(255,45,155,.1); color:var(--pink); font:inherit; font-size:.72rem; font-weight:600; vertical-align:middle; cursor:pointer; box-shadow:0 0 8px rgba(255,45,155,.3); white-space:nowrap}
+.bd-howto:hover{background:rgba(255,45,155,.22)}
+.bd-howto:focus-visible{outline:2px solid var(--cyan); outline-offset:2px}
+.howto-ov{position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:16px; background:rgba(4,6,14,.72); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px)}
+.howto-ov[hidden]{display:none}
+.howto-box{position:relative; width:min(900px, 100%); max-height:100%; overflow:auto; padding:14px 16px 16px; border:1px solid var(--cyan); border-radius:16px; background:#0A1022; box-shadow:0 0 0 1px rgba(255,45,155,.35), 0 0 32px rgba(34,228,245,.3), 0 0 60px rgba(255,45,155,.18)}
+.howto-box h3{margin:0 44px 12px 0; font-size:1.05rem; color:var(--ink)}
+.howto-box video{display:block; width:100%; height:auto; aspect-ratio:16/9; border-radius:10px; background:#000}
+.howto-x{position:absolute; top:8px; right:8px; width:36px; height:36px; border:1px solid var(--line); border-radius:50%; background:rgba(2,4,12,.8); color:var(--ink); font:inherit; font-size:1.3rem; line-height:1; cursor:pointer}
+.howto-x:hover{border-color:var(--pink); color:var(--pink)}
+.howto-x:focus-visible{outline:2px solid var(--pink); outline-offset:2px}
 </style>
 </head>
 <body>
@@ -710,6 +723,14 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       <p class="bd-lb-foot">Best score per player, from games played with an X handle.</p>
     </section>
     <div class="bd-main">
+    <h3 class="bd-sub">Setup</h3>
+    <div class="bd-setup">
+      <div class="bd-row" id="bdBotRow"><span>Your DJ bot</span><div class="bd-bots" id="bdBots" role="group" aria-label="Pick your DJ bot"></div></div>
+      <div class="bd-row" id="bdDeckRow"><span>Deck style <small class="bd-deckname" id="bdDeckName"></small></span><div class="bd-bots" id="bdDecks" role="group" aria-label="Pick your deck style"></div></div>
+      <div class="bd-row"><span>Hit keys <button class="bd-howto" id="bdHowBtn" type="button" aria-haspopup="dialog">▶ How to</button></span><div class="bd-keys" id="bdKeys"></div></div>
+      <div class="bd-row"><span>Note speed <small class="bd-speedwarn" id="bdSpeedWarn" hidden>Below 1.0× won’t count for the Top 10</small></span><div class="bd-range"><input type="range" id="bdSpeed" min="0.6" max="2.2" step="0.1" aria-label="Note speed"><output id="bdSpeedOut"></output></div></div>
+      <div class="bd-row"><span>Audio offset</span><div class="bd-range"><input type="range" id="bdOffset" min="-150" max="150" step="5" aria-label="Audio offset in milliseconds"><output id="bdOffsetOut"></output></div></div>
+    </div>
     <div class="bd-head">
       <h2 class="bd-title">Pick a track</h2>
       <div class="bd-seg" id="bdDiff" role="group" aria-label="Difficulty">
@@ -728,14 +749,6 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       <button class="bd-btn" id="bdAddBtn" type="button">Add track</button>
     </div>
     <div id="bdRemoved"></div>
-    <h3 class="bd-sub">Setup</h3>
-    <div class="bd-setup">
-      <div class="bd-row" id="bdBotRow"><span>Your DJ bot</span><div class="bd-bots" id="bdBots" role="group" aria-label="Pick your DJ bot"></div></div>
-      <div class="bd-row" id="bdDeckRow"><span>Deck style <small class="bd-deckname" id="bdDeckName"></small></span><div class="bd-bots" id="bdDecks" role="group" aria-label="Pick your deck style"></div></div>
-      <div class="bd-row"><span>Hit keys</span><div class="bd-keys" id="bdKeys"></div></div>
-      <div class="bd-row"><span>Note speed</span><div class="bd-range"><input type="range" id="bdSpeed" min="0.6" max="2.2" step="0.1" aria-label="Note speed"><output id="bdSpeedOut"></output></div></div>
-      <div class="bd-row"><span>Audio offset</span><div class="bd-range"><input type="range" id="bdOffset" min="-150" max="150" step="5" aria-label="Audio offset in milliseconds"><output id="bdOffsetOut"></output></div></div>
-    </div>
     <p class="bd-hint">Notes are mapped from the beats in each song. Long notes with a tail are holds: keep the key down while the line lights up, then let go before the next note for bonus points. The ECHO1 DJ bot dances harder at 10, 25 and 50 combos, scratches during holds, and glitches when you miss. Good hits fill the rainbow meters; when they’re full, Overdrive gives double points for 8 seconds. Click a key box to rebind it, tap the lanes on a phone, and press Esc to pause. The page music pauses while you play.</p>
     </div>
     </div></div>
@@ -814,6 +827,13 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
   <button class="critter-switch" id="watchSwitch" type="button" role="switch" aria-checked="false">
     <span class="track"><span class="knob"></span></span><span>Watch visualz</span>
   </button>
+</div>
+<div class="howto-ov" id="howOv" hidden>
+  <div class="howto-box" role="dialog" aria-modal="true" aria-labelledby="howTitle">
+    <h3 id="howTitle">How to change your hit keys</h3>
+    <button class="howto-x" id="howX" type="button" aria-label="Close">×</button>
+    <video id="howVid" src="how-to-keys.mp4" poster="how-to-keys.jpg" controls playsinline preload="none"></video>
+  </div>
 </div>
 <audio id="bgm" preload="auto"></audio>
 
@@ -1394,6 +1414,8 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     const fileInfo = {}, rawMem = {}, buffers = {}, charts = {}, fromBook = {};
 
     /* ----- Top 10 leaderboard (same Google Apps Script as Memory Protocol) ----- */
+    const BB_MIN_SPEED = 1.0;   // must match BB_MIN_SPEED in BeatBreakerz.gs: slower games are saved but kept off the Top 10
+    const slowSpeed = v => Math.round(v * 10) / 10 < BB_MIN_SPEED;
     const GA_URL = "https://script.google.com/macros/s/AKfycbzPfcD3UdovuryFJ7_SE-TrLOl61dOyp6-88GaOzpKYt_EgiDCh-AS_hbIKGvT-bEzfoA/exec";
     const post = body => Promise.race([
       fetch(GA_URL, { method:'POST', body:JSON.stringify(body) }).then(r => r.json()),
@@ -1614,7 +1636,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     let rebinding = -1;
     function renderSettings(){
       document.querySelectorAll('#bdDiff button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.d === settings.diff)));
-      $('bdSpeed').value = settings.speed; $('bdSpeedOut').textContent = settings.speed.toFixed(1) + '×';
+      $('bdSpeed').value = settings.speed; $('bdSpeedOut').textContent = settings.speed.toFixed(1) + '×'; $('bdSpeedWarn').hidden = !slowSpeed(settings.speed);
       $('bdOffset').value = settings.offset; $('bdOffsetOut').textContent = (settings.offset > 0 ? '+' : '') + settings.offset + ' ms';
       const kb = $('bdKeys'); kb.innerHTML = '';
       keys.forEach((k, i) => {
@@ -1629,6 +1651,19 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     document.querySelectorAll('#bdDiff button').forEach(b => b.addEventListener('click', () => { settings.diff = b.dataset.d; saveSettings(); renderSettings(); renderTracks(); loadTop(); }));
     $('bdSpeed').addEventListener('input', e => { settings.speed = +e.target.value; saveSettings(); renderSettings(); });
     $('bdOffset').addEventListener('input', e => { settings.offset = +e.target.value; saveSettings(); renderSettings(); });
+
+    /* ----- how-to video popup ----- */
+    const howOv = $('howOv'), howVid = $('howVid'), howBtn = $('bdHowBtn');
+    const howOpen = () => !howOv.hidden;
+    function setHow(on){
+      if (on){ if (rebinding >= 0){ rebinding = -1; renderSettings(); } howOv.hidden = false; $('howX').focus(); }
+      else { howVid.pause(); try { howVid.currentTime = 0; } catch(e){} howOv.hidden = true; howBtn.focus(); }
+    }
+    howBtn.addEventListener('click', () => setHow(true));
+    $('howX').addEventListener('click', () => setHow(false));
+    howOv.addEventListener('click', e => { if (e.target === howOv) setHow(false); });
+    window.addEventListener('keydown', e => { if (howOpen() && e.key === 'Escape'){ e.preventDefault(); e.stopImmediatePropagation(); setHow(false); } }, true);
+    howVid.addEventListener('play', () => { if (howOv.hidden){ howVid.pause(); return; } const m = $('bgm'), pb = $('playBtn'); if (m && pb && !m.paused) pb.click(); });
 
     /* ----- page music steps aside while you play ----- */
     const bgm = $('bgm'), pagePlay = $('playBtn');
@@ -1693,8 +1728,11 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
           else {
             $('bdLoadSub').textContent = tr.name + ' · ranked as @' + h;
             try {
-              const r = await post({ action:'bb_start', handle:h, song:tr.src, diff:settings.diff });
-              if (r && r.session) ranked = { session:r.session, handle:h, song:tr.src, diff:settings.diff };
+              const r = await post({ action:'bb_start', handle:h, song:tr.src, diff:settings.diff, speed:settings.speed });
+              if (r && r.session){
+                ranked = { session:r.session, handle:h, song:tr.src, diff:settings.diff, speed:settings.speed };
+                if (slowSpeed(settings.speed)) rankNote = 'Note speed is below 1.0×, so this score is saved but won’t make the Top 10.';
+              }
               else rankNote = 'The leaderboard didn’t accept that handle, so this game isn’t ranked.';
             } catch(e){ rankNote = 'Couldn’t reach the leaderboard, so this game isn’t ranked.'; }
           }
@@ -3227,6 +3265,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 
     /* ----- input ----- */
     document.addEventListener('keydown', e => {
+      if (howOpen()) return;
       if (rebinding >= 0){
         e.preventDefault();
         if (e.key !== 'Escape' && e.key.length === 1){
@@ -3329,7 +3368,9 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       post({ action:'bb_end', session:rk.session, score:res.score, maxCombo:res.maxCombo, counts:res.counts, holdBonus:res.holdBonus, odBonus:res.odBonus }).then(r => {
         $('bdGive').classList.remove('on');
         if (r && r.ok){
-          const msg = 'Entered! @' + rk.handle + ' scored ' + r.score.toLocaleString() + '.' + (r.rank ? ' You’re #' + r.rank + ' on the Top 10!' : '');
+          const msg = slowSpeed(rk.speed)
+            ? 'Saved! @' + rk.handle + ' scored ' + r.score.toLocaleString() + '. Slow note speed (' + rk.speed.toFixed(1) + '×) doesn’t count for the Top 10. Set it to 1.0× or higher to get ranked.'
+            : 'Entered! @' + rk.handle + ' scored ' + r.score.toLocaleString() + '.' + (r.rank ? ' You’re #' + r.rank + ' on the Top 10!' : '');
           $('bdREntry').textContent = msg; giveMsg(msg);
           if (lastResult) lastResult.rank = r.rank || 0;
           if (rk.diff === settings.diff){
