@@ -839,6 +839,20 @@ html.sj-soon .sj-soon-panel{display:block}
 .sj-soon-bot i{font-style:normal; color:var(--cyan); animation:sjBlink 1.2s steps(2,start) infinite}
 @keyframes sjBlink{to{visibility:hidden}}
 @media (prefers-reduced-motion: reduce){.sj-soon-bot i{animation:none}}
+/* small launch countdown in the top left, under the link buttons (same timer as the panel, hides at launch) */
+.sj-mini-cd{display:none}
+html.sj-soon .sj-mini-cd{display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:.35rem .7rem .4rem;
+  border-radius:12px; background:rgba(4,6,14,.88); border:1px solid rgba(34,228,245,.45);
+  box-shadow:0 0 14px rgba(255,45,155,.22), inset 0 0 12px rgba(34,228,245,.08); pointer-events:none}
+.sj-mini-cd span{font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.6rem; font-weight:600; letter-spacing:.2em;
+  text-transform:uppercase; color:var(--cyan)}
+.sj-mini-cd b{font-family:"JetBrains Mono",ui-monospace,monospace; font-weight:600; font-size:.95rem; line-height:1.1;
+  font-variant-numeric:tabular-nums; color:#fff; letter-spacing:.04em; text-shadow:0 0 8px rgba(255,45,155,.55); white-space:nowrap}
+@media (max-width:720px){
+  html.sj-soon .sj-mini-cd{grid-column:1 / -1; padding:.3rem .45rem .35rem; align-items:center; text-align:center}
+  .sj-mini-cd span{font-size:.52rem; letter-spacing:.14em}
+  .sj-mini-cd b{font-size:.78rem; letter-spacing:0}
+}
 </style>
 <script>
   /* ===== LAUNCH TIME =====
@@ -875,6 +889,7 @@ html.sj-soon .sj-soon-panel{display:block}
   <a class="tl" href="https://x.com/EchoBotzSOL" target="_blank" rel="noopener" aria-label="ECHO Botz on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.2 2.5h3.4l-7.4 8.5 8.7 11.5h-6.8l-5.3-7-6.1 7H1.3l7.9-9.1L.9 2.5h7l4.8 6.4 5.5-6.4zm-1.2 18h1.9L7.1 4.4H5.1L17 20.5z"/></svg><span>@EchoBotzSOL</span></a>
   <a class="tl" href="https://x.com/Echo1OnChain" target="_blank" rel="noopener" aria-label="ECHO1 on X"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.2 2.5h3.4l-7.4 8.5 8.7 11.5h-6.8l-5.3-7-6.1 7H1.3l7.9-9.1L.9 2.5h7l4.8 6.4 5.5-6.4zm-1.2 18h1.9L7.1 4.4H5.1L17 20.5z"/></svg><span>@Echo1OnChain</span></a>
 <a class="tl" href="https://open.spotify.com/artist/63XWxjfJb7v7pSwdn9F8u6?si=_q8RapZsSOGyA2FKauzSTQ" target="_blank" rel="noopener" aria-label="Listen to ECHO1 on Spotify"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#1ED760"/><path d="M6.5 9.3c3.6-1.1 8-.8 11 1M7 12.4c3-.9 6.6-.6 9.2.9M7.6 15.3c2.4-.6 5-.4 7.1.8" stroke="#04060E" stroke-width="1.7" stroke-linecap="round" fill="none"/></svg><span>Listen on Spotify</span></a>
+  <div class="sj-mini-cd" id="sjMiniCd" role="timer" aria-label="Time until Signal Jammer launches"><span>Launch in</span><b id="sjMiniT">00:00:00:00</b></div>
 </nav>
 
 <main>
@@ -2888,7 +2903,7 @@ requestAnimationFrame(t => { last = t; frame(t); });
   (() => {
     const pad = n => String(n).padStart(2, '0');
     const el = id => document.getElementById(id);
-    const d = el('sjCdD'), h = el('sjCdH'), m = el('sjCdM'), s = el('sjCdS');
+    const d = el('sjCdD'), h = el('sjCdH'), m = el('sjCdM'), s = el('sjCdS'), mini = el('sjMiniT');
     let timer = null;
     function reveal(){
       if (timer) { clearInterval(timer); timer = null; }
@@ -2906,6 +2921,7 @@ requestAnimationFrame(t => { last = t; frame(t); });
       h.textContent = pad(Math.floor(left % 86400 / 3600));
       m.textContent = pad(Math.floor(left % 3600 / 60));
       s.textContent = pad(left % 60);
+      if (mini) mini.textContent = d.textContent + ':' + h.textContent + ':' + m.textContent + ':' + s.textContent;
     }
     window.sjReveal = reveal;
     tick();
