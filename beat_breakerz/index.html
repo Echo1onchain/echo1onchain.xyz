@@ -708,6 +708,40 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 .howto-x{position:absolute; top:8px; right:8px; width:36px; height:36px; border:1px solid var(--line); border-radius:50%; background:rgba(2,4,12,.8); color:var(--ink); font:inherit; font-size:1.3rem; line-height:1; cursor:pointer}
 .howto-x:hover{border-color:var(--pink); color:var(--pink)}
 .howto-x:focus-visible{outline:2px solid var(--pink); outline-offset:2px}
+
+/* Top 10: the #1 score wears a crown. Purple, pink and gold outline plus light rays fanning up behind a little crown */
+.bd-lb-list li.bd-lb-top{position:relative; margin-top:32px; border-color:transparent; background:linear-gradient(180deg, rgba(255,201,60,.1), rgba(2,4,12,.7) 70%);
+  box-shadow:0 0 14px rgba(255,201,60,.35), 0 0 22px rgba(255,45,155,.25), 0 0 30px rgba(182,124,255,.2); animation:bdTopGlow 3s ease-in-out infinite}
+.bd-lb-list li.bd-lb-top::before{content:""; position:absolute; inset:-1px; padding:2.5px; border-radius:inherit; pointer-events:none;
+  background:linear-gradient(110deg, #B67CFF, #FF2D9B 17%, #FFC93C 33%, #B67CFF 50%, #FF2D9B 67%, #FFC93C 83%, #B67CFF); background-size:200% 100%; animation:bdTopEdge 4s linear infinite;
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0)}
+.bd-lb-list li.bd-lb-top .bd-lb-h{color:#FFE7A3}
+.bd-lb-list li.bd-lb-top .bd-lb-sc{color:#FFC93C; text-shadow:0 0 8px rgba(255,201,60,.6)}
+.bd-crown{position:absolute; left:50%; top:-23px; width:150px; height:30px; transform:translateX(-50%); pointer-events:none}
+.bd-crown svg{position:absolute; left:50%; bottom:2px; width:24px; height:18px; transform:translateX(-50%); fill:#FFC93C; filter:drop-shadow(0 0 4px rgba(255,201,60,.9)) drop-shadow(0 0 8px rgba(255,45,155,.5))}
+.bd-rays{position:absolute; left:50%; bottom:4px; width:150px; height:46px; transform:translateX(-50%); transform-origin:50% 100%;
+  background:repeating-conic-gradient(from 270deg at 50% 100%, rgba(255,214,90,.95) 0deg 4deg, rgba(255,45,155,0) 4deg 11deg, rgba(255,45,155,.75) 11deg 14deg, rgba(182,124,255,0) 14deg 21deg);
+  -webkit-mask:radial-gradient(ellipse 50% 100% at 50% 100%, #000 25%, transparent 80%); mask:radial-gradient(ellipse 50% 100% at 50% 100%, #000 25%, transparent 80%);
+  animation:bdRays 3s ease-in-out infinite}
+@keyframes bdTopEdge{to{background-position:200% 0}}
+@keyframes bdTopGlow{50%{box-shadow:0 0 20px rgba(255,201,60,.5), 0 0 30px rgba(255,45,155,.32), 0 0 40px rgba(182,124,255,.26)}}
+@keyframes bdRays{0%,100%{opacity:.75; transform:translateX(-50%) rotate(-4deg)} 50%{opacity:1; transform:translateX(-50%) rotate(4deg)}}
+@media (prefers-reduced-motion: reduce){.bd-lb-list li.bd-lb-top, .bd-lb-list li.bd-lb-top::before, .bd-rays{animation:none}}
+
+/* Top 10 speed icons: bolt (1.1×+), flame (1.5×+), insane skull (2.0×+) to the right of the handle */
+.bd-lb-who{display:flex; align-items:center; gap:6px; min-width:0}
+.bd-lb-who .bd-lb-h{min-width:0}
+.bd-spd{flex:none; display:inline-block; width:16px; height:16px; font-style:normal; line-height:0}
+.bd-spd svg{width:100%; height:100%; fill:currentColor; overflow:visible}
+.bd-spd-1{color:#22E4F5; filter:drop-shadow(0 0 4px rgba(34,228,245,.85))}
+.bd-spd-2{color:#FF5A3D; filter:drop-shadow(0 0 4px rgba(255,90,61,.9)); animation:bdFlame 1.4s ease-in-out infinite; transform-origin:50% 90%}
+.bd-spd-3{width:18px; height:18px; color:#FFC93C; filter:drop-shadow(0 0 4px #FF2D9B) drop-shadow(0 0 2px #FFC93C); animation:bdInsane 1.1s ease-in-out infinite}
+@keyframes bdFlame{0%,100%{transform:scale(1)} 30%{transform:scale(1.08,.94) rotate(-3deg)} 60%{transform:scale(.95,1.07) rotate(3deg)}}
+@keyframes bdInsane{0%,100%{transform:scale(1) rotate(0)} 25%{transform:scale(1.15) rotate(-8deg)} 50%{transform:scale(1.05) rotate(6deg)} 75%{transform:scale(1.18) rotate(-4deg)}}
+.bd-lb-legend{display:flex; justify-content:center; flex-wrap:wrap; gap:4px 12px; margin:10px 0 0; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.68rem; color:var(--muted)}
+.bd-lb-legend span{display:inline-flex; align-items:center; gap:4px; white-space:nowrap}
+.bd-lb-legend .bd-spd{width:13px; height:13px}
+@media (prefers-reduced-motion: reduce){.bd-spd-2, .bd-spd-3{animation:none}}
 </style>
 </head>
 <body>
@@ -754,6 +788,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       <div class="bd-lb-dots" id="bdLbDots" role="group" aria-label="Pick a song’s Top 10"></div>
       <div class="bd-lb-set" id="bdLbDiff"></div>
       <ol class="bd-lb-list" id="bdLbList"><li class="bd-lb-empty">Loading scores…</li></ol>
+      <p class="bd-lb-legend" aria-label="Speed icons: lightning bolt for 1.1 times speed and up, flame for 1.5 times and up, skull for insane 2.0 times and up"><span><i class="bd-spd bd-spd-1" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13.5 1.5 4 14h6.5L9 22.5 20 9.5h-6.8z"/></svg></i>1.1×+</span><span><i class="bd-spd bd-spd-2" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12.2 1.5c.8 4.3 6.3 6.2 6.3 12.2a6.5 6.5 0 0 1-13 0c0-3.3 1.8-5.3 3.3-6.7.2 2 1 3.4 2.5 4 .2-3.8-.3-6.5.9-9.5z"/><path fill="#FFC93C" d="M12 12.5c.4 1.9 2.8 2.7 2.8 5.2a2.8 2.8 0 0 1-5.6 0c0-1.4.8-2.3 1.4-2.9.1.9.5 1.5 1.1 1.8.1-1.7-.2-2.8.3-4.1z"/></svg></i>1.5×+</span><span><i class="bd-spd bd-spd-3" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 1.8c-5 0-8.7 3.5-8.7 8.2 0 2.7 1.2 4.8 3.2 6v3a1 1 0 0 0 1 1h1.7v-2.3h1.6V20h2.4v-2.3h1.6V20h1.7a1 1 0 0 0 1-1v-3c2-1.2 3.2-3.3 3.2-6 0-4.7-3.7-8.2-8.7-8.2z"/><circle cx="8.6" cy="10.6" r="2.3" fill="#FF2D9B"/><circle cx="15.4" cy="10.6" r="2.3" fill="#FF2D9B"/><path d="M12 13.3l-1.2 2.1h2.4z" fill="#2a1030"/></svg></i>2.0× Insane</span></p>
       <p class="bd-lb-foot">Best score per player, from games played with an X handle.</p>
     </section>
     <div class="bd-main">
@@ -3400,6 +3435,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     }, 6000);
     function giveMsg(t){ $('bdGiveMsg').textContent = t || ''; }
     function lbMsg(t){ const l = $('bdLbList'); l.innerHTML = ''; l.append(el('li', 'bd-lb-empty', t)); }
+    const SPD_BOLT = '<svg viewBox="0 0 24 24"><path d="M13.5 1.5 4 14h6.5L9 22.5 20 9.5h-6.8z"/></svg>', SPD_FLAME = '<svg viewBox="0 0 24 24"><path d="M12.2 1.5c.8 4.3 6.3 6.2 6.3 12.2a6.5 6.5 0 0 1-13 0c0-3.3 1.8-5.3 3.3-6.7.2 2 1 3.4 2.5 4 .2-3.8-.3-6.5.9-9.5z"/><path fill="#FFC93C" d="M12 12.5c.4 1.9 2.8 2.7 2.8 5.2a2.8 2.8 0 0 1-5.6 0c0-1.4.8-2.3 1.4-2.9.1.9.5 1.5 1.1 1.8.1-1.7-.2-2.8.3-4.1z"/></svg>', SPD_SKULL = '<svg viewBox="0 0 24 24"><path d="M12 1.8c-5 0-8.7 3.5-8.7 8.2 0 2.7 1.2 4.8 3.2 6v3a1 1 0 0 0 1 1h1.7v-2.3h1.6V20h2.4v-2.3h1.6V20h1.7a1 1 0 0 0 1-1v-3c2-1.2 3.2-3.3 3.2-6 0-4.7-3.7-8.2-8.7-8.2z"/><circle cx="8.6" cy="10.6" r="2.3" fill="#FF2D9B"/><circle cx="15.4" cy="10.6" r="2.3" fill="#FF2D9B"/><path d="M12 13.3l-1.2 2.1h2.4z" fill="#2a1030"/></svg>';
     function renderTop(top){
       const l = $('bdLbList'), me = cleanHandle($('bdHandle').value).toLowerCase();
       if (!top || !top.length){ lbMsg('No scores yet. Be the first!'); return; }
@@ -3410,7 +3446,25 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         a.href = 'https://x.com/' + encodeURIComponent(e.handle); a.target = '_blank'; a.rel = 'noopener';
         const sc = el('span', 'bd-lb-sc', Number(e.score).toLocaleString());
         sc.title = 'Grade ' + e.grade;
-        li.append(el('span', 'bd-lb-rk', '#' + (i + 1)), a, sc);
+        // speed badge: played faster than 1.0×? bolt, flame, or the insane skull
+        const who = el('span', 'bd-lb-who'); who.append(a);
+        const spd = Math.round(Number(e.speed) * 10) / 10;
+        if (spd > 1){
+          const tier = spd >= 2 ? 3 : spd >= 1.5 ? 2 : 1, name = ['', 'Fast', 'Blazing', 'Insane'][tier];
+          const ic = el('i', 'bd-spd bd-spd-' + tier);
+          ic.innerHTML = tier === 3 ? SPD_SKULL : tier === 2 ? SPD_FLAME : SPD_BOLT;
+          ic.setAttribute('role', 'img'); ic.setAttribute('aria-label', name + ': played at ' + spd.toFixed(1) + '× speed');
+          ic.title = name + ' · ' + spd.toFixed(1) + '× note speed';
+          who.append(ic);
+        }
+        li.append(el('span', 'bd-lb-rk', '#' + (i + 1)), who, sc);
+        if (i === 0){
+          // the top score gets a purple, pink and gold outline with crown light rays
+          li.classList.add('bd-lb-top');
+          const cr = el('span', 'bd-crown'); cr.setAttribute('aria-hidden', 'true');
+          cr.innerHTML = '<span class="bd-rays"></span><svg viewBox="0 0 24 18"><path d="M2 15.5h20l1.2-11-5.7 4.6L12 1.5 6.5 9.1.8 4.5z"/><circle cx="12" cy="1.8" r="1.6"/><circle cx="1" cy="4.5" r="1.3"/><circle cx="23" cy="4.5" r="1.3"/></svg>';
+          li.append(cr);
+        }
         l.append(li);
       });
     }
