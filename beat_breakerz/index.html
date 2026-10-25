@@ -3065,11 +3065,11 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       const url = /^https?:$/.test(location.protocol) ? location.href.split('#')[0] : 'https://echo1onchain.xyz';
       const g = r.grade, an = /^[AS]/.test(g) ? 'an ' : 'a ', pts = r.score.toLocaleString(), acc = r.acc.toFixed(1) + '%', song = r.track + ' (' + r.diff + ')';
       const T = [
-        '🎵 Beat broken!! I scored ' + pts + ' on ' + song + ' in ECHO Botz Beat Breakerz and pulled ' + an + g + ' with ' + acc + ' accuracy. Think you can keep the rhythm? Prove it 👇 @EchoBotzSOL',
-        '🎧 ' + (an === 'an ' ? 'An ' : 'A ') + g + ' on ' + song + ', ' + pts + ' points and ' + acc + ' accuracy in ECHO Botz Beat Breakerz. Your move. Beat my score and claim the Top 10 👇 @EchoBotzSOL',
-        '🤖 BEAT REPORT: ' + song + ' cleared. Grade ' + g + ', ' + pts + ' points, ' + acc + ' accuracy 🎵 Can you outplay the ECHO Botz? Play now 👇 @EchoBotzSOL'
+        '🎵 Beat broken!!\n\nI scored ' + pts + ' on ' + song + ' in ECHO Botz Beat Breakerz and pulled ' + an + g + ' with ' + acc + ' accuracy.\n\nThink you can keep the rhythm? Prove it 👇',
+        '🎧 ' + (an === 'an ' ? 'An ' : 'A ') + g + ' on ' + song + ', ' + pts + ' points and ' + acc + ' accuracy in ECHO Botz Beat Breakerz.\n\nYour move. Beat my score and claim the Top 10 👇',
+        '🤖 BEAT REPORT: ' + song + ' cleared.\n\nGrade ' + g + ', ' + pts + ' points, ' + acc + ' accuracy 🎵\n\nCan you outplay the ECHO Botz? Play now 👇'
       ];
-      return T[Math.floor(Math.random() * T.length)] + '\n' + url;
+      return T[Math.floor(Math.random() * T.length)] + '\n\n👉' + url + ' 👈\n\n@EchoBotzSOL';
     }
     function rrect(x, X, Y, w, h, rad){ x.beginPath(); x.moveTo(X + rad, Y); x.arcTo(X + w, Y, X + w, Y + h, rad); x.arcTo(X + w, Y + h, X, Y + h, rad); x.arcTo(X, Y + h, X, Y, rad); x.arcTo(X, Y, X + w, Y, rad); x.closePath(); }
     function drawCard(r, logo){
