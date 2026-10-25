@@ -1703,42 +1703,191 @@ function saveBest() { try { localStorage.setItem(BEST_KEY, String(best)); } catc
 
 /* ---------- audio ---------- */
 let ac = null, master = null, muted = false;
+let sfxBus = null, sfxVerb = null, sfxNoise = null;
+const sfxLast = {};
+function buildSfxBus(ctx) {
+  // master -> gentle lowpass -> soft compressor -> out, plus a short generated reverb send
+  const out = ctx.createGain(); out.gain.value = .32;
+  const comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = -18; comp.knee.value = 12; comp.ratio.value = 4; comp.attack.value = .004; comp.release.value = .18;
+  const tame = ctx.createBiquadFilter(); tame.type = 'lowpass'; tame.frequency.value = 7800; tame.Q.value = .5;
+  const lowcut = ctx.createBiquadFilter(); lowcut.type = 'highpass'; lowcut.frequency.value = 28;
+  const len = Math.floor(ctx.sampleRate * 1.1), ir = ctx.createBuffer(2, len, ctx.sampleRate);
+  for (let c = 0; c < 2; c++) {
+    const d = ir.getChannelData(c);
+    for (let i = 0; i < len; i++) { const x = i / len; d[i] = (Math.random() * 2 - 1) * Math.pow(1 - x, 3.2) * (i < 40 ? i / 40 : 1); }
+  }
+  const verb = ctx.createConvolver(); verb.buffer = ir;
+  const verbTone = ctx.createBiquadFilter(); verbTone.type = 'lowpass'; verbTone.frequency.value = 4200;
+  const wet = ctx.createGain(); wet.gain.value = .55;
+  out.connect(lowcut); lowcut.connect(tame); tame.connect(comp); comp.connect(ctx.destination);
+  verb.connect(verbTone); verbTone.connect(wet); wet.connect(lowcut);
+  const nb = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), nd = nb.getChannelData(0);
+  for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+  return { out, verb, noise: nb };
+}
 function initAudio() {
   if (ac) { if (ac.state === 'suspended') ac.resume(); return; }
   try {
     ac = new (window.AudioContext || window.webkitAudioContext)();
-    master = ac.createGain(); master.gain.value = .32; master.connect(ac.destination);
+    const b = buildSfxBus(ac); master = b.out; sfxVerb = b.verb; sfxNoise = b.noise; sfxBus = b;
   } catch (e) { ac = null; }
+}
+function sfxOk(key, gap) {
+  if (!ac || muted) return false;
+  if (key) { const now = ac.currentTime; if (sfxLast[key] != null && now - sfxLast[key] < gap && now >= sfxLast[key]) return false; sfxLast[key] = now; }
+  return true;
+}
+function sfxOut(node, pan, send) {
+  let n = node;
+  if (pan && ac.createStereoPanner) { const p = ac.createStereoPanner(); p.pan.value = pan; n.connect(p); n = p; }
+  n.connect(master);
+  if (send > 0 && sfxVerb) { const s = ac.createGain(); s.gain.value = send; n.connect(s); s.connect(sfxVerb); }
+}
+// one enveloped oscillator voice with optional pitch sweep, detune and moving lowpass
+function voice(o) {
+  const t = ac.currentTime + (o.delay || 0), a = o.a || .004, dur = Math.max(o.dur, a + .01), vol = o.vol;
+  const osc = ac.createOscillator(), g = ac.createGain();
+  osc.type = o.type || 'sine'; osc.detune.value = o.detune || 0;
+  osc.frequency.setValueAtTime(o.f1, t);
+  if (o.f2 && o.f2 !== o.f1) osc.frequency.exponentialRampToValueAtTime(Math.max(20, o.f2), t + (o.sweep || dur));
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + a);
+  if (o.hold) g.gain.setValueAtTime(vol, t + a + o.hold);
+  g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  let n = osc;
+  if (o.lp) {
+    const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = o.q || .7;
+    f.frequency.setValueAtTime(o.lp, t);
+    if (o.lp2) f.frequency.exponentialRampToValueAtTime(o.lp2, t + dur);
+    osc.connect(f); n = f;
+  }
+  n.connect(g); sfxOut(g, o.pan, o.send);
+  osc.start(t); osc.stop(t + dur + .05);
+}
+// filtered noise burst with its own envelope and filter sweep
+function hiss(o) {
+  const t = ac.currentTime + (o.delay || 0), a = o.a || .002, dur = Math.max(o.dur, a + .01);
+  const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+  src.buffer = sfxNoise; f.type = o.ft || 'lowpass'; f.Q.value = o.q || .8;
+  f.frequency.setValueAtTime(o.f1, t);
+  if (o.f2 && o.f2 !== o.f1) f.frequency.exponentialRampToValueAtTime(o.f2, t + dur);
+  g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(o.vol, t + a);
+  g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  src.connect(f); f.connect(g); sfxOut(g, o.pan, o.send);
+  src.start(t, Math.random() * Math.max(0, 1.9 - dur)); src.stop(t + dur + .05);
 }
 function tone(f1, f2, dur, type = 'sine', vol = .15, delay = 0) {
   if (!ac || muted) return;
-  const t = ac.currentTime + delay, o = ac.createOscillator(), g = ac.createGain();
-  o.type = type; o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f2), t + dur);
-  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0008, t + dur);
-  o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .03);
+  const harsh = type === 'square' || type === 'sawtooth';
+  voice({ f1, f2, dur, type, vol: vol * (harsh ? .8 : 1), delay, a: .005, lp: harsh ? Math.min(3200, Math.max(f1, f2) * 4) : 0, send: .08 });
+  voice({ f1, f2, dur, type: 'sine', vol: vol * .35, delay, a: .005, detune: 7 });
 }
 function noise(dur, vol = .2, freq = 1200) {
   if (!ac || muted) return;
-  const len = Math.floor(ac.sampleRate * dur), buf = ac.createBuffer(1, len, ac.sampleRate), d = buf.getChannelData(0);
-  for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / len);
-  const src = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
-  src.buffer = buf; f.type = 'lowpass'; f.frequency.value = freq; g.gain.value = vol;
-  src.connect(f); f.connect(g); g.connect(master); src.start();
+  hiss({ dur, vol, f1: freq, f2: Math.max(60, freq * .35), send: .12 });
 }
 const sfx = {
-  shot() { tone(380, 1000, .11, 'sine', .09); tone(190, 500, .11, 'triangle', .05); },
-  hit() { tone(900, 380, .07, 'square', .04); },
-  boom() { noise(.28, .22, 1400); tone(220, 60, .25, 'triangle', .1); },
-  big() { noise(.45, .28, 900); tone(160, 40, .4, 'sawtooth', .1); },
-  pulse() { tone(70, 35, .7, 'sawtooth', .2); tone(240, 1600, .5, 'sine', .1); },
-  power() { [523, 659, 784, 1046].forEach((f, i) => tone(f, f, .12, 'square', .05, i * .07)); },
-  die() { tone(700, 50, .9, 'sawtooth', .18); noise(.7, .25, 700); },
-  wave() { [392, 523, 659].forEach((f, i) => tone(f, f * 1.01, .16, 'triangle', .08, i * .1)); },
-  life() { [659, 880, 1318].forEach((f, i) => tone(f, f, .14, 'sine', .1, i * .08)); },
-  bass() { tone(55, 28, 1.3, 'sine', .45); tone(110, 30, .9, 'sawtooth', .14); noise(.9, .3, 260); },
-  scratch() { tone(1400, 180, .2, 'sawtooth', .07); tone(180, 1200, .15, 'sawtooth', .05, .12); noise(.2, .12, 3000); },
-  freeze() { [1568, 1175, 880].forEach((f, i) => tone(f, f * .98, .2, 'sine', .07, i * .06)); },
-  mic() { tone(160, 70, .35, 'square', .08); noise(.2, .12, 600); }
+  // soft laser: falling sine pair, detuned body, tiny air click
+  shot() {
+    if (!sfxOk('shot', .06)) return;
+    voice({ f1: 1250, f2: 520, dur: .12, type: 'sine', vol: .112, a: .003, sweep: .09 });
+    voice({ f1: 625, f2: 250, dur: .11, type: 'triangle', vol: .072, a: .003, detune: -9, sweep: .09, lp: 2400 });
+    hiss({ dur: .025, vol: .04, ft: 'highpass', f1: 5000, f2: 3000 });
+  },
+  // metallic tick when an enemy is hit but not destroyed
+  hit() {
+    if (!sfxOk('hit', .045)) return;
+    voice({ f1: 1600, f2: 900, dur: .06, type: 'triangle', vol: .052, a: .002 });
+    voice({ f1: 2410, f2: 1500, dur: .045, type: 'sine', vol: .023, a: .002 });
+    hiss({ dur: .04, vol: .039, ft: 'bandpass', f1: 3200, f2: 2200, q: 2 });
+  },
+  // enemy explosion: noise burst with closing filter, sine thump, short room tail
+  boom() {
+    if (!sfxOk('boom', .05)) return;
+    const pan = (Math.random() - .5) * .5;
+    hiss({ dur: .38, vol: .216, f1: 2600, f2: 160, a: .003, pan, send: .2 });
+    voice({ f1: 150, f2: 45, dur: .3, type: 'sine', vol: .189, a: .004, pan });
+    voice({ f1: 300, f2: 80, dur: .16, type: 'triangle', vol: .054, a: .003, lp: 900, pan });
+  },
+  // big enemy: deeper layered blast with crackle and longer tail
+  big() {
+    if (!sfxOk('big', .07)) return;
+    hiss({ dur: .65, vol: .2, f1: 1900, f2: 90, a: .004, send: .3 });
+    hiss({ dur: .22, vol: .06, ft: 'bandpass', f1: 2600, f2: 900, q: 1.5, delay: .03 });
+    voice({ f1: 110, f2: 32, dur: .6, type: 'sine', vol: .2, a: .005 });
+    voice({ f1: 220, f2: 55, dur: .4, type: 'triangle', vol: .05, a: .004, detune: 8, lp: 800 });
+    voice({ f1: 220, f2: 55, dur: .4, type: 'triangle', vol: .05, a: .004, detune: -8, lp: 800 });
+  },
+  // echo pulse: sub drop, rising shimmer and a sweeping whoosh
+  pulse() {
+    if (!sfxOk('pulse', .2)) return;
+    voice({ f1: 90, f2: 36, dur: .85, type: 'sine', vol: .26, a: .006 });
+    voice({ f1: 300, f2: 1700, dur: .55, type: 'sine', vol: .05, a: .03, detune: 6, send: .3 });
+    voice({ f1: 300, f2: 1700, dur: .55, type: 'sine', vol: .05, a: .03, detune: -6, send: .3 });
+    hiss({ dur: .6, vol: .07, ft: 'bandpass', f1: 400, f2: 4200, q: 1.2, a: .05, send: .25 });
+  },
+  // power up: bright bell arpeggio with an octave shimmer
+  power() {
+    if (!sfxOk('power', .15)) return;
+    [523, 659, 784, 1046].forEach((f, i) => {
+      voice({ f1: f, dur: .28, type: 'triangle', vol: .038, a: .004, delay: i * .065, send: .3 });
+      voice({ f1: f * 2, dur: .16, type: 'sine', vol: .013, a: .003, delay: i * .065, detune: 5 });
+    });
+  },
+  // player hit: falling detuned tones with a closing filter, noise and sub thump
+  die() {
+    if (!sfxOk('die', .3)) return;
+    voice({ f1: 620, f2: 55, dur: 1.0, type: 'triangle', vol: .11, a: .005, lp: 2400, lp2: 200, detune: 10, send: .3 });
+    voice({ f1: 620, f2: 55, dur: 1.0, type: 'sawtooth', vol: .05, a: .005, lp: 1600, lp2: 150, detune: -10 });
+    hiss({ dur: .8, vol: .18, f1: 1600, f2: 80, a: .004, send: .3 });
+    voice({ f1: 120, f2: 35, dur: .5, type: 'sine', vol: .2, a: .004 });
+  },
+  // wave start: soft rising chord with a gentle attack and room tail
+  wave() {
+    if (!sfxOk('wave', .3)) return;
+    [392, 523, 659].forEach((f, i) => {
+      voice({ f1: f, f2: f * 1.01, dur: .42, type: 'triangle', vol: .038, a: .02, delay: i * .1, send: .35 });
+      voice({ f1: f, f2: f * 1.01, dur: .42, type: 'sine', vol: .021, a: .02, delay: i * .1, detune: 8 });
+    });
+  },
+  // extra life: sparkling bell notes
+  life() {
+    if (!sfxOk('life', .2)) return;
+    [659, 880, 1318].forEach((f, i) => {
+      voice({ f1: f, dur: .35, type: 'sine', vol: .049, a: .003, delay: i * .08, send: .35 });
+      voice({ f1: f * 2.01, dur: .18, type: 'sine', vol: .014, a: .002, delay: i * .08 });
+    });
+  },
+  // bass drop: heavy sub with filtered body and rumble
+  bass() {
+    if (!sfxOk('bass', .4)) return;
+    voice({ f1: 62, f2: 30, dur: 1.4, type: 'sine', vol: .34, a: .008 });
+    voice({ f1: 124, f2: 40, dur: 1.0, type: 'sawtooth', vol: .07, a: .006, lp: 700, lp2: 120 });
+    hiss({ dur: 1.0, vol: .16, f1: 500, f2: 60, a: .01, send: .25 });
+  },
+  // shield block: vinyl scratch back and forth through a resonant filter
+  scratch() {
+    if (!sfxOk('scratch', .1)) return;
+    voice({ f1: 1300, f2: 200, dur: .2, type: 'sawtooth', vol: .07, a: .004, lp: 2200, lp2: 500, q: 2 });
+    voice({ f1: 200, f2: 1100, dur: .16, type: 'sawtooth', vol: .056, a: .004, delay: .12, lp: 600, lp2: 2200, q: 2 });
+    hiss({ dur: .2, vol: .098, ft: 'bandpass', f1: 3200, f2: 700, q: 2.5 });
+    hiss({ dur: .15, vol: .07, ft: 'bandpass', f1: 700, f2: 3000, q: 2.5, delay: .12 });
+  },
+  // freeze: glassy falling chimes with shimmer
+  freeze() {
+    if (!sfxOk('freeze', .2)) return;
+    [1568, 1175, 880].forEach((f, i) => {
+      voice({ f1: f, f2: f * .98, dur: .45, type: 'sine', vol: .035, a: .003, delay: i * .06, send: .45 });
+      voice({ f1: f * 1.5, f2: f * 1.47, dur: .2, type: 'sine', vol: .01, a: .003, delay: i * .06, detune: 6 });
+    });
+  },
+  // mic drop: thud with a filtered body and dusty tail
+  mic() {
+    if (!sfxOk('mic', .15)) return;
+    voice({ f1: 170, f2: 60, dur: .4, type: 'triangle', vol: .12, a: .004, lp: 900, lp2: 200 });
+    voice({ f1: 90, f2: 40, dur: .35, type: 'sine', vol: .15, a: .004 });
+    hiss({ dur: .25, vol: .08, f1: 900, f2: 150, send: .2 });
+  }
 };
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
