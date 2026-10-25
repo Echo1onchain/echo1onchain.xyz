@@ -4025,18 +4025,45 @@ a.gh-btn.bot-mint{display:block; text-align:center; text-decoration:none}
         l.append(li);
       });
     }
+    /* the score server can be slow: each try gets 24s, then up to 2 more tries after a short pause (about 75s total) */
+    const LB_TRY_MS = 24000, LB_TRIES = 3, lbInflight = {};
+    function fetchTop(body){
+      let n = 0;
+      const once = () => Promise.race([
+        fetch(GA_URL, { method:'POST', body:JSON.stringify(body) }).then(r => { if (!r.ok) throw new Error('http'); return r.json(); }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), LB_TRY_MS))
+      ]).then(r => { if (r && Array.isArray(r.top)) return r.top; throw new Error('bad'); });
+      const go = () => once().catch(e => { if (++n >= LB_TRIES) throw e; return new Promise(res => setTimeout(res, 1000 * n)).then(go); });
+      return go();
+    }
+    // last good Top 10 per song and difficulty, shown right away while fresh scores load
+    function lbSaved(key){ try { const v = JSON.parse(localStorage.getItem('echoBeatLbTop:' + key) || 'null'); return v && Array.isArray(v.top) ? v.top : null; } catch(e){ return null; } }
+    function lbSave(key, top){ try { localStorage.setItem('echoBeatLbTop:' + key, JSON.stringify({ t:Date.now(), top })); } catch(e){} }
+    function lbSlow(){
+      lbMsg('Scores are slow to load. Tap to retry.');
+      const li = $('bdLbList').firstChild;
+      li.style.cursor = 'pointer'; li.tabIndex = 0; li.setAttribute('role', 'button');
+      const again = () => { holdCycle(); loadTop(); };
+      li.addEventListener('click', again);
+      li.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); again(); } });
+    }
     function loadTop(){
       if (!SITE.length) return;
       const my = ++lbToken, song = lbSongSel.value, diff = settings.diff, key = song + ':' + diff;
       $('bdLbDiff').textContent = diff[0].toUpperCase() + diff.slice(1);
       renderDots();
-      const have = lbCache[key];
+      let have = lbCache[key];
+      if (!have){ const saved = lbSaved(key); if (saved) have = lbCache[key] = { t:0, top:saved }; }
       if (have) renderTop(have.top); else lbMsg('Loading scores…');
       if (have && Date.now() - have.t < 60000) return;      // fresh enough, no need to ask again
-      post({ action:'bb_top', song, diff }).then(r => {
-        if (r && Array.isArray(r.top)){ lbCache[key] = { t:Date.now(), top:r.top }; if (my === lbToken) renderTop(r.top); }
-        else if (my === lbToken && !have) lbMsg('The leaderboard is unavailable right now.');
-      }).catch(() => { if (my === lbToken && !have) lbMsg('The leaderboard is unavailable right now.'); });
+      let p = lbInflight[key];
+      if (!p){
+        // keeps going even if the board rotates away, so the scores are ready next time this song comes up
+        p = lbInflight[key] = fetchTop({ action:'bb_top', song, diff })
+          .then(top => { lbCache[key] = { t:Date.now(), top }; lbSave(key, top); return top; })
+          .finally(() => { delete lbInflight[key]; });
+      }
+      p.then(top => { if (my === lbToken) renderTop(top); }, () => { if (my === lbToken && !have) lbSlow(); });
     }
     function submitRanked(rk, res){
       $('bdREntry').textContent = 'Saving your score to the Top 10…';
