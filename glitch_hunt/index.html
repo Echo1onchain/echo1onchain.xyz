@@ -1801,9 +1801,15 @@ a.gh-btn.bot-mint{display:block; text-align:center; text-decoration:none}
       r.found=demo.found.length;r.total=B.length;r.misses=demo.misses;
       if(r.found===r.total){r.done=true;r.seconds=Math.round((Date.now()-demo.t)/100)/10}else if(demo.misses>=10)r.out=true;
       return r}
+    /* the game server can be slow: each try gets 24s, then up to 2 more tries after a short pause (about 75s total) */
+    function retry3(fn){
+      var n=0;
+      function once(){return Promise.race([fn(),new Promise(function(_,rej){setTimeout(function(){rej(new Error("timeout"))},24000)})])}
+      function go(){return once().catch(function(e){if(++n>=3)throw e;return new Promise(function(res){setTimeout(res,1000*n)}).then(go)})}
+      return go()}
     function loadPuzzle(id){
       if(C.preview)return Promise.resolve(C.preview.puzzle);
-      return fetch(C.base+encodeURIComponent(id)+".json",{cache:"no-cache"}).then(function(r){if(!r.ok)throw new Error("file");return r.json()})}
+      return retry3(function(){return fetch(C.base+encodeURIComponent(id)+".json",{cache:"no-cache"}).then(function(r){if(!r.ok)throw new Error("file");return r.json()})})}
 
     function lamps(el,n,lit){el.innerHTML="";for(var i=0;i<n;i++){var l=document.createElement("span");l.className="gh-lamp"+(i<lit?" on"+(i%2?" p":""):"");el.appendChild(l)}}
     function count(){
@@ -1893,8 +1899,7 @@ a.gh-btn.bot-mint{display:block; text-align:center; text-decoration:none}
     Array.prototype.forEach.call(document.querySelectorAll("#ghTabs .gh-tab"),function(b){b.addEventListener("click",function(){var t=b.getAttribute("data-type");if(t!==type&&info[t])select(t)})});
 
     blank(cA);blank(cB);count();
-    call({action:"today"}).then(function(r){
-      if(r.error)throw new Error(r.error);
+    (C.preview?call({action:"today"}):retry3(function(){return call({action:"today"}).then(function(r){if(!r||r.error)throw new Error(r&&r.error||"bad");return r})})).then(function(r){
       info.daily=r.daily;info.giveaway=r.giveaway;info.maxMisses=r.maxMisses;bonusLoad(r.date||(r.daily&&r.daily.date)||"");
       if(!setTabs()){gate("No puzzle right now","A new glitch is on the way. Check back soon.",false);document.getElementById("ghCount").textContent="Offline";return}
       select(info.giveaway?"giveaway":"daily");
