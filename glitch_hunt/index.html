@@ -461,6 +461,10 @@ textarea{
 .gh-stats span{font-size:.8rem;color:var(--muted)}
 .gh-note{font-size:.85rem}
 .gh-share{margin:0 0 1rem}
+.gh-bonusbar{margin:.8rem 0 0;max-width:20rem}
+.gh-bonusbar[hidden],.gh-popcard .gh-bonus-btn[hidden],.gh-card .gh-bonus-go[hidden]{display:none}
+.gh-bonus-btn{margin:0 0 .6rem;color:#fff;background:linear-gradient(90deg,#B67CFF,var(--pink));box-shadow:0 0 18px rgba(182,124,255,.4)}
+.gh-bonus-btn small{margin-left:.45rem;font-family:"JetBrains Mono",ui-monospace,monospace;font-weight:600;font-size:.75rem;opacity:.85}
 .gh-btn.gh-x{display:flex;align-items:center;justify-content:center;gap:.55rem;color:#fff;background:#000;border:1px solid var(--ink);box-shadow:0 0 14px rgba(34,228,245,.25)}
 .gh-btn.gh-x:hover{filter:none;border-color:var(--cyan);box-shadow:0 0 20px rgba(34,228,245,.5)}
 .gh-x svg{width:16px;height:16px;flex:none}
@@ -716,9 +720,11 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
             <p class="gh-err" id="ghErr" aria-live="polite"></p>
             <button class="gh-btn" type="submit" id="ghStart">Start</button>
           </form>
+          <button class="gh-btn gh-bonus-go" type="button" id="ghBonusGo" hidden>Start</button>
         </div></div>
       </div>
       <p class="gh-msg" id="ghMsg" aria-live="polite"></p>
+      <div class="gh-bonusbar" id="ghBonusBar" hidden><button class="gh-btn gh-bonus-btn" type="button" id="ghBonusNext">Bonus glitch</button></div>
     </div>
     <div class="gh-pop" id="ghPop" role="dialog" aria-modal="true" aria-labelledby="ghPopT" hidden>
       <div class="gh-popcard" id="ghPopCard">
@@ -730,6 +736,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         <div class="gh-share"><button class="gh-btn gh-x" type="button" id="ghShare"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.2 2.5h3.4l-7.4 8.5 8.7 11.5h-6.8l-5.3-7-6.1 7H1.3l7.9-9.1L.9 2.5h7l4.8 6.4 5.5-6.4zm-1.2 18h1.9L7.1 4.4H5.1L17 20.5z"/></svg>Share to X</button>
           <p class="gh-share-note" id="ghShareNote" aria-live="polite"></p></div>
         <p class="gh-note" id="ghPopNote"></p>
+        <button class="gh-btn gh-bonus-btn" type="button" id="ghPopBonus" hidden>Bonus glitch</button>
         <button class="gh-btn" type="button" id="ghPopClose">Close</button>
       </div>
     </div>
@@ -1530,7 +1537,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         x.save();x.shadowColor=col;x.shadowBlur=lw*4;x.beginPath();x.arc(cx,cy,r,0,7);x.lineWidth=lw*2.2;x.strokeStyle="rgba(4,6,14,.85)";x.stroke();
         x.lineWidth=lw;x.strokeStyle=col;x.stroke();x.restore()})}
     function draw(){if(P){paint(cA,imgA);paint(cB,imgB)}count()}
-    function gate(title,text,showForm){root.classList.add("locked");gateT.textContent=title;gateP.textContent=text||"";form.hidden=!showForm;err.textContent=""}
+    function gate(title,text,showForm){document.getElementById("ghBonusGo").hidden=true;root.classList.add("locked");gateT.textContent=title;gateP.textContent=text||"";form.hidden=!showForm;err.textContent=""}
     function fmtDate(s){if(!s)return"";var p=s.split("-"),d=new Date(+p[0],+p[1]-1,+p[2]);return d.toLocaleDateString(undefined,{month:"short",day:"numeric"})}
 
     function setTabs(){
@@ -1593,7 +1600,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     blank(cA);blank(cB);count();
     call({action:"today"}).then(function(r){
       if(r.error)throw new Error(r.error);
-      info.daily=r.daily;info.giveaway=r.giveaway;
+      info.daily=r.daily;info.giveaway=r.giveaway;info.maxMisses=r.maxMisses;bonusLoad(r.date||(r.daily&&r.daily.date)||"");
       if(!setTabs()){gate("No puzzle right now","A new glitch is on the way. Check back soon.",false);document.getElementById("ghCount").textContent="Offline";return}
       select(info.giveaway?"giveaway":"daily");
     }).catch(function(){gate("Couldn’t reach the game server","Check your connection and reload the page.",false);document.getElementById("ghCount").textContent="Offline"});
@@ -1618,6 +1625,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       if(a&&a.live){var lv=Math.min(1,(a.bass||a.level||0)*1.4);card.style.boxShadow="0 0 "+(40+lv*50)+"px rgba(255,45,155,"+(0.35+lv*0.4)+"),0 0 "+(80+lv*60)+"px rgba(34,228,245,"+(0.2+lv*0.35)+")"}
       glowRaf=requestAnimationFrame(glow)}
     function showPop(seconds){
+      document.getElementById("ghPopT").textContent="Glitch cleared!";shareBox.hidden=false;
       var w=document.getElementById("ghPopWho"),b=document.createElement("b");w.innerHTML="";b.textContent="@"+handle;
       w.append(b,total===1?" found the glitch.":" found all "+total+" glitches.");
       lamps(document.getElementById("ghPopLamps"),total,total);
@@ -1627,6 +1635,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         type==="giveaway"?"Your finish was recorded for the giveaway. Good luck!":"Your time was logged. Come back tomorrow for a new glitch.";
       if(typeof ghPrepareShare==="function"){try{var sec=Number(seconds)>0?Number(seconds):0,k=ghFinds.length&&ghFinds[ghFinds.length-1]>0?sec/ghFinds[ghFinds.length-1]:1;
         ghPrepareShare({handle:handle,total:total,seconds:sec,misses:misses,daily:type==="daily",finds:ghFinds.map(function(t){return t*k}),fails:ghFails.map(function(t){return t*k})})}catch(e){}}
+      bonusOffer();
       pop.hidden=false;document.getElementById("ghPopClose").focus();
       if(!still){var cols=["#22E4F5","#FF2D9B","#B67CFF","#FFC93C","#F2F6FF"];
         for(var i=0;i<70;i++){var s=document.createElement("span");s.className="gh-bit";s.textContent=Math.random()<.7?(Math.random()<.5?"0":"1"):"✦";
@@ -1638,6 +1647,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     pop.addEventListener("click",function(e){if(e.target===pop)closePop()});
     document.addEventListener("keydown",function(e){if(e.key==="Escape"&&!pop.hidden)closePop()});
     function tap(e){
+      if(type==="bonus"){bonusTap(e);return}
       if(!session||over||busy||!P)return;
       var c=e.currentTarget,rc=c.getBoundingClientRect(),x=(e.clientX-rc.left)/rc.width*P.w,y=(e.clientY-rc.top)/rc.height*P.h,my=token;
       busy=true;root.classList.add("busy");var dot=mark(c,x,y,"gh-dot"),tt=(performance.now()-ghT0)/1000;
@@ -1646,10 +1656,91 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         if(r.error){over=r.error==="over"||r.error==="session";msg.textContent=ERR[r.error]||ERR.server;return}
         misses=r.misses;
         if(r.hit){rings.push(r.box);ghFinds.push(tt);draw()}else{ghFails.push(tt);mark(c,x,y,"gh-miss","✕",750);count()}
-        if(r.done){over=true;msg.textContent="Glitch cleared in "+r.seconds+"s, @"+handle+"!";showPop(r.seconds);if(type==="daily")setTimeout(lbLoad,1500)}
+        if(r.done){over=true;msg.textContent="Glitch cleared in "+r.seconds+"s, @"+handle+"!";if(type==="daily")bonus.unlocked=true;showPop(r.seconds);if(type==="daily")setTimeout(lbLoad,1500)}
         else if(r.out){over=true;msg.textContent="Out of guesses, @"+handle+". Reload the page to try again."}
       }).catch(function(){if(my===token)msg.textContent="That tap didn’t reach the game server. Tap again."})
       .then(function(){busy=false;root.classList.remove("busy");dot.remove()})}
+
+    /* Bonus glitches: up to 4 just-for-fun puzzles after the daily is cleared.
+       They come from puzzles/bonus.txt (one answer code per line, copied from the Puzzles tab).
+       Taps are checked here on the page. Nothing is saved, sent to the Top 10 or sent to the leaderboard. */
+    var BONUS_MAX=4,bonus={list:[],idx:-1,unlocked:false,boxes:[],found:[],t0:0,ready:false},shareBox=pop.querySelector(".gh-share");
+    function bonusLoad(day){
+      if(C.preview)return;
+      fetch(C.base+"bonus.txt",{cache:"no-cache"}).then(function(r){if(!r.ok)throw new Error("none");return r.text()}).then(function(txt){
+        var arr=[];
+        try{var j=JSON.parse(txt);arr=Array.isArray(j)?j:[j]}
+        catch(e){txt.split(/\r?\n/).forEach(function(l){l=l.split("\t")[0].trim();if(!l)return;
+          if(l.charAt(0)==='"'&&l.charAt(l.length-1)==='"')l=l.slice(1,-1).replace(/""/g,'"');
+          try{arr.push(JSON.parse(l))}catch(e2){}})}
+        var skip=[info.daily&&info.daily.id,info.giveaway&&info.giveaway.id],seen={};
+        arr=arr.filter(function(p){if(!p||!p.id||!Array.isArray(p.boxes)||!p.boxes.length||skip.indexOf(p.id)>=0||seen[p.id])return false;seen[p.id]=1;return true});
+        var key=String(day||new Date().toDateString()),h=2166136261;for(var i=0;i<key.length;i++){h^=key.charCodeAt(i);h=Math.imul(h,16777619)>>>0}
+        function rnd(){h=(Math.imul(h,1664525)+1013904223)>>>0;return h/4294967296}
+        for(var k=arr.length-1;k>0;k--){var q=Math.floor(rnd()*(k+1)),t=arr[k];arr[k]=arr[q];arr[q]=t}
+        bonus.list=arr.slice(0,BONUS_MAX);bonusOffer();
+      }).catch(function(){})}
+    function bonusLeft(){return bonus.list.length-(bonus.idx+1)}
+    function bonusLabel(b){b.innerHTML="";b.append(bonus.idx<0?"Bonus glitch":"Next bonus glitch");var s=document.createElement("small");s.textContent=(bonus.idx+2)+" of "+bonus.list.length;b.appendChild(s)}
+    function bonusOffer(){
+      var on=bonus.unlocked&&bonusLeft()>0,pb=document.getElementById("ghPopBonus"),bar=document.getElementById("ghBonusBar");
+      pb.hidden=!on||(type!=="daily"&&type!=="bonus");bar.hidden=!on||(type==="bonus"&&!over);
+      if(on){bonusLabel(pb);bonusLabel(document.getElementById("ghBonusNext"))}}
+    function bonusGate(title,text,label,fn){gate(title,text,false);var g=document.getElementById("ghBonusGo");g.textContent=label;g.hidden=false;g.onclick=fn}
+    function bonusStart(){
+      rings=[];bonus.found=[];misses=0;over=false;total=bonus.boxes.length;maxMisses=info.maxMisses||15;draw();
+      bonus.t0=performance.now();root.classList.remove("locked");document.getElementById("ghBonusGo").hidden=true;
+      msg.textContent="Bonus glitch "+(bonus.idx+1)+" of "+bonus.list.length+". Just for fun. Tap where the scans differ."}
+    function bonusPlay(){
+      if(!bonus.unlocked||bonusLeft()<=0)return;
+      if(!pop.hidden)closePop();
+      bonus.idx++;var q=bonus.list[bonus.idx],my=++token;
+      type="bonus";rings=[];session="";total=0;misses=0;over=false;busy=false;P=null;bonus.ready=false;
+      blank(cA);blank(cB);setTabs();count();msg.textContent="";
+      document.getElementById("ghBonusBar").hidden=true;
+      gate("Loading bonus glitch…","",false);
+      loadPuzzle(q.id).then(function(p){
+        if(my!==token)return;
+        var sx=q.w?p.w/q.w:1,sy=q.h?p.h/q.h:1;
+        bonus.boxes=q.boxes.map(function(b){return{x:b.x*sx,y:b.y*sy,w:b.w*sx,h:b.h*sy}});
+        P=p;m=Math.min(P.w,P.h);document.getElementById("ghBcap").textContent=P.rightLabel||"Glitched";
+        var loaded=0;imgA=new Image();imgB=new Image();
+        imgA.onload=imgB.onload=function(){if(my===token&&++loaded===2){draw();bonus.ready=true;
+          bonusGate("Bonus glitch "+(bonus.idx+1)+" of "+bonus.list.length,"Just for fun. This time is not saved.","Start",bonusStart)}};
+        imgA.onerror=imgB.onerror=function(){if(my===token)bonusSkip()};
+        imgA.src=P.a;imgB.src=P.b;
+      }).catch(function(){if(my===token)bonusSkip()})}
+    function bonusSkip(){
+      if(bonusLeft()>0)bonusGate("Couldn’t load this bonus","Try the next one.","Next bonus glitch",bonusPlay);
+      else gate("That’s all for today","Come back tomorrow for a new glitch.",false)}
+    function bonusTap(e){
+      if(!bonus.ready||over||!P||!total||root.classList.contains("locked"))return;
+      var c=e.currentTarget,rc=c.getBoundingClientRect(),x=(e.clientX-rc.left)/rc.width*P.w,y=(e.clientY-rc.top)/rc.height*P.h,pad=m*0.035,best=-1,bd=1e12;
+      bonus.boxes.forEach(function(b,i){if(bonus.found.indexOf(i)>=0)return;
+        if(x>=b.x-pad&&x<=b.x+b.w+pad&&y>=b.y-pad&&y<=b.y+b.h+pad){var d=Math.hypot(x-b.x-b.w/2,y-b.y-b.h/2);if(d<bd){bd=d;best=i}}});
+      if(best>=0){bonus.found.push(best);rings.push(bonus.boxes[best]);draw()}else{misses++;mark(c,x,y,"gh-miss","✕",750);count()}
+      if(bonus.found.length===total){over=true;var sec=Math.round((performance.now()-bonus.t0)/100)/10;
+        msg.textContent=bonusLeft()>0?"Bonus glitch cleared in "+sec+"s!":"Bonus glitch cleared in "+sec+"s! That’s all for today. Come back tomorrow.";bonusPop(sec)}
+      else if(maxMisses&&misses>=maxMisses){over=true;msg.textContent="Out of guesses on this bonus.";
+        bonusGate("Out of guesses","It’s just for fun, so try again.","Try again",bonusStart)}}
+    function bonusPop(sec){
+      document.getElementById("ghPopT").textContent="Bonus cleared!";shareBox.hidden=true;
+      var w=document.getElementById("ghPopWho");w.innerHTML="";
+      if(handle){var b=document.createElement("b");b.textContent="@"+handle;w.append(b," ")}
+      w.append("cleared bonus glitch "+(bonus.idx+1)+" of "+bonus.list.length+".");
+      lamps(document.getElementById("ghPopLamps"),total,total);
+      document.getElementById("ghPopTime").textContent=sec+"s";
+      document.getElementById("ghPopMiss").textContent=String(misses);
+      document.getElementById("ghPopNote").textContent=bonusLeft()>0?"Just for fun. This time is not saved.":"That’s all for today. Come back tomorrow.";
+      bonusOffer();
+      pop.hidden=false;var pb=document.getElementById("ghPopBonus");(pb.hidden?document.getElementById("ghPopClose"):pb).focus();
+      if(!still){var cols=["#22E4F5","#FF2D9B","#B67CFF","#FFC93C","#F2F6FF"];
+        for(var i=0;i<50;i++){var s=document.createElement("span");s.className="gh-bit";s.textContent=Math.random()<.7?(Math.random()<.5?"0":"1"):"✦";
+          s.style.cssText="left:"+(Math.random()*100)+"%;color:"+cols[i%cols.length]+";font-size:"+(12+Math.random()*16)+"px;text-shadow:0 0 8px "+cols[i%cols.length]+";animation-duration:"+(2.2+Math.random()*2.2)+"s;animation-delay:"+(Math.random()*.8)+"s;--dx:"+((Math.random()-.5)*160)+"px;--rot:"+((Math.random()-.5)*720)+"deg";
+          pop.appendChild(s)}
+        cancelAnimationFrame(glowRaf);glow()}}
+    document.getElementById("ghPopBonus").addEventListener("click",bonusPlay);
+    document.getElementById("ghBonusNext").addEventListener("click",bonusPlay);
     cA.addEventListener("click",tap);cB.addEventListener("click",tap);
   })();
 
