@@ -742,6 +742,214 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 .bd-lb-legend span{display:inline-flex; align-items:center; gap:4px; white-space:nowrap}
 .bd-lb-legend .bd-spd{width:13px; height:13px}
 @media (prefers-reduced-motion: reduce){.bd-spd-2, .bd-spd-3{animation:none}}
+
+/* Game Settings box: same glowing neon outline as the Top 10 and "Get on the Top 10" boxes */
+.bd-setup{position:relative; isolation:isolate; border-color:transparent; background:rgba(2,4,12,.62);
+  box-shadow:0 0 16px rgba(182,124,255,.45), 0 0 34px rgba(34,228,245,.2); animation:bdGlowSet 3.4s ease-in-out infinite}
+.bd-setup::before{content:""; position:absolute; inset:-1px; padding:2px; border-radius:inherit; pointer-events:none;
+  background:linear-gradient(135deg, #B67CFF, #22E4F5 50%, #FF2D9B);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0)}
+@keyframes bdGlowSet{50%{box-shadow:0 0 24px rgba(34,228,245,.55), 0 0 46px rgba(182,124,255,.3)}}
+@media (prefers-reduced-motion: reduce){.bd-setup{animation:none}}
+
+/* selected DJ bot and deck style: the purple, pink and gold crown outline, flowing and breathing */
+.bd-bots button[aria-pressed="true"]{border:2px solid transparent;
+  background:linear-gradient(rgba(2,4,12,.9), rgba(2,4,12,.9)) padding-box,
+             linear-gradient(110deg, #B67CFF, #FF2D9B 17%, #FFC93C 33%, #B67CFF 50%, #FF2D9B 67%, #FFC93C 83%, #B67CFF) border-box;
+  background-size:100% 100%, 200% 100%;
+  animation:bdPickFlow 4s linear infinite, bdPickBreathe 6.3s ease-in-out infinite}
+@keyframes bdPickFlow{from{background-position:0 0, 0 0} to{background-position:0 0, 200% 0}}
+@keyframes bdPickBreathe{
+  0%,100%{box-shadow:0 0 6px rgba(255,201,60,.35), 0 0 10px rgba(255,45,155,.25)}
+  50%{box-shadow:0 0 14px rgba(255,201,60,.65), 0 0 24px rgba(255,45,155,.5), 0 0 34px rgba(182,124,255,.35)}
+}
+@media (prefers-reduced-motion: reduce){.bd-bots button[aria-pressed="true"]{animation:none; box-shadow:0 0 12px rgba(255,201,60,.5), 0 0 18px rgba(255,45,155,.35)}}
+/* sparks from the note speed and audio offset sliders */
+.bd-sparks{position:fixed; inset:0; width:100%; height:100%; pointer-events:none; z-index:80}
+
+/* track list Play buttons: a soft light-pink glow that breathes every 6.3 seconds */
+.bd-track .bd-btn.primary:not(:disabled){animation:bdPlayBreathe 6.3s ease-in-out infinite}
+@keyframes bdPlayBreathe{
+  0%,100%{box-shadow:0 0 10px rgba(255,45,155,.3); border-color:var(--pink)}
+  50%{box-shadow:0 0 12px rgba(255,160,210,.45), 0 0 22px rgba(255,160,210,.2); border-color:#FF8CC6; background:rgba(255,160,210,.14)}
+}
+@media (prefers-reduced-motion: reduce){.bd-track .bd-btn.primary:not(:disabled){animation:none}}
+
+/* "How to" button: same soft light-pink glow, breathing every 6.3 seconds */
+.bd-howto{animation:bdHowBreathe 6.3s ease-in-out infinite}
+@keyframes bdHowBreathe{
+  0%,100%{box-shadow:0 0 8px rgba(255,45,155,.35)}
+  50%{box-shadow:0 0 10px rgba(255,160,210,.45), 0 0 18px rgba(255,160,210,.2); border-color:#FF8CC6}
+}
+@media (prefers-reduced-motion: reduce){.bd-howto{animation:none; box-shadow:0 0 10px rgba(255,45,155,.45)}}
+
+
+/* hovering a Play button makes it pop up */
+.bd-track .bd-btn.primary{transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+.bd-track .bd-btn.primary:not(:disabled):hover, .bd-track .bd-btn.primary:not(:disabled):focus-visible{
+  transform:translateY(-2px) scale(1.14); animation:none; border-color:var(--stripe, #FF8CC6); background:color-mix(in srgb, var(--stripe, #FF2D9B) 28%, transparent);
+  box-shadow:0 6px 16px color-mix(in srgb, var(--stripe, #FF2D9B) 35%, transparent), 0 0 16px color-mix(in srgb, var(--stripe, #FF2D9B) 55%, transparent)}
+.bd-track .bd-btn.primary:not(:disabled):active{transform:scale(1.04); transition-duration:.08s}
+@media (prefers-reduced-motion: reduce){.bd-track .bd-btn.primary{transition:none}}
+
+
+
+/* Play buttons: a smooth glow that cascades gently down the list every 7.7 seconds, each button glowing in its own song color */
+.bd-track{--wf1:#22E4F5; --wf2:#22E4F5; --wfg1:34,228,245; --wfg2:34,228,245; --wfbg:34,228,245}
+.bd-track .bd-btn.primary{position:relative}
+.bd-track .bd-btn.primary:not(:disabled){animation:bdCascade 7.7s cubic-bezier(.45,0,.55,1) infinite, bdRock 7.7s ease-in-out infinite; animation-delay:calc(var(--i, 0) * .22s)}
+/* a very slight rock back and forth, one full sway every 7.7 seconds */
+@keyframes bdRock{0%, 100%{transform:rotate(0deg)} 25%{transform:rotate(-1.6deg)} 75%{transform:rotate(1.6deg)}}
+.bd-track .bd-btn.primary:not(:disabled)::before{content:""; position:absolute; inset:-1px; padding:1.5px; border-radius:inherit; pointer-events:none; opacity:0;
+  background:var(--stripe, #22E4F5);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation:bdCascadeEdge 7.7s cubic-bezier(.45,0,.55,1) infinite; animation-delay:calc(var(--i, 0) * .22s)}
+@keyframes bdCascade{
+  0%, 30%, 100%{box-shadow:0 0 8px color-mix(in srgb, var(--stripe, #FF2D9B) 30%, transparent); background:color-mix(in srgb, var(--stripe, #FF2D9B) 15%, transparent)}
+  14%{box-shadow:0 0 14px color-mix(in srgb, var(--stripe, #22E4F5) 55%, transparent), 0 0 28px color-mix(in srgb, var(--stripe, #22E4F5) 25%, transparent); background:color-mix(in srgb, var(--stripe, #22E4F5) 24%, transparent)}
+}
+@keyframes bdCascadeEdge{0%, 30%, 100%{opacity:0} 14%{opacity:1}}
+.bd-track .bd-btn.primary:not(:disabled):hover::before, .bd-track .bd-btn.primary:not(:disabled):focus-visible::before{animation:none; opacity:0}
+@media (prefers-reduced-motion: reduce){.bd-track .bd-btn.primary:not(:disabled), .bd-track .bd-btn.primary:not(:disabled)::before{animation:none}}
+
+/* difficulty buttons: the selected one takes its own color */
+#bdDiff button[data-d="easy"][aria-pressed="true"]{background:#22E4F5; color:#04060E; box-shadow:0 0 12px rgba(34,228,245,.55)}
+#bdDiff button[data-d="normal"][aria-pressed="true"]{background:#B67CFF; color:#04060E; box-shadow:0 0 12px rgba(182,124,255,.6)}
+#bdDiff button[data-d="hard"][aria-pressed="true"]{background:#FF2D9B; color:#04060E; box-shadow:0 0 12px rgba(255,45,155,.6)}
+
+/* Play button outline matches its song's color stripe */
+.bd-track .bd-btn.primary{border-color:var(--stripe, #FF2D9B); background:color-mix(in srgb, var(--stripe, #FF2D9B) 15%, transparent); box-shadow:0 0 8px color-mix(in srgb, var(--stripe, #FF2D9B) 30%, transparent)}
+
+/* nudge the difficulty picker in from the right edge a little */
+@media (min-width:561px){.bd-diffwrap{margin-right:1.5rem}}
+
+/* a little more room between "Pick difficulty" and its 👉 */
+.bd-difflabel .bd-point-right{margin-left:.45rem}
+
+
+/* neon chevron pointers: three stacked chevrons (cyan, purple, pink) that light up in a quick cascade every 5 seconds */
+.bd-chev{display:inline-block; vertical-align:middle; line-height:0}
+.bd-chev svg{overflow:visible; fill:none; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round}
+.bd-chev-down svg{width:.62em; height:.9em; margin-left:.25em; transform:translateY(.05em)}
+.bd-chev-right svg{width:1.35em; height:.95em}
+.bd-chev path:nth-child(1){stroke:#22E4F5}
+.bd-chev path:nth-child(2){stroke:#B67CFF}
+.bd-chev path:nth-child(3){stroke:#FF2D9B}
+.bd-chev path{opacity:.32; animation:bdChevLight 5s ease-out infinite}
+.bd-chev path:nth-child(2){animation-delay:.13s}
+.bd-chev path:nth-child(3){animation-delay:.26s}
+.bd-chev-down svg{animation:bdChevDrop 5s ease-out infinite}
+.bd-chev-right svg{animation:bdChevPush 5s ease-out infinite}
+@keyframes bdChevLight{0%{opacity:.32} 5%{opacity:1; filter:drop-shadow(0 0 3px currentColor)} 16%, 100%{opacity:.32}}
+@keyframes bdChevDrop{0%, 100%{transform:translateY(.05em)} 7%{transform:translateY(.22em)} 15%{transform:translateY(.05em)}}
+@keyframes bdChevPush{0%, 100%{transform:translateX(0)} 7%{transform:translateX(4px)} 15%{transform:translateX(0)}}
+.bd-chev path:nth-child(1){color:#22E4F5} .bd-chev path:nth-child(2){color:#B67CFF} .bd-chev path:nth-child(3){color:#FF2D9B}
+/* "Pick difficulty": a small uppercase label in a cyan-to-pink gradient, like the other section labels */
+.bd-difflabel{display:inline-flex; align-items:center; gap:.45rem; opacity:1}
+.bd-difftext{font-size:.74rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+  background:linear-gradient(90deg, #22E4F5, #B67CFF 55%, #FF2D9B); -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 0 6px rgba(34,228,245,.25))}
+.bd-difflabel .bd-point-right{margin-left:0}
+@media (prefers-reduced-motion: reduce){.bd-chev path, .bd-chev svg{animation:none} .bd-chev path{opacity:.8}}
+
+/* "Pick a Track": same uppercase gradient style as "Pick difficulty", just bigger */
+.bd-titletext{font-size:1.05rem; font-weight:700; letter-spacing:.16em; text-transform:uppercase;
+  background:linear-gradient(90deg, #22E4F5, #B67CFF 55%, #FF2D9B); -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 0 6px rgba(34,228,245,.25))}
+.bd-title{display:flex; align-items:center; gap:.2rem}
+
+/* "Pick a Track" breathes in step with the "Get on the Top 10" box outline: grows, brightens and glows, then settles back, every 3.4 seconds */
+.bd-titletext{display:inline-block; transform-origin:left center; animation:bdTitleBreathe 3.4s cubic-bezier(.37,0,.63,1) infinite; will-change:transform, filter; backface-visibility:hidden}
+@keyframes bdTitleBreathe{
+  0%, 100%{filter:drop-shadow(0 0 6px rgba(34,228,245,.25)) drop-shadow(0 0 8px rgba(255,201,60,0)) brightness(1)}
+  50%{filter:drop-shadow(0 0 7px rgba(34,228,245,.27)) drop-shadow(0 0 8px rgba(255,201,60,.12)) brightness(1.04)}
+}
+/* the down chevrons beside it cascade 0.3 s slower than before */
+.bd-chev-down path{animation-name:bdChevLightSlow}
+.bd-chev-down path:nth-child(2){animation-delay:.23s}
+.bd-chev-down path:nth-child(3){animation-delay:.46s}
+.bd-chev-down svg{animation-name:bdChevDropSlow}
+@keyframes bdChevLightSlow{0%{opacity:.32} 8%{opacity:1; filter:drop-shadow(0 0 3px currentColor)} 22%, 100%{opacity:.32}}
+@keyframes bdChevDropSlow{0%, 100%{transform:translateY(.05em)} 10%{transform:translateY(.22em)} 21%{transform:translateY(.05em)}}
+@media (prefers-reduced-motion: reduce){.bd-titletext, .bd-chev-down path, .bd-chev-down svg{animation:none}}
+
+/* room for "Pick a Track" to grow without touching its chevrons */
+.bd-title .bd-chev-down svg{margin-left:.75em}
+
+/* a slight gold outline around "Pick a Track" that breathes with it */
+.bd-titletext{position:relative}
+.bd-titletext::before{content:attr(data-text); position:absolute; left:0; top:0; pointer-events:none;
+  color:transparent; -webkit-text-stroke:.8px #FFC93C; opacity:.2; animation:bdTitleGold 3.4s cubic-bezier(.37,0,.63,1) infinite}
+@keyframes bdTitleGold{0%, 100%{opacity:.2} 50%{opacity:.34}}
+.bd-title .bd-chev-down svg{margin-left:1em}
+@media (prefers-reduced-motion: reduce){.bd-titletext::before{animation:none; opacity:.6}}
+
+/* chevron pointers, smoother and slower: a 6 s cycle, each chevron fades up and down gently, the nudge eases in and out */
+.bd-chev path{animation:bdChevSoft 6s ease-in-out infinite; filter:drop-shadow(0 0 0 transparent)}
+.bd-chev path:nth-child(2){animation-delay:.35s}
+.bd-chev path:nth-child(3){animation-delay:.7s}
+.bd-chev-down svg{animation:bdChevDropSoft 6s ease-in-out infinite}
+.bd-chev-right svg{animation:bdChevPushSoft 6s ease-in-out infinite}
+@keyframes bdChevSoft{
+  0%, 40%, 100%{opacity:.32; filter:drop-shadow(0 0 0 currentColor)}
+  18%{opacity:1; filter:drop-shadow(0 0 3px currentColor)}
+}
+@keyframes bdChevDropSoft{0%, 45%, 100%{transform:translateY(.05em)} 20%{transform:translateY(.24em)}}
+@keyframes bdChevPushSoft{0%, 45%, 100%{transform:translateX(0)} 20%{transform:translateX(4px)}}
+@media (prefers-reduced-motion: reduce){.bd-chev path, .bd-chev svg{animation:none}}
+
+/* thin gold outline around "Pick a Track" */
+.bd-titletext{padding:.3em .8em; border:1px solid rgba(255,201,60,.7); border-radius:999px; box-shadow:0 0 8px rgba(255,201,60,.18), inset 0 0 8px rgba(255,201,60,.08)}
+.bd-titletext::before{left:.8em; top:.3em}
+.bd-title .bd-chev-down svg{margin-left:.9em}
+
+/* "Pick a Track" gets a little excited wiggle as it reaches the top of each breath, then settles */
+.bd-titlerock{display:inline-block; transform-origin:50% 60%; animation:bdTitleRock 3.4s cubic-bezier(.37,0,.63,1) infinite}
+@keyframes bdTitleRock{
+  0%, 30%, 74%, 100%{transform:rotate(0deg)}
+  38%{transform:rotate(-1.6deg)}
+  46%{transform:rotate(1.6deg)}
+  54%{transform:rotate(-1.1deg)}
+  62%{transform:rotate(.7deg)}
+  68%{transform:rotate(-.3deg)}
+}
+@media (prefers-reduced-motion: reduce){.bd-titlerock{animation:none}}
+
+/* the chevrons ride along with "Pick a Track": the whole group breathes (grows from its left edge) and wiggles together */
+.bd-titlegroup{display:inline-flex; align-items:center; transform-origin:left center; will-change:transform;
+  animation:bdTitleScale 3.4s cubic-bezier(.37,0,.63,1) infinite}
+@keyframes bdTitleScale{0%, 100%{transform:translateZ(0) scale(1)} 50%{transform:translateZ(0) scale(1.074)}}
+.bd-titlerock{transform-origin:30% 60%}
+/* "Pick difficulty" breathes slightly on the same rhythm */
+.bd-difftext{display:inline-block; animation:bdDiffBreathe 3.4s cubic-bezier(.37,0,.63,1) infinite}
+@keyframes bdDiffBreathe{
+  0%, 100%{transform:scale(1); filter:drop-shadow(0 0 6px rgba(34,228,245,.25)) brightness(1)}
+  50%{transform:scale(1.04); filter:drop-shadow(0 0 8px rgba(34,228,245,.32)) brightness(1.04)}
+}
+@media (prefers-reduced-motion: reduce){.bd-titlegroup, .bd-difftext{animation:none}}
+
+/* keep "Pick a Track" and the difficulty picker on one line */
+.bd-titletext{padding:.28em .62em}
+.bd-titletext::before{left:.62em; top:.28em}
+.bd-title .bd-chev-down svg{margin-left:.55em}
+@media (min-width:561px){.bd-diffwrap{margin-right:1rem}}
+
+/* "Pick a Track" no longer rocks */
+.bd-titlerock{animation:none}
+/* chevrons: same smooth light and nudge, then a 1.5 s rest after the last chevron fades before the next round (4.6 s cycle) */
+.bd-chev path{animation:bdChevRest 4.6s ease-in-out infinite}
+.bd-chev path:nth-child(2){animation-delay:.35s}
+.bd-chev path:nth-child(3){animation-delay:.7s}
+.bd-chev-down svg{animation:bdChevDropRest 4.6s ease-in-out infinite}
+.bd-chev-right svg{animation:bdChevPushRest 4.6s ease-in-out infinite}
+@keyframes bdChevRest{
+  0%, 52.2%, 100%{opacity:.32; filter:drop-shadow(0 0 0 currentColor)}
+  23.5%{opacity:1; filter:drop-shadow(0 0 3px currentColor)}
+}
+@keyframes bdChevDropRest{0%, 58.7%, 100%{transform:translateY(.05em)} 26.1%{transform:translateY(.24em)}}
+@keyframes bdChevPushRest{0%, 58.7%, 100%{transform:translateX(0)} 26.1%{transform:translateX(4px)}}
+@media (prefers-reduced-motion: reduce){.bd-chev path, .bd-chev svg{animation:none}}
 </style>
 </head>
 <body>
@@ -792,8 +1000,8 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       <p class="bd-lb-foot">Best score per player, from games played with an X handle.</p>
     </section>
     <div class="bd-main">
-    <h3 class="bd-sub">Setup</h3>
-    <div class="bd-setup">
+    <h3 class="bd-sub">Game Settings</h3>
+    <div class="bd-setup" role="group" aria-label="Game Settings">
       <div class="bd-row" id="bdBotRow"><span>Your DJ bot</span><div class="bd-bots" id="bdBots" role="group" aria-label="Pick your DJ bot"></div></div>
       <div class="bd-row" id="bdDeckRow"><span>Deck style <small class="bd-deckname" id="bdDeckName"></small></span><div class="bd-bots" id="bdDecks" role="group" aria-label="Pick your deck style"></div></div>
       <div class="bd-row"><span>Hit keys <button class="bd-howto" id="bdHowBtn" type="button" aria-haspopup="dialog">▶ How to</button></span><div class="bd-keys" id="bdKeys"></div></div>
@@ -807,9 +1015,9 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       <div class="bd-give-msg" id="bdGiveMsg" aria-live="polite"></div>
     </div>
     <div class="bd-head">
-      <h2 class="bd-title">Pick a track <span class="bd-point bd-point-down" aria-hidden="true">👇</span></h2>
+      <h2 class="bd-title"><span class="bd-titlerock"><span class="bd-titlegroup"><span class="bd-titletext" data-text="Pick a Track">Pick a Track</span><span class="bd-chev bd-chev-down" aria-hidden="true"><svg viewBox="0 0 16 23"><path d="M2.5 2.5l5.5 4.6 5.5-4.6"/><path d="M2.5 9.2l5.5 4.6 5.5-4.6"/><path d="M2.5 15.9l5.5 4.6 5.5-4.6"/></svg></span></span></span></h2>
       <div class="bd-diffwrap">
-        <span class="bd-difflabel">Pick difficulty <span class="bd-point bd-point-right" aria-hidden="true">👉</span></span>
+        <span class="bd-difflabel"><span class="bd-difftext">Pick difficulty</span> <span class="bd-chev bd-chev-right" aria-hidden="true"><svg viewBox="0 0 23 16"><path d="M2.5 2.5l4.6 5.5-4.6 5.5"/><path d="M9.2 2.5l4.6 5.5-4.6 5.5"/><path d="M15.9 2.5l4.6 5.5-4.6 5.5"/></svg></span></span>
         <div class="bd-seg" id="bdDiff" role="group" aria-label="Difficulty">
           <button type="button" data-d="easy">Easy</button><button type="button" data-d="normal">Normal</button><button type="button" data-d="hard">Hard</button>
         </div>
@@ -1501,7 +1709,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     const DEFAULT_KEYS = ['d','f','j','k'];
     let keys = store.get('echoBeatKeys', DEFAULT_KEYS);
     if (!Array.isArray(keys) || keys.length !== 4) keys = DEFAULT_KEYS.slice();
-    const settings = Object.assign({ diff:'normal', speed:1.2, offset:0 }, store.get('echoBeatSettings', {}));
+    const settings = Object.assign({ diff:'normal', speed:1.0, offset:0 }, store.get('echoBeatSettings', {}));
     let tracks = store.get('echoBeatTracks', []);  if (!Array.isArray(tracks)) tracks = [];
     let removed = store.get('echoBeatRemoved', []); if (!Array.isArray(removed)) removed = [];
     const bests = store.get('echoBeatBests', {});
@@ -1649,11 +1857,15 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 
     /* ----- track list ----- */
     function el(tag, cls, text){ const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+
+    // each song's color (the stripe at the end of its box, and its Play button outline)
+    const SONG_COLS = ['#FF2D9B', '#FFC93C', '#4DFF6A', '#22E4F5', '#B67CFF', '#FF8A3D'];
     function renderTracks(){
       const list = $('bdTracks'); list.innerHTML = '';
+      let playIdx = 0;
       [...SITE, ...tracks, DEMO].forEach((tr, i) => {
         const card = el('article', 'bd-track');
-        card.style.setProperty('--stripe', tr.demo ? 'var(--muted)' : LANE[i % 4]);
+        card.style.setProperty('--stripe', tr.demo ? 'var(--muted)' : SONG_COLS[i % SONG_COLS.length]);
         const meta = el('div', 'bd-meta');
         meta.append(el('h3', 'bd-name', tr.name));
         meta.append(el('p', 'bd-st', tr.site ? 'By ECHO1' + (chartBook && chartBook[tr.src] && chartBook[tr.src].bpm ? ' · ' + Math.round(chartBook[tr.src].bpm) + ' BPM' : '') : tr.demo ? 'Built-in warm-up beat, 128 BPM' : (fileInfo[tr.id] || 'No audio yet. Load your file to play.')));
@@ -1673,6 +1885,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         const play = el('button', 'bd-btn primary', 'Play'); play.type = 'button';
         play.disabled = !tr.site && !tr.demo && !fileInfo[tr.id];
         play.setAttribute('aria-label', 'Play ' + tr.name);
+        if (!play.disabled) play.style.setProperty('--i', String(playIdx++));   // position in the waterfall
         play.addEventListener('click', () => startTrack(tr));
         acts.append(play);
         card.append(meta, acts);
@@ -2211,10 +2424,10 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         ring:'#22E4F5', peak:'#FF2D9B', edge:'#22E4F5', halo:'#FFC93C', vinyl:'sig5', eye:'#D92684', stripe:'#FFC93C', hub:'#FFC93C', vu:['#22E4F5', '#FFC93C', '#FF2D9B'], goldTrim:true })
     };
     for (const k in THEMES) THEMES[k].dustRGB = THEMES[k].dust.map(c => 'rgb(' + c + ')');
-    // deck style picker: offered decks, plus Random (default) which picks one each time a song starts
-    const DECK_OPTS = [1, 3, 4, 5];
-    let deckPick = store.get('echoBeatDeck', 'random');
-    if (deckPick !== 'random' && !DECK_OPTS.includes(deckPick)) deckPick = 'random';
+    // deck style picker: ECHO1 Signature first and the default, then the others, plus Random which picks one each time a song starts
+    const DECK_OPTS = [5, 1, 3, 4], DECK_DEFAULT = 5;
+    let deckPick = store.get('echoBeatDeck', DECK_DEFAULT);
+    if (deckPick !== 'random' && !DECK_OPTS.includes(deckPick)) deckPick = DECK_DEFAULT;
     let DECK_TH = THEMES[DECK_THEME] || null;
     function applyDeckTheme(){ DECK_TH = THEMES[deckPick === 'random' ? DECK_OPTS[Math.floor(Math.random() * DECK_OPTS.length)] : deckPick] || THEMES[DECK_THEME] || null; }
     // soft underglow and faint star dust around the main decks (drawn behind them, kept out of the lanes)
@@ -3515,6 +3728,46 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 
     renderBots();
     renderDecks();
+
+    /* ----- sliders shoot sparks while you drag them ----- */
+    (function(){
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const cv = document.createElement('canvas'); cv.className = 'bd-sparks'; cv.setAttribute('aria-hidden', 'true'); document.body.append(cv);
+      const c = cv.getContext('2d'), COLS = ['#FF2D9B', '#FFC93C', '#B67CFF', '#22E4F5', '#ffffff'];
+      let bits = [], raf = 0, last = 0, dpr = 1;
+      function size(){ dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; }
+      size(); window.addEventListener('resize', size);
+      function frame(now){
+        const dt = Math.min(2.5, (now - last) / 16.67 || 1); last = now;
+        c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, innerWidth, innerHeight);
+        bits = bits.filter(b => now - b.born < b.life);
+        for (const b of bits){
+          b.vy += .18 * dt; b.vx *= Math.pow(.97, dt); b.x += b.vx * dt; b.y += b.vy * dt;
+          const a = 1 - (now - b.born) / b.life;
+          c.globalAlpha = a * .75; c.strokeStyle = b.col; c.shadowColor = b.col; c.shadowBlur = 5; c.lineWidth = b.w; c.lineCap = 'round';
+          c.beginPath(); c.moveTo(b.x, b.y); c.lineTo(b.x - b.vx * 1.8, b.y - b.vy * 1.8); c.stroke();
+        }
+        c.globalAlpha = 1; c.shadowBlur = 0;
+        raf = bits.length ? requestAnimationFrame(frame) : 0;
+      }
+      function burst(input, dir){
+        const r = input.getBoundingClientRect(), min = +input.min, max = +input.max, frac = (+input.value - min) / (max - min || 1), thumb = 16;
+        const x = r.left + thumb / 2 + frac * (r.width - thumb), y = r.top + r.height / 2, now = performance.now();
+        for (let k = 0; k < 4; k++){
+          const ang = -Math.PI / 2 + (Math.random() - .5) * 2 - dir * .4, sp = 1.6 + Math.random() * 2.8;
+          bits.push({ x, y, vx:Math.cos(ang) * sp - dir * .9, vy:Math.sin(ang) * sp, col:COLS[Math.floor(Math.random() * COLS.length)], w:1 + Math.random() * 1, born:now, life:320 + Math.random() * 260 });
+        }
+        if (bits.length > 90) bits.splice(0, bits.length - 90);
+        if (!raf){ last = now; raf = requestAnimationFrame(frame); }
+      }
+      ['bdSpeed', 'bdOffset'].forEach(id => {
+        const el2 = $(id); if (!el2) return;
+        let prev = +el2.value;
+        el2.addEventListener('input', () => { const v = +el2.value; burst(el2, Math.sign(v - prev)); prev = v; });
+      });
+    })();
+
+
     renderSettings(); renderTracks();
     getChartBook().then(renderTracks);
     loadTop();
