@@ -1026,6 +1026,8 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 </style>
 <style>
 /* ECHO BOTZ header (same on every page): breathes every 6.2s, rainbow ripple every other breath */
+/* ECHO BOTZ line made bigger and brighter so it stands out */
+.eb-big{filter:drop-shadow(0 0 6px rgba(255,45,155,.55)) brightness(1.15)}
 .eb-logo{mask-image:none; -webkit-mask-image:none; max-width:50rem; overflow:visible}
 .eb-breathe{transform-box:fill-box; transform-origin:center; animation:ebBreathe 6.2s cubic-bezier(.45,0,.55,1) infinite; will-change:transform}
 @keyframes ebBreathe{0%,100%{transform:scale(1); opacity:.9}50%{transform:scale(1.12); opacity:1}}
@@ -1061,8 +1063,8 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     <button class="tl tl-glitch games-btn" id="gamesBtn" type="button" aria-expanded="false" aria-controls="gamesMenu"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8h10a4 4 0 0 1 4 4v1.5a3.5 3.5 0 0 1-6.3 2.1L13.5 14h-3l-1.2 1.6A3.5 3.5 0 0 1 3 13.5V12a4 4 0 0 1 4-4z"/><path d="M7.5 10.5v3M6 12h3"/><circle cx="15.5" cy="11.2" r=".6" fill="currentColor"/><circle cx="17" cy="12.8" r=".6" fill="currentColor"/></svg><span class="gamez-txt" data-text="ECHO Bot Gamez">ECHO Bot Gamez</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9.5l6 6 6-6"/></svg></button>
     <div class="games-menu" id="gamesMenu" hidden>
       <!-- To add a game: copy the line below, change the link and the name -->
-      <a class="tl tl-glitch" href="https://echo1onchain.xyz/glitch_hunt/"><svg class="glitch-ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path class="gl gl-a" d="M6 8h7"/><path class="gl gl-b" d="M9 11h9"/><path class="gl gl-c" d="M5 14h4"/></svg><span class="glitch-txt" data-text="Play Glitch Hunt">Play Glitch Hunt</span></a>
       <a class="tl tl-binary" href="https://echo1onchain.xyz/echo_botz_binary_lab/"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="liquid" d="M7.6 13.6H16.4L19.2 18.4A1.6 1.6 0 0 1 17.8 20.8H6.2A1.6 1.6 0 0 1 4.8 18.4Z"/><circle class="bubble" cx="10" cy="17.5" r=".9"/><circle class="bubble" cx="13.6" cy="16" r=".65"/><circle class="bubble" cx="12.2" cy="19" r=".55"/><path d="M9 3h6M10 3v6.2L4.6 18.4A1.8 1.8 0 0 0 6.2 21h11.6a1.8 1.8 0 0 0 1.6-2.6L14 9.2V3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Binary Lab</span></a>
+      <a class="tl tl-glitch" href="https://echo1onchain.xyz/glitch_hunt/"><svg class="glitch-ico" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/><path class="gl gl-a" d="M6 8h7"/><path class="gl gl-b" d="M9 11h9"/><path class="gl gl-c" d="M5 14h4"/></svg><span class="glitch-txt" data-text="Play Glitch Hunt">Play Glitch Hunt</span></a>
       <a class="tl tl-memory" href="https://echo1onchain.xyz/echo_botz_memory_protocol/" aria-label="Play Memory Protocol"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><path d="M9.5 14.5h.01M12.5 14.5h.01M15.5 14.5h.01" stroke-width="2.6"/></svg><span class="mem-txt" aria-hidden="true"><i style="--i:0">P</i><i style="--i:1">l</i><i style="--i:2">a</i><i style="--i:3">y</i><i style="--i:4">&nbsp;</i><i style="--i:5">M</i><i style="--i:6">e</i><i style="--i:7">m</i><i style="--i:8">o</i><i style="--i:9">r</i><i style="--i:10">y</i><i style="--i:11">&nbsp;</i><i style="--i:12">P</i><i style="--i:13">r</i><i style="--i:14">o</i><i style="--i:15">t</i><i style="--i:16">o</i><i style="--i:17">c</i><i style="--i:18">o</i><i style="--i:19">l</i></span></a>
       <a class="tl tl-beat" href="https://echo1onchain.xyz/beat_breakerz/" aria-label="Play Beat Breakerz" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.5V12a8 8 0 0 1 16 0v2.5"/><rect x="2.8" y="13" width="3.6" height="7" rx="1.5"/><rect x="17.6" y="13" width="3.6" height="7" rx="1.5"/><path class="eq eq1" d="M10 19.5v-4"/><path class="eq eq2" d="M12 19.5v-6"/><path class="eq eq3" d="M14 19.5v-3"/></svg><span class="beat-txt" aria-hidden="true"><i style="--i:0;--c:#FF2D9B">P</i><i style="--i:1;--c:#FFC93C">l</i><i style="--i:2;--c:#4DFF6A">a</i><i style="--i:3;--c:#22E4F5">y</i><i style="--i:4">&nbsp;</i><i style="--i:5;--c:#FF2D9B">B</i><i style="--i:6;--c:#FFC93C">e</i><i style="--i:7;--c:#4DFF6A">a</i><i style="--i:8;--c:#22E4F5">t</i><i style="--i:9">&nbsp;</i><i style="--i:10;--c:#FF2D9B">B</i><i style="--i:11;--c:#FFC93C">r</i><i style="--i:12;--c:#4DFF6A">e</i><i style="--i:13;--c:#22E4F5">a</i><i style="--i:14;--c:#FF2D9B">k</i><i style="--i:15;--c:#FFC93C">e</i><i style="--i:16;--c:#4DFF6A">r</i><i style="--i:17;--c:#22E4F5">z</i></span></a>
       <a class="tl tl-signal" href="https://echo1onchain.xyz/signal_jammer/" aria-label="Play Signal Jammer"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8.5" width="8" height="8" rx="2"/><path d="M12 8.5V6"/><circle cx="12" cy="5" r="1" fill="currentColor"/><circle cx="10.4" cy="12" r=".8" fill="#FF2D9B" stroke="none"/><circle cx="13.6" cy="12" r=".8" fill="#FF2D9B" stroke="none"/><path d="M10.5 14.6h3"/><path class="wv" d="M5.5 10a4 4 0 0 0 0 5"/><path class="wv wv2" d="M3 8a7 7 0 0 0 0 9"/><path class="wv" d="M18.5 10a4 4 0 0 1 0 5"/><path class="wv wv2" d="M21 8a7 7 0 0 1 0 9"/></svg><span class="sig-txt" aria-hidden="true"><i style="--i:0;--c:#FF2D9B">P</i><i style="--i:1;--c:#FF8A2B">l</i><i style="--i:2;--c:#FFC93C">a</i><i style="--i:3;--c:#4DFF6A">y</i><i style="--i:4">&nbsp;</i><i style="--i:5;--c:#22E4F5">S</i><i style="--i:6;--c:#7FA8FF">i</i><i style="--i:7;--c:#B67CFF">g</i><i style="--i:8;--c:#FF2D9B">n</i><i style="--i:9;--c:#FF8A2B">a</i><i style="--i:10;--c:#FFC93C">l</i><i style="--i:11">&nbsp;</i><i style="--i:12;--c:#4DFF6A">J</i><i style="--i:13;--c:#22E4F5">a</i><i style="--i:14;--c:#7FA8FF">m</i><i style="--i:15;--c:#B67CFF">m</i><i style="--i:16;--c:#FF2D9B">e</i><i style="--i:17;--c:#FF8A2B">r</i></span></a>
@@ -1091,8 +1093,8 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       <text font-family="'Chakra Petch', system-ui, sans-serif" font-weight="700" font-size="104.1" class="bb-st" style="--i:10" x="934.9" y="252" >R</text>
       <text font-family="'Chakra Petch', system-ui, sans-serif" font-weight="700" font-size="104.1" class="bb-st" style="--i:11" x="1008.4" y="252" >Z</text></clipPath>
     </defs>
-    <g class="eb-breathe"><g opacity=".9" filter="url(#bbBSoft)"><g fill="url(#bbBBarsL)" stroke="#FFFFFF" stroke-width=".55" stroke-opacity=".8" paint-order="stroke"><rect class="eb-rip" style="--i:9" x="310" y="57.0" width="6" height="10.0" rx="3"/><rect fill="#B67CFF" class="eb-rip eb-rain" style="--i:9" x="310" y="57.0" width="6" height="10.0" rx="3"/><rect class="eb-rip" style="--i:8" x="324" y="45.2" width="6" height="33.5" rx="3"/><rect fill="#7FA8FF" class="eb-rip eb-rain" style="--i:8" x="324" y="45.2" width="6" height="33.5" rx="3"/><rect class="eb-rip" style="--i:7" x="338" y="44.1" width="6" height="35.7" rx="3"/><rect fill="#22E4F5" class="eb-rip eb-rain" style="--i:7" x="338" y="44.1" width="6" height="35.7" rx="3"/><rect class="eb-rip" style="--i:6" x="352" y="39.4" width="6" height="45.2" rx="3"/><rect fill="#39E6A0" class="eb-rip eb-rain" style="--i:6" x="352" y="39.4" width="6" height="45.2" rx="3"/><rect class="eb-rip" style="--i:5" x="366" y="44.0" width="6" height="36.0" rx="3"/><rect fill="#4DFF6A" class="eb-rip eb-rain" style="--i:5" x="366" y="44.0" width="6" height="36.0" rx="3"/><rect class="eb-rip" style="--i:4" x="380" y="48.0" width="6" height="27.9" rx="3"/><rect fill="#C6FF3D" class="eb-rip eb-rain" style="--i:4" x="380" y="48.0" width="6" height="27.9" rx="3"/><rect class="eb-rip" style="--i:3" x="394" y="51.4" width="6" height="21.1" rx="3"/><rect fill="#FFC93C" class="eb-rip eb-rain" style="--i:3" x="394" y="51.4" width="6" height="21.1" rx="3"/><rect class="eb-rip" style="--i:2" x="408" y="45.5" width="6" height="33.1" rx="3"/><rect fill="#FF8A2B" class="eb-rip eb-rain" style="--i:2" x="408" y="45.5" width="6" height="33.1" rx="3"/><rect class="eb-rip" style="--i:1" x="422" y="40.3" width="6" height="43.3" rx="3"/><rect fill="#FF5A4E" class="eb-rip eb-rain" style="--i:1" x="422" y="40.3" width="6" height="43.3" rx="3"/><rect class="eb-rip" style="--i:0" x="436" y="42.4" width="6" height="39.2" rx="3"/><rect fill="#FF2D9B" class="eb-rip eb-rain" style="--i:0" x="436" y="42.4" width="6" height="39.2" rx="3"/></g><g fill="url(#bbBBarsR)" stroke="#FFFFFF" stroke-width=".55" stroke-opacity=".8" paint-order="stroke"><rect class="eb-rip" style="--i:0" x="840" y="51.0" width="6" height="22.0" rx="3"/><rect fill="#FF2D9B" class="eb-rip eb-rain" style="--i:0" x="840" y="51.0" width="6" height="22.0" rx="3"/><rect class="eb-rip" style="--i:1" x="854" y="41.4" width="6" height="41.1" rx="3"/><rect fill="#FF5A4E" class="eb-rip eb-rain" style="--i:1" x="854" y="41.4" width="6" height="41.1" rx="3"/><rect class="eb-rip" style="--i:2" x="868" y="43.7" width="6" height="36.6" rx="3"/><rect fill="#FF8A2B" class="eb-rip eb-rain" style="--i:2" x="868" y="43.7" width="6" height="36.6" rx="3"/><rect class="eb-rip" style="--i:3" x="882" y="40.6" width="6" height="42.9" rx="3"/><rect fill="#FFC93C" class="eb-rip eb-rain" style="--i:3" x="882" y="40.6" width="6" height="42.9" rx="3"/><rect class="eb-rip" style="--i:4" x="896" y="48.7" width="6" height="26.6" rx="3"/><rect fill="#C6FF3D" class="eb-rip eb-rain" style="--i:4" x="896" y="48.7" width="6" height="26.6" rx="3"/><rect class="eb-rip" style="--i:5" x="910" y="52.4" width="6" height="19.2" rx="3"/><rect fill="#4DFF6A" class="eb-rip eb-rain" style="--i:5" x="910" y="52.4" width="6" height="19.2" rx="3"/><rect class="eb-rip" style="--i:6" x="924" y="47.3" width="6" height="29.3" rx="3"/><rect fill="#39E6A0" class="eb-rip eb-rain" style="--i:6" x="924" y="47.3" width="6" height="29.3" rx="3"/><rect class="eb-rip" style="--i:7" x="938" y="41.6" width="6" height="40.8" rx="3"/><rect fill="#22E4F5" class="eb-rip eb-rain" style="--i:7" x="938" y="41.6" width="6" height="40.8" rx="3"/><rect class="eb-rip" style="--i:8" x="952" y="40.3" width="6" height="43.4" rx="3"/><rect fill="#7FA8FF" class="eb-rip eb-rain" style="--i:8" x="952" y="40.3" width="6" height="43.4" rx="3"/><rect class="eb-rip" style="--i:9" x="966" y="57.0" width="6" height="10.0" rx="946"/><rect fill="#B67CFF" class="eb-rip eb-rain" style="--i:9" x="966" y="57.0" width="6" height="10.0" rx="946"/></g></g>
-    <text x="640" y="79" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, monospace" font-weight="600" font-size="48.4" letter-spacing="9.7" fill="#FF2D9B" stroke="#FFFFFF" stroke-width=".62" stroke-opacity=".8" paint-order="stroke" stroke-linejoin="round" filter="url(#bbBSoft)">ECHO BOTZ</text></g>
+    <g class="eb-big" transform="translate(640 68) scale(1.32) translate(-640 -68)"><g class="eb-breathe"><g opacity=".9" filter="url(#bbBSoft)"><g fill="url(#bbBBarsL)" stroke="#FFFFFF" stroke-width=".55" stroke-opacity=".8" paint-order="stroke"><rect class="eb-rip" style="--i:9" x="310" y="57.0" width="6" height="10.0" rx="3"/><rect fill="#B67CFF" class="eb-rip eb-rain" style="--i:9" x="310" y="57.0" width="6" height="10.0" rx="3"/><rect class="eb-rip" style="--i:8" x="324" y="45.2" width="6" height="33.5" rx="3"/><rect fill="#7FA8FF" class="eb-rip eb-rain" style="--i:8" x="324" y="45.2" width="6" height="33.5" rx="3"/><rect class="eb-rip" style="--i:7" x="338" y="44.1" width="6" height="35.7" rx="3"/><rect fill="#22E4F5" class="eb-rip eb-rain" style="--i:7" x="338" y="44.1" width="6" height="35.7" rx="3"/><rect class="eb-rip" style="--i:6" x="352" y="39.4" width="6" height="45.2" rx="3"/><rect fill="#39E6A0" class="eb-rip eb-rain" style="--i:6" x="352" y="39.4" width="6" height="45.2" rx="3"/><rect class="eb-rip" style="--i:5" x="366" y="44.0" width="6" height="36.0" rx="3"/><rect fill="#4DFF6A" class="eb-rip eb-rain" style="--i:5" x="366" y="44.0" width="6" height="36.0" rx="3"/><rect class="eb-rip" style="--i:4" x="380" y="48.0" width="6" height="27.9" rx="3"/><rect fill="#C6FF3D" class="eb-rip eb-rain" style="--i:4" x="380" y="48.0" width="6" height="27.9" rx="3"/><rect class="eb-rip" style="--i:3" x="394" y="51.4" width="6" height="21.1" rx="3"/><rect fill="#FFC93C" class="eb-rip eb-rain" style="--i:3" x="394" y="51.4" width="6" height="21.1" rx="3"/><rect class="eb-rip" style="--i:2" x="408" y="45.5" width="6" height="33.1" rx="3"/><rect fill="#FF8A2B" class="eb-rip eb-rain" style="--i:2" x="408" y="45.5" width="6" height="33.1" rx="3"/><rect class="eb-rip" style="--i:1" x="422" y="40.3" width="6" height="43.3" rx="3"/><rect fill="#FF5A4E" class="eb-rip eb-rain" style="--i:1" x="422" y="40.3" width="6" height="43.3" rx="3"/><rect class="eb-rip" style="--i:0" x="436" y="42.4" width="6" height="39.2" rx="3"/><rect fill="#FF2D9B" class="eb-rip eb-rain" style="--i:0" x="436" y="42.4" width="6" height="39.2" rx="3"/></g><g fill="url(#bbBBarsR)" stroke="#FFFFFF" stroke-width=".55" stroke-opacity=".8" paint-order="stroke"><rect class="eb-rip" style="--i:0" x="840" y="51.0" width="6" height="22.0" rx="3"/><rect fill="#FF2D9B" class="eb-rip eb-rain" style="--i:0" x="840" y="51.0" width="6" height="22.0" rx="3"/><rect class="eb-rip" style="--i:1" x="854" y="41.4" width="6" height="41.1" rx="3"/><rect fill="#FF5A4E" class="eb-rip eb-rain" style="--i:1" x="854" y="41.4" width="6" height="41.1" rx="3"/><rect class="eb-rip" style="--i:2" x="868" y="43.7" width="6" height="36.6" rx="3"/><rect fill="#FF8A2B" class="eb-rip eb-rain" style="--i:2" x="868" y="43.7" width="6" height="36.6" rx="3"/><rect class="eb-rip" style="--i:3" x="882" y="40.6" width="6" height="42.9" rx="3"/><rect fill="#FFC93C" class="eb-rip eb-rain" style="--i:3" x="882" y="40.6" width="6" height="42.9" rx="3"/><rect class="eb-rip" style="--i:4" x="896" y="48.7" width="6" height="26.6" rx="3"/><rect fill="#C6FF3D" class="eb-rip eb-rain" style="--i:4" x="896" y="48.7" width="6" height="26.6" rx="3"/><rect class="eb-rip" style="--i:5" x="910" y="52.4" width="6" height="19.2" rx="3"/><rect fill="#4DFF6A" class="eb-rip eb-rain" style="--i:5" x="910" y="52.4" width="6" height="19.2" rx="3"/><rect class="eb-rip" style="--i:6" x="924" y="47.3" width="6" height="29.3" rx="3"/><rect fill="#39E6A0" class="eb-rip eb-rain" style="--i:6" x="924" y="47.3" width="6" height="29.3" rx="3"/><rect class="eb-rip" style="--i:7" x="938" y="41.6" width="6" height="40.8" rx="3"/><rect fill="#22E4F5" class="eb-rip eb-rain" style="--i:7" x="938" y="41.6" width="6" height="40.8" rx="3"/><rect class="eb-rip" style="--i:8" x="952" y="40.3" width="6" height="43.4" rx="3"/><rect fill="#7FA8FF" class="eb-rip eb-rain" style="--i:8" x="952" y="40.3" width="6" height="43.4" rx="3"/><rect class="eb-rip" style="--i:9" x="966" y="57.0" width="6" height="10.0" rx="946"/><rect fill="#B67CFF" class="eb-rip eb-rain" style="--i:9" x="966" y="57.0" width="6" height="10.0" rx="946"/></g></g>
+    <text x="640" y="79" text-anchor="middle" font-family="'JetBrains Mono', ui-monospace, monospace" font-weight="600" font-size="48.4" letter-spacing="9.7" fill="#FF2D9B" stroke="#FFFFFF" stroke-width=".62" stroke-opacity=".8" paint-order="stroke" stroke-linejoin="round" filter="url(#bbBSoft)">ECHO BOTZ</text></g></g>
     <g font-family="'Chakra Petch', system-ui, sans-serif" font-weight="700" font-size="104.1" fill="url(#bbBFill)" stroke="#FFFFFF" stroke-width="2" paint-order="stroke" filter="url(#bbBGlow)"><text class="bb-st" style="--i:0" x="210.0" y="252" >B</text>
       <text class="bb-st" style="--i:1" x="282.9" y="252" >E</text>
       <text class="bb-st" style="--i:2" x="349.1" y="252" >A</text>
@@ -3592,13 +3594,24 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         const lg = x.createRadialGradient(0, 0, 0, 0, 0, w * .6);
         lg.addColorStop(0, 'rgba(34,228,245,.13)'); lg.addColorStop(.6, 'rgba(255,45,155,.06)'); lg.addColorStop(1, 'rgba(255,45,155,0)');
         x.fillStyle = lg; x.fillRect(-w * .65, -w * .65, w * 1.3, w * 1.3); x.restore();
-        x.save(); x.globalCompositeOperation = 'lighten'; x.drawImage(logo, lx, ly, w, h); x.restore();
+        x.save(); if (!logo.isHeader) x.globalCompositeOperation = 'lighten'; x.drawImage(logo, lx, ly, w, h); x.restore();
       } else {
         x.font = '600 17px ' + M; x.fillStyle = MUTED; spaced('ECHO BOTZ', 600, 118, 7, 'center');
         x.font = '700 58px ' + F; const t = 'BEAT BREAKERZ';
         let w = 0; for (const ch of t) w += x.measureText(ch).width + 6; w -= 6;
         let tx = 600 - w / 2, n = 0;
         for (const ch of t){ if (ch !== ' '){ const col = LANE[n++ % 4]; x.fillStyle = col; glowText(() => x.fillText(ch, tx, 186), col, 12); } tx += x.measureText(ch).width + 6; }
+      }
+      // the DJ bot they played as, top right
+      if (r.bot && r.bot.img){
+        const S = 140, TX = 962, TY = 72, nm = String(r.bot.name || '').toUpperCase();
+        x.save(); rrect(x, TX, TY, S, S, 18); x.fillStyle = '#0A1022'; x.shadowColor = 'rgba(255,45,155,.4)'; x.shadowBlur = 24; x.fill(); x.restore();
+        x.save(); rrect(x, TX, TY, S, S, 18); x.clip(); x.drawImage(r.bot.img, TX, TY, S, S); x.restore();
+        const be = x.createLinearGradient(TX, TY, TX + S, TY + S); be.addColorStop(0, PK); be.addColorStop(1, CY);
+        x.save(); x.shadowColor = 'rgba(34,228,245,.35)'; x.shadowBlur = 10; rrect(x, TX + 1.25, TY + 1.25, S - 2.5, S - 2.5, 17); x.lineWidth = 2.5; x.strokeStyle = be; x.stroke(); x.restore();
+        x.font = '600 12px ' + M; x.fillStyle = MUTED; spaced('DJ BOT', TX + S / 2, TY - 12, 3, 'center');
+        if (nm){ let z = 17; do { x.font = '600 ' + z + 'px ' + F; } while (x.measureText(nm).width + nm.length * 3 > 180 && --z > 11);
+          x.fillStyle = INK; glowText(() => spaced(nm, TX + S / 2, TY + S + 24, 3, 'center'), 'rgba(34,228,245,.5)', 8); }
       }
       // hairline divider
       const dv = x.createLinearGradient(110, 0, 1090, 0); dv.addColorStop(0, 'rgba(34,228,245,0)'); dv.addColorStop(.5, 'rgba(34,228,245,.45)'); dv.addColorStop(1, 'rgba(34,228,245,0)');
@@ -3671,16 +3684,75 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       x.textAlign = 'left';
       return c;
     }
+
+    /* score card header: a still frame of this page's own animated SVG header, with its fonts built in so it draws the same */
+    var CARD_PROPS = ['display','visibility','opacity','transform','transform-origin','transform-box','rotate','scale','translate','fill','fill-opacity','stroke','stroke-opacity','stroke-dasharray','stroke-dashoffset'];
+    var cardFontCss = null;
+    function cardFonts(){
+      if (cardFontCss) return cardFontCss;
+      var link = document.querySelector('link[href*="fonts.googleapis.com/css"]');
+      if (!link || !window.fetch || !window.FileReader) return Promise.resolve('');
+      cardFontCss = fetch(link.href).then(function(res){ return res.text(); }).then(function(css){
+        var blocks = css.split('/* ').filter(function(b){ return /^latin \*\//.test(b); });
+        return Promise.all(blocks.map(function(b){
+          var m = b.match(/url\((https:[^)]+)\)/); if (!m) return '';
+          return fetch(m[1]).then(function(res){ return res.blob(); }).then(function(bl){ return new Promise(function(done){
+            var fr = new FileReader();
+            fr.onload = function(){ done(b.slice(b.indexOf('@font-face')).split(m[1]).join(fr.result)); };
+            fr.onerror = function(){ done(''); };
+            fr.readAsDataURL(bl);
+          }); }).catch(function(){ return ''; });
+        })).then(function(a){ return a.join('\n'); });
+      }).catch(function(){ return ''; });
+      cardFontCss.then(function(css){ if (!css) cardFontCss = null; });
+      return cardFontCss;
+    }
+    function cardHeader(){
+      var svg = document.querySelector('svg.logo');
+      if (!svg || !window.XMLSerializer) return Promise.resolve(null);
+      return cardFonts().then(function(fonts){
+        var copy = svg.cloneNode(true), live = svg.querySelectorAll('*'), dup = copy.querySelectorAll('*'), i, NS = 'http://www.w3.org/2000/svg';
+        for (i = 0; i < live.length; i++){
+          if (!live[i].getAttribute('class')) continue;
+          var cs = getComputedStyle(live[i]), st = '';
+          CARD_PROPS.forEach(function(p){ var v = cs.getPropertyValue(p); if (!v || ((p === 'fill' || p === 'stroke') && /url\(/.test(v))) return; st += p + ':' + v + ';'; });
+          dup[i].setAttribute('style', (dup[i].getAttribute('style') || '') + ';' + st);
+          dup[i].removeAttribute('class');
+        }
+        var vb = (svg.getAttribute('viewBox') || '0 0 1280 380').split(/[\s,]+/).map(Number);
+        copy.removeAttribute('class'); copy.removeAttribute('style');
+        copy.setAttribute('xmlns', NS); copy.setAttribute('width', vb[2] * 2); copy.setAttribute('height', vb[3] * 2);
+        if (fonts){ var s = document.createElementNS(NS, 'style'); s.textContent = fonts; copy.insertBefore(s, copy.firstChild); }
+        var src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(copy));
+        return new Promise(function(done){
+          var im = new Image();
+          im.onload = function(){ im.isHeader = true; (im.decode ? im.decode().catch(function(){}) : Promise.resolve()).then(function(){ done(im); }); };
+          im.onerror = function(){ done(null); };
+          im.src = src;
+        });
+      }).catch(function(){ return null; });
+    }
+    // the DJ bot picked for this run: a crew bot from the top row, or the ECHO1 DJ bot (the default)
+    function cardBot(){
+      if (botIdx >= 0){ const im = BOT_IMGS[botIdx]; return im && im.complete && im.naturalWidth ? { img:im, name:BOT_NAMES[botIdx] || '' } : null; }
+      if (!djReady()) return null;
+      const S = 280, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d');
+      g.fillStyle = '#0A1022'; g.fillRect(0, 0, S, S);
+      g.drawImage(DJ.body, 0, 0, S, S); g.drawImage(DJ.lh, 0, 0, S, S); g.drawImage(DJ.head, 0, 0, S, S); g.drawImage(DJ.rh, 0, 0, S, S);
+      return { img:c, name:'ECHO1' };
+    }
     const canvasBlob = c => new Promise((res, rej) => { try { c.toBlob(b => b ? res(b) : rej(new Error('no image')), 'image/png'); } catch(e){ rej(e); } });
     async function makeCard(r){
       try { await document.fonts.ready; } catch(e){}
       const logo = document.querySelector('img.logo');
       const useLogo = logo && logo.complete && logo.naturalWidth > 0 && logo.style.display !== 'none';
-      try { return await canvasBlob(drawCard(r, useLogo ? logo : null)); }
+      const hdr = await cardHeader();
+      try { return await canvasBlob(drawCard(r, hdr || (useLogo ? logo : null))); }
       catch(e){ return await canvasBlob(drawCard(r, null)); }   // logo couldn't be used (e.g. opened from a local file)
     }
     function prepareShare(r){
       lastResult = r;
+      try { r.bot = cardBot(); } catch(e){}
       r.blobP = makeCard(r);
       r.blobP.then(b => { try { r.file = new File([b], 'beat-breakerz-score.png', { type:'image/png' }); } catch(e){} }, () => {});
       const note = $('bdShareNote'); note.classList.remove('ok');
