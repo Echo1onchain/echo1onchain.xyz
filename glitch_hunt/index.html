@@ -710,6 +710,51 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
   .mc-badge.mc-live .mc-bt{color:#FFC93C; text-shadow:0 0 6px rgba(255,201,60,.6)}
 }
 @media (prefers-reduced-motion: reduce){.mc-t,.mc-badge{animation:none}}
+.sj-ghost{font:inherit;font-weight:600;font-size:.95rem;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:10px;padding:.55rem 1rem;cursor:pointer}
+.sj-ghost:hover{border-color:var(--cyan);color:var(--cyan)}
+.sj-ghost:focus-visible{outline:2px solid var(--pink);outline-offset:3px}
+/* ===== ECHO Botz crew cards: lift on hover, tap for the bot's card ===== */
+.crew-card{position:relative; cursor:pointer;
+  transition:translate .5s cubic-bezier(.22,1,.36,1), scale .5s cubic-bezier(.22,1,.36,1), box-shadow .5s ease, border-color .5s ease}
+@media (hover:hover){
+  .crew-card:hover{translate:0 -12px; scale:1.1; z-index:2; border-color:rgba(34,228,245,.75);
+    box-shadow:0 0 28px rgba(255,45,155,.45), 0 0 52px rgba(34,228,245,.3)}
+}
+.crew-card:focus-visible{outline:2px solid var(--pink); outline-offset:4px; translate:0 -12px; scale:1.1; z-index:2}
+.crew-card:active{scale:1.04}
+@media (prefers-reduced-motion: reduce){
+  .crew-card{transition:box-shadow .2s, border-color .2s}
+  .crew-card:hover,.crew-card:focus-visible{translate:none; scale:none}
+}
+.bot-pop{z-index:120; overflow-y:auto; animation:botFadeIn .28s ease both}
+.bot-pop .gh-popcard{margin:auto}
+body.bot-open{overflow:hidden}
+.bot-pop.bot-closing{animation:botFadeOut .22s ease forwards}
+.bot-pop.bot-closing .gh-popcard{animation:botCardOut .22s ease forwards}
+@keyframes botFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes botFadeOut{to{opacity:0}}
+@keyframes botCardOut{to{transform:scale(.9) translateY(8px); opacity:0}}
+.bot-card{width:min(23rem,100%); padding:1.4rem 1.3rem 1.2rem}
+.bot-x{position:absolute; top:10px; right:12px; z-index:3; width:34px; height:34px; display:grid; place-items:center; padding:0; border-radius:50%;
+  border:1px solid var(--line); background:rgba(4,6,14,.85); color:var(--muted); font:600 1.25rem/1 "Chakra Petch",sans-serif; cursor:pointer}
+.bot-x:hover{color:var(--ink); border-color:var(--cyan)}
+.bot-x:focus-visible,.bot-mint:focus-visible{outline:2px solid var(--pink); outline-offset:3px}
+.bot-frame{position:relative; width:min(220px,60vw); margin:.2rem auto 1rem; padding:5px; border-radius:18px;
+  background:linear-gradient(135deg,#FF2D9B,#B67CFF 50%,#22E4F5);
+  box-shadow:0 0 30px rgba(255,45,155,.45), 0 0 60px rgba(34,228,245,.25); animation:botFloat 4.5s ease-in-out infinite}
+.bot-frame img{display:block; width:100%; aspect-ratio:1; border-radius:14px; background:#04060E}
+.bot-frame::after{content:""; position:absolute; inset:5px; border-radius:14px; pointer-events:none;
+  background:repeating-linear-gradient(0deg, rgba(255,255,255,.05) 0 1px, transparent 1px 3px)}
+@keyframes botFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.bot-id{margin:-.1rem 0 .75rem !important; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.8rem; color:var(--cyan) !important}
+.bot-tags{display:flex; flex-wrap:wrap; justify-content:center; gap:6px; margin:0 0 .9rem}
+.bot-tags span{font-size:.75rem; font-weight:600; padding:3px 10px; border-radius:999px; border:1px solid var(--line); background:rgba(2,4,12,.7); color:var(--ink)}
+.bot-tags .sol{border-color:rgba(153,69,255,.65); color:#C9A7FF; box-shadow:0 0 10px rgba(153,69,255,.25)}
+.bot-tags .soc{border-color:rgba(20,241,149,.5); color:#14F195; box-shadow:0 0 10px rgba(20,241,149,.2)}
+.bot-desc{margin:0 0 1.1rem !important; font-size:.95rem; line-height:1.55; text-align:left}
+.bot-actions{display:grid; gap:.55rem}
+a.gh-btn.bot-mint{display:block; text-align:center; text-decoration:none}
+@media (prefers-reduced-motion: reduce){.bot-pop,.bot-pop.bot-closing,.bot-pop.bot-closing .gh-popcard,.bot-frame{animation:none}}
 </style>
 <style>
 /* ECHO BOTZ header (same on every page): breathes every 6.2s, rainbow ripple every other breath */
@@ -894,6 +939,21 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     </div>
   </div>
 </div>
+<div class="gh-pop bot-pop" id="botPop" role="dialog" aria-modal="true" aria-labelledby="botPopName" hidden>
+  <div class="gh-popcard bot-card">
+    <button class="bot-x" type="button" id="botPopX" aria-label="Close">×</button>
+    <div class="bot-frame"><img id="botPopImg" alt=""></div>
+    <p class="gh-bin" id="botPopBin"></p>
+    <h3 id="botPopName"></h3>
+    <p class="bot-id" id="botPopId"></p>
+    <div class="bot-tags"><span class="sol">◎ Solana</span><span class="soc">Minted on SolOnChain</span><span id="botPopRole"></span></div>
+    <p class="bot-desc" id="botPopDesc"></p>
+    <div class="bot-actions">
+      <a class="gh-btn bot-mint" href="https://www.solonchain.io/mint/echo-botz" target="_blank" rel="noopener">Mint an ECHO Bot</a>
+      <button class="sj-ghost" type="button" id="botPopClose">Close</button>
+    </div>
+  </div>
+</div>
 <audio id="bgm" preload="auto"></audio>
 
 <script>
@@ -940,12 +1000,13 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     const pool = Object.keys(BOTZ_IMG).filter(k => k !== 'admin');
     const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     function swap(){
-      if (!document.hidden){
+      const bp = document.getElementById('botPop');
+      if (!document.hidden && (!bp || bp.hidden)){
         const cards = Array.from(crew.querySelectorAll('.crew-card'));
         const shown = cards.map(c => c.dataset.id);
         const hidden = pool.filter(id => !shown.includes(id));
         const n = Math.min(2 + (Math.random() < .5 ? 1 : 0), hidden.length);
-        const slots = cards.slice().sort(() => Math.random() - .5).slice(0, n);
+        const slots = cards.filter(c => !c.matches(':hover') && c !== document.activeElement).sort(() => Math.random() - .5).slice(0, n);
         const picks = hidden.slice().sort(() => Math.random() - .5).slice(0, n);
         slots.forEach((fig, k) => {
           const id = picks[k];
@@ -959,6 +1020,65 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       setTimeout(swap, 20000 + Math.random()*10000);
     }
     setTimeout(swap, 20000 + Math.random()*10000);
+  })();
+
+  /* ---------- crew popup: tap a bot to open its card ----------
+     Change a bot's role or story here. */
+  const BOTZ_LORE = {
+    '361': { role:'Courier',      text:'The smallest bot on the block and the fastest. Byte zips between Solana validators carrying single bits of data, and has never missed a slot.' },
+    '367': { role:'Artist',       text:'Pixel paints the neon skyline of the chain one block at a time. Every drop on SolOnChain gets a final touch of glow from Pixel before it goes live.' },
+    '368': { role:'Navigator',    text:'Node keeps the network humming. Drop Node into any cluster and it already knows every peer, every route and every shortcut across Solana.' },
+    '372': { role:'Bug hunter',   text:'Born from a corrupted transaction that somehow confirmed anyway. Glitch flickers between blocks and hunts down the bugs other botz can’t see.' },
+    '373': { role:'Hauler',       text:'The muscle of the crew. Servo hauls heavy data across the chain and keeps the ECHO Botz lab running when traffic on Solana spikes.' },
+    '418': { role:'Calculator',   text:'Chip runs the numbers. Fees, block times and SOL balances all pass through its circuits before anyone else can blink.' },
+    '438': { role:'Archivist',    text:'Cache never forgets. Every signal, every song and every high score ever written on chain is tucked away in Cache’s memory banks.' },
+    '410': { role:'Keyholder',    text:'The first bot to wake up on SolOnChain. Root holds the master keys to the lab and still remembers the genesis block.' },
+    '66':  { role:'Crash tester', text:'Crash tests everything by breaking it first. If a smart contract survives Crash, it can survive anything Solana throws at it.' },
+    '62':  { role:'Scout',        text:'Ping is always listening. It bounces signals across the chain to find lost botz, and it’s the first to hear when a new drop goes live.' }
+  };
+  (function(){
+    const crew = document.querySelector('.crew'), pop = document.getElementById('botPop');
+    if (!crew || !pop) return;
+    const $b = id => document.getElementById(id);
+    const img = $b('botPopImg'), nameEl = $b('botPopName'), idEl = $b('botPopId'), roleEl = $b('botPopRole'),
+          descEl = $b('botPopDesc'), binEl = $b('botPopBin'), closeBtn = $b('botPopClose');
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let lastCard = null, closeTimer = 0;
+    const toBin = s => Array.from(s.toUpperCase()).slice(0, 4).map(c => c.charCodeAt(0).toString(2).padStart(8, '0')).join(' ');
+    crew.querySelectorAll('.crew-card').forEach(fig => { fig.tabIndex = 0; fig.setAttribute('role', 'button'); });
+    function open(fig){
+      const id = fig.dataset.id, name = BOTZ_NAMES[id] || ('Bot #' + id);
+      const lore = BOTZ_LORE[id] || { role:'Signal runner', text:'Minted on SolOnChain and wired straight into Solana, this ECHO Bot patrols the neon grid and keeps the signal clean for the rest of the crew.' };
+      img.src = BOTZ_IMG[id] || fig.querySelector('img').src; img.alt = 'ECHO Botz #' + id + ' ' + name;
+      nameEl.textContent = name; idEl.textContent = 'ECHO Botz #' + id; roleEl.textContent = lore.role;
+      descEl.textContent = lore.text; binEl.textContent = toBin(name);
+      clearTimeout(closeTimer); pop.classList.remove('bot-closing');
+      pop.hidden = false; document.body.classList.add('bot-open');
+      lastCard = fig; closeBtn.focus({ preventScroll:true });
+    }
+    function close(){
+      if (pop.hidden || pop.classList.contains('bot-closing')) return;
+      const done = () => { pop.hidden = true; pop.classList.remove('bot-closing'); document.body.classList.remove('bot-open'); if (lastCard) lastCard.focus({ preventScroll:true }); };
+      if (calm) return done();
+      pop.classList.add('bot-closing'); closeTimer = setTimeout(done, 220);
+    }
+    crew.addEventListener('click', e => { const fig = e.target.closest('.crew-card'); if (fig) open(fig); });
+    crew.addEventListener('keydown', e => { const fig = e.target.closest('.crew-card'); if (fig && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); open(fig); } });
+    $b('botPopX').addEventListener('click', close); closeBtn.addEventListener('click', close);
+    pop.addEventListener('click', e => { if (e.target === pop) close(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !pop.hidden) close(); });
+    pop.addEventListener('keydown', e => {          // keep Tab inside the card while it's open
+      if (e.key !== 'Tab') return;
+      const f = Array.from(pop.querySelectorAll('button, a[href]')), first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+    });
+    window.addEventListener('keydown', e => {      // while the card is open, page keys (game keys, Escape) stay with the card
+      if (pop.hidden) return;
+      if (e.key === 'Escape'){ e.preventDefault(); e.stopImmediatePropagation(); close(); return; }
+      if (e.key !== 'Tab' && !pop.contains(e.target)) e.preventDefault();
+      if (e.key !== 'Tab') e.stopImmediatePropagation();
+    }, true);
   })();
 
   /* ---------- page music playlist ---------- */
