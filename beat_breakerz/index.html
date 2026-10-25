@@ -964,7 +964,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 
     // volume (remembered), default 33
     let level = 33;
-    try { const saved = localStorage.getItem('echoBgmVolume'); if (saved !== null && !isNaN(+saved)) level = Math.min(100, Math.max(0, +saved)); } catch(e){}
+    try { const saved = localStorage.getItem('echoBgmVolume'); if (saved !== null && !isNaN(+saved) && +saved > 0) level = Math.min(100, Math.max(0, +saved)); } catch(e){}
     vol.value = level;
     bgm.volume = 0.5;
     if (bgm.volume !== 0.5){ vol.remove(); ctl.classList.add('no-slider'); }   // iPhone/iPad: device buttons only
@@ -1032,7 +1032,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     sbtn.addEventListener('click', () => {
       if (bgm.muted || bgm.volume === 0){
         bgm.muted = false;
-        if (bgm.volume === 0 && document.body.contains(vol)){ vol.value = 33; bgm.volume = 0.33; }
+        if (bgm.volume === 0 && document.body.contains(vol)){ vol.value = 33; bgm.volume = 0.33; try { localStorage.setItem('echoBgmVolume', '33'); } catch(e){} }
         if (bgm.paused) start();
       } else bgm.muted = true;
       stopKick(); sync();
