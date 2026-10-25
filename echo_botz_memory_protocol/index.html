@@ -658,6 +658,15 @@ a.gh-btn.bot-mint{display:block; text-align:center; text-decoration:none}
 @keyframes elBlink{50%{opacity:.4}}
 @keyframes elEq{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
 @media (prefers-reduced-motion:reduce){.el-board::after,.el-hub::before,.el-led.on,.el-bars i{animation:none}.el-pad,.el-start{transition:none}}
+/* pad symbols drawn as same-size shapes so star, heart, diamond and dot match */
+.el-pad span{display:flex;align-items:center;justify-content:center;line-height:0}
+.el-sym{width:.8em;height:.8em;fill:currentColor;filter:drop-shadow(0 0 5px var(--c)) drop-shadow(0 0 12px var(--c))}
+.el-pad.lit .el-sym{filter:drop-shadow(0 0 4px #fff) drop-shadow(0 0 10px #fff)}
+/* pad symbols moved toward the middle of each pad */
+.el-pad:nth-child(1){padding:0 6% 6% 0}
+.el-pad:nth-child(2){padding:0 0 6% 6%}
+.el-pad:nth-child(3){padding:6% 6% 0 0}
+.el-pad:nth-child(4){padding:6% 0 0 6%}
 .el-status{min-height:1.5em;font-size:1.15rem;font-weight:600;text-align:center;color:var(--ink)}
 .el-scores{color:var(--muted);font-size:.95rem}
 .el-scores b{color:var(--ink)}
@@ -922,10 +931,10 @@ a.gh-btn.bot-mint{display:block; text-align:center; text-decoration:none}
 <div class="el-frame"><div class="el-device"><div class="el-shell">
 <div class="el-top"><span class="el-led" id="elLed" aria-hidden="true"></span><span class="el-sys" aria-hidden="true">Sys</span><span class="el-brand">Memory Protocol</span><span class="el-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span></div>
 <div class="el-board" id="elBoard">
-<button class="el-pad" type="button" style="--c:#FFC93C" aria-label="Star"><span>★</span></button>
-<button class="el-pad" type="button" style="--c:#FF2D9B" aria-label="Heart"><span>♥</span></button>
-<button class="el-pad" type="button" style="--c:#22E4F5" aria-label="Diamond"><span>◆</span></button>
-<button class="el-pad" type="button" style="--c:#B67CFF" aria-label="Circle"><span>●</span></button>
+<button class="el-pad" type="button" style="--c:#FFC93C" aria-label="Star"><span><svg class="el-sym" viewBox="0 0 24 24" aria-hidden="true"><polygon points="12,0.8 15.1,8.6 23.3,9.2 17,14.4 19,22.8 12,18.3 5,22.8 7,14.4 0.7,9.2 8.9,8.6"/></svg></span></button>
+<button class="el-pad" type="button" style="--c:#FF2D9B" aria-label="Heart"><span><svg class="el-sym" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22.2 3.2 13.2C.4 10.4.6 6 3.4 3.6 6 1.4 9.7 1.9 12 4.5 14.3 1.9 18 1.4 20.6 3.6 23.4 6 23.6 10.4 20.8 13.2Z"/></svg></span></button>
+<button class="el-pad" type="button" style="--c:#22E4F5" aria-label="Diamond"><span><svg class="el-sym" viewBox="0 0 24 24" aria-hidden="true"><polygon points="12,1 23,12 12,23 1,12"/></svg></span></button>
+<button class="el-pad" type="button" style="--c:#B67CFF" aria-label="Circle"><span><svg class="el-sym" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="11"/></svg></span></button>
 <div class="el-hub"><div class="el-lcd"><div class="el-lbl">Round</div><div class="el-round" id="elRound">0</div></div><button class="el-start" id="elStart" type="button">Start</button></div>
 </div>
 <div class="el-foot" aria-hidden="true"><span>Mem//Protocol v1.0</span><span class="el-dots"><i style="--c:#FFC93C"></i><i style="--c:#FF2D9B"></i><i style="--c:#22E4F5"></i><i style="--c:#B67CFF"></i></span></div>
