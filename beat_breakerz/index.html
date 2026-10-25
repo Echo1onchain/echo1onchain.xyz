@@ -950,6 +950,31 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 @keyframes bdChevDropRest{0%, 58.7%, 100%{transform:translateY(.05em)} 26.1%{transform:translateY(.24em)}}
 @keyframes bdChevPushRest{0%, 58.7%, 100%{transform:translateX(0)} 26.1%{transform:translateX(4px)}}
 @media (prefers-reduced-motion: reduce){.bd-chev path, .bd-chev svg{animation:none}}
+
+/* "Game Settings" heading: the Pick a Track look (gradient caps, gold outline, arrows) without the grow, and a slower, calmer glow */
+.bd-sub-pill{display:flex; align-items:center; gap:.2rem}
+.bd-sub-pill .bd-chev{font-size:clamp(1.3rem,3.5vw,1.7rem)}
+.bd-sub-pill .bd-chev-down svg{margin-left:.55em}
+.bd-gs-text{animation:bdGsGlow 7s cubic-bezier(.45,0,.55,1) infinite}
+.bd-gs-text::before{animation:bdGsGold 7s cubic-bezier(.45,0,.55,1) infinite}
+@keyframes bdGsGlow{
+  0%, 100%{filter:drop-shadow(0 0 6px rgba(34,228,245,.22)) brightness(1)}
+  50%{filter:drop-shadow(0 0 8px rgba(34,228,245,.32)) brightness(1.05)}
+}
+@keyframes bdGsGold{0%, 100%{opacity:.2} 50%{opacity:.32}}
+@media (prefers-reduced-motion: reduce){.bd-gs-text, .bd-gs-text::before{animation:none}}
+
+/* "Pick a Track" and "Game Settings" text 15% smaller; arrows keep their size */
+.bd-title .bd-titletext, .bd-sub-pill .bd-titletext{font-size:.8925rem}
+.bd-title .bd-chev, .bd-sub-pill .bd-chev{font-size:clamp(1.3rem,3.5vw,1.7rem)}
+
+/* "Pick a Track" and "Game Settings" breathe together: one calm 7 s breath, a soft glow and a gentle, smooth grow ("Pick difficulty" stays in step) */
+.bd-title .bd-titletext, .bd-sub-pill .bd-titletext{animation:bdGsGlow 7s cubic-bezier(.45,0,.55,1) infinite}
+.bd-title .bd-titletext::before, .bd-sub-pill .bd-titletext::before{animation:bdGsGold 7s cubic-bezier(.45,0,.55,1) infinite}
+.bd-title .bd-titlegroup, .bd-sub-pill .bd-titlegroup{display:inline-flex; align-items:center; transform-origin:left center; will-change:transform; animation:bdCalmGrow 7s cubic-bezier(.45,0,.55,1) infinite}
+@keyframes bdCalmGrow{0%, 100%{transform:translateZ(0) scale(1)} 50%{transform:translateZ(0) scale(1.05)}}
+.bd-difftext{animation-duration:7s; animation-timing-function:cubic-bezier(.45,0,.55,1)}
+@media (prefers-reduced-motion: reduce){.bd-title .bd-titletext, .bd-sub-pill .bd-titletext, .bd-title .bd-titletext::before, .bd-sub-pill .bd-titletext::before, .bd-title .bd-titlegroup, .bd-sub-pill .bd-titlegroup, .bd-difftext{animation:none}}
 </style>
 </head>
 <body>
@@ -1000,7 +1025,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
       <p class="bd-lb-foot">Best score per player, from games played with an X handle.</p>
     </section>
     <div class="bd-main">
-    <h3 class="bd-sub">Game Settings</h3>
+    <h3 class="bd-sub bd-sub-pill"><span class="bd-titlegroup"><span class="bd-titletext bd-gs-text" data-text="Game Settings">Game Settings</span><span class="bd-chev bd-chev-down" aria-hidden="true"><svg viewBox="0 0 16 23"><path d="M2.5 2.5l5.5 4.6 5.5-4.6"/><path d="M2.5 9.2l5.5 4.6 5.5-4.6"/><path d="M2.5 15.9l5.5 4.6 5.5-4.6"/></svg></span></span></h3>
     <div class="bd-setup" role="group" aria-label="Game Settings">
       <div class="bd-row" id="bdBotRow"><span>Your DJ bot</span><div class="bd-bots" id="bdBots" role="group" aria-label="Pick your DJ bot"></div></div>
       <div class="bd-row" id="bdDeckRow"><span>Deck style <small class="bd-deckname" id="bdDeckName"></small></span><div class="bd-bots" id="bdDecks" role="group" aria-label="Pick your deck style"></div></div>
