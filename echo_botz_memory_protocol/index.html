@@ -6,7 +6,7 @@
     - echo1-song.mp3, echo1-song-2.mp3 ... echo1-song-5.mp3 : the music playlist
   What the page already does:
     - Neon grid + network background and floating neon creatures
-    - Switches (top right): Creaturez, More creaturez, Music pulse, Watch visualz
+    - FX tab (top right, under the music card, starts closed): Creaturez, More creaturez, Music pulse, Watch visualz
     - LED-tube music visualizer at the top that reacts to the page music
     - Music card (top right): play/pause, next, mute, volume, scrolling song title, shuffled playlist
     - Links (top left): Mint ECHO Botz, ECHO Bot Gamez dropdown, two X accounts, Spotify
@@ -213,6 +213,28 @@ textarea{
 .critter-switch[aria-checked="true"] .knob{transform:translateX(16px); background:var(--pink); box-shadow:0 0 8px var(--pink)}
 .critter-switch:focus-visible{outline:2px solid var(--pink); outline-offset:3px}
 @media (prefers-reduced-motion: reduce){.critter-switch .track,.critter-switch .knob{transition:none}}
+/* FX tab: the 4 switches live in a small pop-down under the music player, closed on every visit */
+.fx{position:relative; display:flex; flex-direction:column; align-items:flex-end}
+.fx-tab{display:inline-flex; align-items:center; gap:.35rem; cursor:pointer; font:inherit; font-size:.78rem; font-weight:600; color:var(--muted); background:rgba(4,6,14,.88); border:1px solid var(--line); border-radius:999px; padding:4px 11px 4px 9px; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); transition:color .2s, border-color .2s, box-shadow .2s}
+.fx-tab:hover,.fx-tab[aria-expanded="true"]{color:var(--ink); border-color:var(--cyan); box-shadow:0 0 10px rgba(34,228,245,.3)}
+.fx-tab:focus-visible{outline:2px solid var(--pink); outline-offset:3px}
+.fx-gear{color:var(--cyan); font-size:.9rem; line-height:1}
+.fx-arrow{display:inline-block; font-size:.7rem; transition:transform .2s}
+.fx-tab[aria-expanded="true"] .fx-arrow{transform:rotate(180deg)}
+.fx-panel{position:absolute; z-index:40; top:calc(100% + 6px); right:0; display:flex; flex-direction:column; align-items:stretch; gap:.3rem; padding:6px; max-width:calc(100vw - 1.5rem); background:rgba(4,6,14,.95); border:1px solid var(--line); border-radius:16px; box-shadow:0 10px 30px rgba(0,0,0,.55), 0 0 14px rgba(34,228,245,.12); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px)}
+.fx-panel[hidden]{display:none}
+.fx-panel .critter-switch{white-space:nowrap; background:transparent; border-color:transparent; backdrop-filter:none; -webkit-backdrop-filter:none}
+.fx-panel .critter-switch:hover{border-color:var(--line)}
+/* until the FX tab has been opened once: neon glow pulse plus a wiggle now and then */
+.fx-tab.fx-attn{color:var(--ink); animation:fxGlow 2s ease-in-out infinite}
+.fx-tab.fx-attn.fx-wiggle{animation:fxGlow 2s ease-in-out infinite, fxWiggle .8s ease-in-out 1}
+@keyframes fxGlow{
+  0%,100%{border-color:#22E4F5; box-shadow:0 0 6px rgba(34,228,245,.55), 0 0 16px rgba(34,228,245,.35)}
+  33%{border-color:#FF2D9B; box-shadow:0 0 6px rgba(255,45,155,.6), 0 0 18px rgba(255,45,155,.38)}
+  66%{border-color:#FFC93C; box-shadow:0 0 6px rgba(255,201,60,.6), 0 0 18px rgba(255,201,60,.36)}
+}
+@keyframes fxWiggle{0%,100%{transform:none} 15%{transform:translateY(-4px) rotate(-6deg)} 30%{transform:translateY(0) rotate(5deg)} 45%{transform:translateY(-2px) rotate(-4deg)} 60%{transform:rotate(3deg)} 75%{transform:rotate(-1deg)}}
+@media (prefers-reduced-motion: reduce){.fx-tab,.fx-arrow{transition:none} .fx-tab.fx-attn,.fx-tab.fx-attn.fx-wiggle{animation:none; border-color:var(--cyan); box-shadow:0 0 6px rgba(34,228,245,.55), 0 0 16px rgba(34,228,245,.35)}}
 .sound{
   display:flex; align-items:center; gap:.5rem; padding:4px 12px 4px 4px;
   border-radius:999px; background:rgba(4,6,14,.88); border:1px solid var(--line);
@@ -768,18 +790,23 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     </div>
     <div class="now" id="now" aria-live="polite"><div class="now-track" id="nowTrack"><span id="nowText">Loading songs…</span><span id="nowText2" aria-hidden="true"></span></div></div>
   </div>
-  <button class="critter-switch" id="critSwitch" type="button" role="switch" aria-checked="true">
-    <span class="track"><span class="knob"></span></span><span>Creaturez</span>
-  </button>
-  <button class="critter-switch" id="moreSwitch" type="button" role="switch" aria-checked="false">
-    <span class="track"><span class="knob"></span></span><span>More creaturez</span>
-  </button>
-  <button class="critter-switch" id="pulseSwitch" type="button" role="switch" aria-checked="false">
-    <span class="track"><span class="knob"></span></span><span>Music pulse</span>
-  </button>
-  <button class="critter-switch" id="watchSwitch" type="button" role="switch" aria-checked="false">
-    <span class="track"><span class="knob"></span></span><span>Watch visualz</span>
-  </button>
+  <div class="fx" id="fxDock">
+    <button class="fx-tab" id="fxTab" type="button" aria-expanded="false" aria-controls="fxPanel" aria-label="FX: effect switches"><span class="fx-gear" aria-hidden="true">⚙</span><span>FX</span><span class="fx-arrow" aria-hidden="true">▾</span></button>
+    <div class="fx-panel" id="fxPanel" role="group" aria-label="FX effect switches" hidden>
+    <button class="critter-switch" id="critSwitch" type="button" role="switch" aria-checked="true">
+      <span class="track"><span class="knob"></span></span><span>Creaturez</span>
+    </button>
+    <button class="critter-switch" id="moreSwitch" type="button" role="switch" aria-checked="false">
+      <span class="track"><span class="knob"></span></span><span>More creaturez</span>
+    </button>
+    <button class="critter-switch" id="pulseSwitch" type="button" role="switch" aria-checked="false">
+      <span class="track"><span class="knob"></span></span><span>Music pulse</span>
+    </button>
+    <button class="critter-switch" id="watchSwitch" type="button" role="switch" aria-checked="false">
+      <span class="track"><span class="knob"></span></span><span>Watch visualz</span>
+    </button>
+    </div>
+  </div>
 </div>
 <audio id="bgm" preload="auto"></audio>
 
@@ -1271,6 +1298,29 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     btn.addEventListener('click', e => { e.stopPropagation(); set(menu.hidden); if (!menu.hidden) menu.querySelector('a') && menu.querySelector('a').focus(); });
     document.addEventListener('click', e => { if (!menu.hidden && !menu.contains(e.target)) set(false); });
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && !menu.hidden){ set(false); btn.focus(); } });
+  })();
+
+  /* ---------- FX tab (always starts closed; glows until opened once) ---------- */
+  (function(){
+    const dock = document.getElementById('fxDock'), tab = document.getElementById('fxTab'), panel = document.getElementById('fxPanel');
+    if (!dock || !tab || !panel) return;
+    let seen = false;
+    try { seen = localStorage.getItem('echoFxSeen') === '1'; } catch(e){}
+    const timers = [];
+    const calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!seen){
+      tab.classList.add('fx-attn');
+      const wiggle = () => { if (seen) return; tab.classList.remove('fx-wiggle'); void tab.offsetWidth; tab.classList.add('fx-wiggle'); };
+      tab.addEventListener('animationend', e => { if (e.animationName === 'fxWiggle') tab.classList.remove('fx-wiggle'); });
+      if (!calm) timers.push(setTimeout(wiggle, 3500), setTimeout(wiggle, 15000));
+    }
+    function setOpen(open){
+      panel.hidden = !open; tab.setAttribute('aria-expanded', String(open));
+      if (open && !seen){ seen = true; timers.forEach(clearTimeout); tab.classList.remove('fx-attn', 'fx-wiggle'); try { localStorage.setItem('echoFxSeen', '1'); } catch(e){} }
+    }
+    tab.addEventListener('click', () => setOpen(panel.hidden));
+    document.addEventListener('click', e => { if (!panel.hidden && !dock.contains(e.target)) setOpen(false); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !panel.hidden){ setOpen(false); tab.focus(); } });
   })();
 
   /* ---------- watch visuals mode ---------- */
