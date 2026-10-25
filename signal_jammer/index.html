@@ -2524,8 +2524,9 @@ function fitTop3() {
   l.style.maxHeight = (li[2].offsetTop + li[2].offsetHeight - l.offsetTop + 16) + 'px';
 }
 function lbRenderInto(list, meIdx) {
-  const top = lbGet(); list.innerHTML = '';
-  if (!top.length) { const li = document.createElement('li'); li.className = 'gh-lb-empty'; li.textContent = 'No runs yet. Be the first!'; list.appendChild(li); return; }
+  if (sjOnline) meIdx = sjMe;
+  const top = sjOnline || lbGet(); list.innerHTML = '';
+  if (!top.length) { const li = document.createElement('li'); li.className = 'gh-lb-empty'; li.textContent = sjOnline ? 'No runs yet. Be the first!' : sjLbState === 'loading' ? 'Loading scores…' : sjLbState === 'slow' ? 'Scores are slow to load. Tap to retry.' : 'No runs yet. Be the first!'; if (!sjOnline && sjLbState === 'slow') sjTapRetry(li); list.appendChild(li); return; }
   top.forEach((e, i) => {
     const li = document.createElement('li'); if (i === meIdx) li.className = 'me';
     const rk = document.createElement('span'); rk.className = 'gh-lb-rk'; rk.textContent = '#' + (i + 1);
@@ -2544,13 +2545,81 @@ function lbRenderInto(list, meIdx) {
     }
     list.appendChild(li);
   });
+  if (!sjOnline && sjLbState === 'slow') { const li = document.createElement('li'); li.className = 'gh-lb-empty'; li.textContent = 'Showing this device’s runs. Tap to load the shared Top 10.'; sjTapRetry(li); list.appendChild(li); }
 }
+
+/* ---------- Shared Top 10: Echo1's Signal Jammer Apps Script (its own sheet) ----------
+   Only runs with an X handle are sent. If the script can't be reached, the game keeps
+   working and this device's Top 10 shows instead, exactly as before. */
+const SJ_API = 'https://script.google.com/macros/s/AKfycbzmNpeiBgXR2-I_bB37KZRqStO0LTl9QrUo-952dDzzk9kiqwJ52cTB5ESoo0rj_Z7f/exec';
+const SJ_CACHE = 'echoSjSharedTop';
+var sjOnline = null, sjMe = -1, sjLbState = 'loading', sjLbBusy = null;
+let sjRunId = 0, sjSession = null, sjSent = true;
+/* the script can be slow: each try gets 24s, then up to 2 more tries after a short pause (about 75s total).
+   Plain text body, so no CORS preflight. Only network errors and timeouts are retried. */
+function sjPost(body, check) {
+  let n = 0;
+  const once = () => Promise.race([
+    fetch(SJ_API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
+      .then(r => { if (!r.ok) throw new Error('http'); return r.json(); }),
+    new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 24000))
+  ]).then(r => { if (!r || typeof r !== 'object' || (check && !check(r))) throw new Error('bad'); return r; });
+  const go = () => once().catch(e => { if (++n >= 3) throw e; return new Promise(res => setTimeout(res, 1000 * n)).then(go); });
+  return go();
+}
+function sjClean(top) { return top.slice(0, 10).map(e => ({ handle: String(e.handle || '').replace(/^@+/, ''), score: +e.score || 0, wave: +e.wave || 1 })); }
+function sjUseTop(top, meIdx = -1) {
+  sjOnline = sjClean(top); sjMe = meIdx; sjLbState = 'ok';
+  try { localStorage.setItem(SJ_CACHE, JSON.stringify({ t: Date.now(), top: sjOnline })); } catch (e) {}
+  const foot = document.querySelector('#sjLbList2 ~ .gh-lb-foot'); if (foot) foot.textContent = 'Best runs from all players.';
+  lbRender(meIdx);
+}
+function sjTapRetry(li) {
+  li.style.cursor = 'pointer'; li.tabIndex = 0; li.setAttribute('role', 'button');
+  li.addEventListener('click', () => sjLoadTop());
+  li.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); sjLoadTop(); } });
+}
+function sjLoadTop() {
+  if (sjLbBusy) return sjLbBusy;
+  if (!sjOnline) { sjLbState = 'loading'; lbRender(); }
+  sjLbBusy = sjPost({ action: 'leaderboard' }, r => r.ok !== false && Array.isArray(r.top))
+    .then(r => { sjUseTop(r.top, state === 'over' ? sjMe : -1); })
+    .catch(() => { if (!sjOnline) { sjLbState = 'slow'; lbRender(); } })
+    .finally(() => { sjLbBusy = null; });
+  return sjLbBusy;
+}
+function sjScoreStart(h) {
+  ++sjRunId; sjSession = null; sjSent = false; sjMe = -1;
+  if (!h) return;
+  sjSession = sjPost({ action: 'start', handle: h }).then(r => (r && r.ok && r.session) || null).catch(() => null);
+}
+function sjScoreEnd() {
+  if (sjSent) return; sjSent = true;      // once per run
+  const id = sjRunId, s = score, w = wave, h = cleanHandle(), sess = sjSession;
+  const note = t => { if (id === sjRunId && state === 'over') $('sjOverNote').textContent = t; };
+  if (s <= 0 || !h || !sess) return;      // no handle: this device's Top 10 only, as before
+  note('Sending your score to the Top 10…');
+  const fail = () => note('Couldn’t reach the shared Top 10 right now. Your run is saved on this device.');
+  sess.then(session => {
+    if (!session) return fail();
+    return sjPost({ action: 'submit', session, score: s, wave: w }).then(res => {
+      if (!res.ok) return note(res.error === 'session' ? 'That run’s session ran out, so it stayed on this device. Run it back!' : res.error === 'score' ? 'That run couldn’t be checked, so it stayed on this device. Run it back!' : 'Couldn’t reach the shared Top 10 right now. Your run is saved on this device.');
+      const rank = +res.rank || 0;
+      if (Array.isArray(res.top)) sjUseTop(res.top, rank >= 1 && rank <= 10 && id === sjRunId ? rank - 1 : -1); else sjLoadTop();
+      if (rank >= 1 && rank <= 10) note(`That run is #${rank} on the Top 10.`);
+      else note(res.improved ? 'New personal best saved. Not on the Top 10 yet, run it back!' : `Score saved. Your best is ${(+res.best || s).toLocaleString()}. Run it back!`);
+    });
+  }).catch(fail);
+}
+try { const c = JSON.parse(localStorage.getItem(SJ_CACHE) || 'null'); if (c && Array.isArray(c.top)) { sjOnline = sjClean(c.top); sjLbState = 'ok'; const foot = document.querySelector('#sjLbList2 ~ .gh-lb-foot'); if (foot) foot.textContent = 'Best runs from all players.'; } } catch (e) {}
 lbRender();
+sjLoadTop();
 
 function begin() {
   const h = cleanHandle(); handleIn.value = h ? '@' + h : '';
   try { localStorage.setItem('echoSjHandle', h); } catch (e) {}
   initAudio(); menu.hidden = true; over.hidden = true; topOv.hidden = true; resetGame(); sfx.wave(); banner('Wave 1');
+  sjScoreStart(h);
   const r = wrap.getBoundingClientRect();
   if (r.top < 0 || r.bottom > innerHeight) wrap.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' });
   cv.focus({ preventScroll: true });
@@ -2566,6 +2635,7 @@ function gameOver() {
   $('sjOverT').textContent = newBest ? 'New best!' : 'Signal lost';
   $('sjOverNote').textContent = idx >= 0 ? `That run is #${idx + 1} on this device’s Top 10.` : 'Run it back and push past your best.';
   over.hidden = false; $('sjAgain').focus({ preventScroll: true });
+  sjScoreEnd();
 }
 function setPaused(on) {
   if (on && state === 'play') { state = 'paused'; paused.hidden = false; pauseBtn.textContent = 'Resume'; pointerDown = false; keys.clear(); }
