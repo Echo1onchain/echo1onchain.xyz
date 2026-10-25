@@ -1865,14 +1865,28 @@ a.gh-btn.bot-mint{display:block; text-align:center; text-decoration:none}
           li.classList.add("gh-lb-top");var cr=document.createElement("span");cr.className="gh-crown";cr.setAttribute("aria-hidden","true");
           cr.innerHTML='<span class="gh-rays"></span><svg viewBox="0 0 24 18"><path d="M2 15.5h20l1.2-11-5.7 4.6L12 1.5 6.5 9.1.8 4.5z"/><circle cx="12" cy="1.8" r="1.6"/><circle cx="1" cy="4.5" r="1.3"/><circle cx="23" cy="4.5" r="1.3"/></svg>';li.appendChild(cr)}
         lbList.appendChild(li)})}
+    /* the score server can be slow: each try gets 24s, then up to 2 more tries after a short pause (about 75s total) */
+    function lbTry(body){
+      var n=0;
+      function once(){
+        var p=C.preview?call(body):Promise.race([call(body),new Promise(function(_,rej){setTimeout(function(){rej(new Error("timeout"))},24000)})]);
+        return p.then(function(r){if(r&&Array.isArray(r.top))return r.top;throw new Error("bad")})}
+      function go(){return once().catch(function(e){if(++n>=3)throw e;return new Promise(function(res){setTimeout(res,1000*n)}).then(go)})}
+      return go()}
+    function lbSlow(){
+      lbMsg("Times are slow to load. Tap to retry.");
+      var li=lbList.firstChild;li.style.cursor="pointer";li.tabIndex=0;li.setAttribute("role","button");
+      li.addEventListener("click",lbLoad);
+      li.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();lbLoad()}})}
     function lbLoad(){
-      if(!info.daily)return;var my=++lbTok;
-      call({action:"leaderboard",puzzle:info.daily.id}).then(function(r){
-        if(my!==lbTok)return;
-        if(r&&Array.isArray(r.top))lbRender(r.top);
-        else if(r&&r.error==="unknown")lbMsg("Leaderboard coming soon.");
-        else lbMsg("The leaderboard is unavailable right now.");
-      }).catch(function(){if(my===lbTok)lbMsg("The leaderboard is unavailable right now.")})}
+      if(!info.daily)return;var my=++lbTok,pid=info.daily.id,saved=null;
+      /* last good Top 10 for today's puzzle, shown right away while fresh times load */
+      try{saved=JSON.parse(localStorage.getItem("gh-lb-top")||"null")}catch(e){}
+      if(saved&&saved.id===pid&&Array.isArray(saved.top))lbRender(saved.top);else{saved=null;lbMsg("Loading times…")}
+      lbTry({action:"leaderboard",puzzle:pid}).then(function(top){
+        try{localStorage.setItem("gh-lb-top",JSON.stringify({id:pid,t:Date.now(),top:top}))}catch(e){}
+        if(my===lbTok)lbRender(top);
+      },function(){if(my===lbTok&&!saved)lbSlow()})}
     function lbSync(){
       var on=type==="daily"&&!!info.daily;lbEl.hidden=!on;
       if(on){document.getElementById("ghLbSet").textContent="Daily glitch"+(info.daily.date?" · "+fmtDate(info.daily.date):"");lbLoad()}}
