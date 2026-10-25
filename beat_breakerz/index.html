@@ -2307,7 +2307,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
     /* picker: the ECHO1 DJ bot is the default, the crew bots from the top of the page can be picked too */
     const BOT_IMGS = Array.from(document.querySelectorAll('.crew-card img')).map(el => { const im = new Image(); im.src = el.src; return im; });
     const BOT_NAMES = Array.from(document.querySelectorAll('.crew-card figcaption')).map(f => (f.textContent || '').trim());
-    let botIdx = store.get('echoBeatDJ', -1);
+    let botIdx = store.get('echoBeatDJ2', -1);
     if (!(botIdx === -1 || (botIdx >= 0 && botIdx < BOT_IMGS.length))) botIdx = -1;
     const botParts = {};
     function cutBot(i){
@@ -2346,7 +2346,7 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
         const b = document.createElement('button'); b.type = 'button';
         b.setAttribute('aria-pressed', String(i === botIdx)); b.setAttribute('aria-label', 'DJ bot ' + label);
         fill(b);
-        b.addEventListener('click', () => { botIdx = i; store.set('echoBeatDJ', i); renderBots(); });
+        b.addEventListener('click', () => { botIdx = i; store.set('echoBeatDJ2', i); renderBots(); });
         box.append(b);
       };
       add(-1, 'ECHO1', b => {
