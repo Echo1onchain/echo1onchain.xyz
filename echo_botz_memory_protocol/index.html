@@ -636,6 +636,25 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 .el-lb-dots button[aria-current="true"]{background:#22E4F5;box-shadow:0 0 8px #22E4F5}
 .el-lb-dots button:focus-visible{outline:2px solid #22E4F5;outline-offset:2px}
 @media (prefers-reduced-motion:reduce){.el-lb-list.fade{animation:none}}
+/* Top 10: the #1 score wears a crown. Purple, pink and gold outline plus light rays fanning up behind a little crown */
+.el-lb-list li.el-lb-top{position:relative; margin-top:32px; border-color:transparent; background:linear-gradient(180deg, rgba(255,201,60,.1), rgba(2,4,12,.7) 70%);
+  box-shadow:0 0 14px rgba(255,201,60,.35), 0 0 22px rgba(255,45,155,.25), 0 0 30px rgba(182,124,255,.2); animation:elTopGlow 3s ease-in-out infinite}
+.el-lb-list li.el-lb-top::before{content:""; position:absolute; inset:-1px; padding:2.5px; border-radius:inherit; pointer-events:none;
+  background:linear-gradient(110deg, #B67CFF, #FF2D9B 17%, #FFC93C 33%, #B67CFF 50%, #FF2D9B 67%, #FFC93C 83%, #B67CFF); background-size:200% 100%; animation:elTopEdge 4s linear infinite;
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0)}
+.el-lb-list li.el-lb-top .el-lb-h{color:#FFE7A3}
+.el-lb-list li.el-lb-top .el-lb-sc{color:#FFC93C; text-shadow:0 0 8px rgba(255,201,60,.6)}
+.el-crown{position:absolute; left:50%; top:-23px; width:150px; height:30px; transform:translateX(-50%); pointer-events:none}
+.el-crown svg{position:absolute; left:50%; bottom:2px; width:24px; height:18px; transform:translateX(-50%); fill:#FFC93C; filter:drop-shadow(0 0 4px rgba(255,201,60,.9)) drop-shadow(0 0 8px rgba(255,45,155,.5))}
+.el-rays{position:absolute; left:50%; bottom:4px; width:150px; height:46px; transform:translateX(-50%); transform-origin:50% 100%;
+  background:repeating-conic-gradient(from 270deg at 50% 100%, rgba(255,214,90,.95) 0deg 4deg, rgba(255,45,155,0) 4deg 11deg, rgba(255,45,155,.75) 11deg 14deg, rgba(182,124,255,0) 14deg 21deg);
+  -webkit-mask:radial-gradient(ellipse 50% 100% at 50% 100%, #000 25%, transparent 80%); mask:radial-gradient(ellipse 50% 100% at 50% 100%, #000 25%, transparent 80%);
+  animation:elRays 3s ease-in-out infinite}
+@keyframes elTopEdge{to{background-position:200% 0}}
+@keyframes elTopGlow{50%{box-shadow:0 0 20px rgba(255,201,60,.5), 0 0 30px rgba(255,45,155,.32), 0 0 40px rgba(182,124,255,.26)}}
+@keyframes elRays{0%,100%{opacity:.75; transform:translateX(-50%) rotate(-4deg)} 50%{opacity:1; transform:translateX(-50%) rotate(4deg)}}
+@media (prefers-reduced-motion: reduce){.el-lb-list li.el-lb-top, .el-lb-list li.el-lb-top::before, .el-rays{animation:none}}
+.el-lb-list{min-height:calc(5 * 30px + 4 * 4px + 32px)} /* room for the #1 crown so the box does not jump between pages */
 .el-ov{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:20px;background:rgba(4,6,14,.78);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);font-family:"Chakra Petch",system-ui,-apple-system,"Segoe UI",sans-serif;box-sizing:border-box}
 .el-ov *{box-sizing:border-box}
 .el-ov[hidden]{display:none}
@@ -1811,7 +1830,12 @@ function drawLbPage(anim){
     var rk=document.createElement('span'); rk.className='el-lb-rk'; rk.textContent='#'+(i+1);
     var a=document.createElement('a'); a.className='el-lb-h'; a.href='https://x.com/'+encodeURIComponent(e.handle); a.target='_blank'; a.rel='noopener'; a.textContent='@'+e.handle;
     var sc=document.createElement('span'); sc.className='el-lb-sc'; sc.textContent=e.rounds; sc.setAttribute('aria-label',e.rounds+(e.rounds===1?' round':' rounds'));
-    li.appendChild(rk); li.appendChild(a); li.appendChild(sc); l.appendChild(li);
+    li.appendChild(rk); li.appendChild(a); li.appendChild(sc);
+    if(i===0){ // the top score gets a purple, pink and gold outline with crown light rays
+      li.classList.add('el-lb-top'); var cr=document.createElement('span'); cr.className='el-crown'; cr.setAttribute('aria-hidden','true');
+      cr.innerHTML='<span class="el-rays"></span><svg viewBox="0 0 24 18"><path d="M2 15.5h20l1.2-11-5.7 4.6L12 1.5 6.5 9.1.8 4.5z"/><circle cx="12" cy="1.8" r="1.6"/><circle cx="1" cy="4.5" r="1.3"/><circle cx="23" cy="4.5" r="1.3"/></svg>'; li.appendChild(cr);
+    }
+    l.appendChild(li);
   });
   if(anim){ l.classList.remove('fade'); void l.offsetWidth; l.classList.add('fade'); }
   var d=$('elLbDots'); d.innerHTML='';
