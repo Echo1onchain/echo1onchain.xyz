@@ -1032,6 +1032,10 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 .mcp.mcp-live .mcp-bots{display:flex; gap:clamp(.4rem,1.2vw,.8rem); grid-row:1 / span 3; align-self:center}
 .mcp.mcp-live .mcp-bots-l{grid-column:1}
 .mcp.mcp-live .mcp-bots-r{grid-column:3}
+/* desktop: the inner bot sits just beside the text, the middle bot is centered between the outer and inner bots */
+.mcp.mcp-live{grid-template-columns:1fr max-content 1fr}
+.mcp.mcp-live .mcp-bots{justify-content:space-between}
+@media (min-width:721px) and (max-width:1000px){.mcp.mcp-live .mcp-bots img{width:clamp(50px,6.2vw,64px)}}
 .mcp-bots img{display:block; width:clamp(64px,6.5vw,84px); height:auto; aspect-ratio:1; border-radius:12px; border:1px solid rgba(255,201,60,.55);
   background:rgba(8,12,28,.85); box-shadow:0 0 12px rgba(255,201,60,.28), 0 0 18px rgba(255,45,155,.14); animation:mcpFloat 5s ease-in-out infinite}
 .mcp-bots img:nth-child(2){animation-delay:-1.7s}
@@ -1044,6 +1048,8 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 @media (max-width:720px){
   .mcp.mcp-live{padding:.9rem .7rem 1rem; column-gap:.5rem}
   .mcp.mcp-live .mcp-bots{flex-direction:column; gap:.4rem}
+  .mcp.mcp-live{grid-template-columns:auto minmax(0,1fr) auto}
+  .mcp.mcp-live .mcp-bots{justify-content:flex-start}
   .mcp-bots img{width:clamp(34px,10vw,44px); border-radius:9px}
   .mcp.mcp-live h2{font-size:clamp(.95rem,4.4vw,1.25rem); letter-spacing:.08em}
   .mcp.mcp-live .mcp-live-msg{font-size:clamp(1rem,4.6vw,1.3rem)}
