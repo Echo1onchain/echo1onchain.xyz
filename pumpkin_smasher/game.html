@@ -97,6 +97,20 @@ kbd{font:700 .92em var(--ff);color:var(--tx);background:rgba(255,255,255,.08);bo
 .ib svg{width:18px;height:18px}
 #mute{right:max(10px,env(safe-area-inset-right))}
 #pause{right:calc(max(10px,env(safe-area-inset-right)) + 46px)}
+/* volume popup */
+#volPop{position:fixed;z-index:9;top:calc(max(10px,env(safe-area-inset-top)) + 46px);right:max(10px,env(safe-area-inset-right));display:flex;align-items:center;gap:10px;padding:8px 12px 8px 8px;border-radius:14px;border:1px solid rgba(34,228,245,.35);background:rgba(10,16,34,.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);box-shadow:0 6px 22px rgba(0,0,0,.45),0 0 14px rgba(34,228,245,.12);touch-action:none}
+#volPop.hidden{display:none}
+#volMute{width:34px;height:34px;flex:none;border-radius:10px;border:1px solid rgba(34,228,245,.3);background:rgba(2,4,12,.6);color:var(--cy);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0}
+#volMute svg{width:17px;height:17px}
+#volMute.off{color:var(--mu);border-color:rgba(143,163,200,.3)}
+#volR{-webkit-appearance:none;appearance:none;width:clamp(120px,34vw,170px);height:28px;margin:0;background:transparent;cursor:pointer;touch-action:none}
+#volR::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--cy),var(--mg)) 0/var(--v,60%) 100% no-repeat,rgba(143,163,200,.22)}
+#volR::-moz-range-track{height:6px;border-radius:3px;background:rgba(143,163,200,.22)}
+#volR::-moz-range-progress{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--cy),var(--mg))}
+#volR::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-6px;border-radius:50%;background:var(--tx);border:2px solid var(--cy);box-shadow:0 0 8px rgba(34,228,245,.6)}
+#volR::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--tx);border:2px solid var(--cy);box-shadow:0 0 8px rgba(34,228,245,.6)}
+#volR:focus-visible{outline:2px solid var(--mg);outline-offset:3px;border-radius:6px}
+#volV{min-width:3.2em;text-align:right;font:700 12px "JetBrains Mono",ui-monospace,monospace;color:var(--tx);letter-spacing:.04em}
 #superBtn{position:fixed;z-index:7;right:max(14px,env(safe-area-inset-right));bottom:max(14px,env(safe-area-inset-bottom));width:clamp(62px,15vmin,84px);height:clamp(62px,15vmin,84px);border-radius:50%;border:0;padding:0;cursor:pointer;background:conic-gradient(var(--mg) 0deg,var(--cy) var(--p,0deg),rgba(255,255,255,.1) var(--p,0deg));box-shadow:0 4px 16px rgba(0,0,0,.5);transition:transform .15s}
 #superBtn .in{position:absolute;inset:4px;border-radius:50%;background:radial-gradient(circle at 50% 35%,#1a2350,#080c1c);display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--mu);font:900 clamp(10px,2.6vmin,13px)/1.05 var(--ff);letter-spacing:.08em}
 #superBtn .in small{font-size:.72em;font-weight:700;letter-spacing:.12em;opacity:.85}
@@ -166,7 +180,8 @@ kbd{font:700 .92em var(--ff);color:var(--tx);background:rgba(255,255,255,.08);bo
 <canvas id="c"></canvas>
 <div id="saProbe" aria-hidden="true" style="position:fixed;top:0;left:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)"></div>
 <button id="pause" class="ib hidden" aria-label="Pause"><svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="5" width="4" height="14" rx="1.2"/><rect x="14" y="5" width="4" height="14" rx="1.2"/></svg></button>
-<button id="mute" class="ib" aria-label="Mute"><svg id="muteIc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg></button>
+<button id="mute" class="ib" aria-label="Volume" aria-haspopup="true" aria-expanded="false" aria-controls="volPop"><svg id="muteIc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg></button>
+<div id="volPop" class="hidden" role="group" aria-label="Game volume"><button id="volMute" type="button" aria-label="Mute"><svg id="volMuteIc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></svg></button><input id="volR" type="range" min="0" max="100" step="1" value="60" aria-label="Game volume"><span id="volV">60%</span></div>
 <button id="superBtn" class="hidden" aria-label="Super Smash"><div class="in"><span>SUPER</span><small id="superPct">0%</small></div></button>
 
 <div id="title" class="ov">
@@ -248,12 +263,15 @@ let W=0,H=0,DPR=1;
 // The audio scheduler is the master clock: it schedules 16th steps ahead and pushes beat times (in game time) to a queue.
 // when the game sits inside the ECHO Botz page, hold the page's music while Pumpkin Circuit plays, then bring it back after
 function pageMusic(hold){try{const d=window.parent!==window&&window.parent.document;const a=d&&d.getElementById('bgm');if(!a)return;if(hold){if(!a.paused){a.pause();pageMusic.held=true}}else if(pageMusic.held){pageMusic.held=false;const p=a.play();if(p&&p.catch)p.catch(()=>{})}}catch(e){}}
-const Snd=(()=>{let ac=null,master,music,fx,noiseBuf,verb,muted=LS.get('muted',false);
+const Snd=(()=>{let ac=null,master,out,music,fx,noiseBuf,verb,muted=LS.get('muted',false),vol=(v=>typeof v==='number'&&v>=0&&v<=100?Math.round(v):60)(LS.get('vol',60));
+  // v77: volume is applied AFTER the compressor so the slider gives a real drop. 100 = the old level, default 60.
+  const outLevel=()=>muted?0:vol/100;
+  function applyOut(){if(out&&ac){out.gain.cancelScheduledValues(ac.currentTime);out.gain.setValueAtTime(out.gain.value,ac.currentTime);out.gain.setTargetAtTime(outLevel(),ac.currentTime,0.02)}}
   // smash sounds: 3 splat files, fetched now, decoded when audio starts
   const SPLAT_GAIN=1,splatData=['splat1.mp3','splat2.mp3','splat3.mp3'].map(u=>fetch(u).then(r=>r.ok?r.arrayBuffer():null).catch(()=>null)),splats=[];let lastSplat=-1;
   const mf=m=>440*Math.pow(2,(m-69)/12);
   function init(){if(ac)return;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;try{ac=new AC()}catch(e){ac=null;return}
-    master=ac.createGain();master.gain.value=muted?0:0.8;const comp=ac.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;master.connect(comp);comp.connect(ac.destination);
+    master=ac.createGain();master.gain.value=0.8;const comp=ac.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;master.connect(comp);out=ac.createGain();out.gain.value=outLevel();comp.connect(out);out.connect(ac.destination);
     music=ac.createGain();music.gain.value=0.55;music.connect(master);songGain=ac.createGain();songGain.gain.value=SONG.gain;songGain.connect(master);songDecodeLive();fx=ac.createGain();fx.gain.value=0.65;fx.connect(master);
     noiseBuf=ac.createBuffer(1,ac.sampleRate,ac.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
     splatData.forEach((p,i)=>p.then(b=>b&&new Promise((ok,no)=>ac.decodeAudioData(b,ok,no))).then(buf=>{if(buf)splats[i]=buf}).catch(()=>{}));
@@ -314,8 +332,11 @@ const Snd=(()=>{let ac=null,master,music,fx,noiseBuf,verb,muted=LS.get('muted',f
     stop(){clock.running=false;if(song.on&&ac&&songSrc){song.pausePos=songPos(ac.currentTime);songKill()}},
     get songOn(){return song.on},
     setLevel(L){const r=Math.min(SONG.maxRate,1+(L-1)*SONG.ratePerLevel);if(song.on&&ac&&songSrc){const tc=ac.currentTime+0.02;song.pos0=songPos(tc);song.t0=tc;song.rate=r;songSrc.playbackRate.setValueAtTime(r,tc)}else song.rate=r;return Math.round(SONG.bpm*r)},
-    setMuted(m){muted=m;LS.set('muted',m);if(master)master.gain.setTargetAtTime(m?0:0.8,ac.currentTime,0.02)},
+    setMuted(m){muted=!!m;LS.set('muted',muted);applyOut()},
     get muted(){return muted},
+    setVol(v){vol=Math.max(0,Math.min(100,Math.round(+v||0)));LS.set('vol',vol);applyOut()},
+    get vol(){return vol},
+    get outGain(){return out?out.gain.value:null},
     blip(f){resume();if(!ac)return;osc('square',f,ac.currentTime,0.08,0.12,fx,f*1.5)},
     smash(perfect,mult){if(!ac)return;const t=ac.currentTime;if(!playSplat(t)){osc('sine',160,t,0.18,0.9,fx,45);noise(t,0.22,0.55,'lowpass',1200,fx);// squelch
       const s=ac.createBufferSource();s.buffer=noiseBuf;const f=ac.createBiquadFilter();f.type='bandpass';f.Q.value=5;f.frequency.setValueAtTime(400,t);f.frequency.exponentialRampToValueAtTime(1800,t+0.15);const gn=ac.createGain();env(gn,t,0.005,0.4,0.2);s.connect(f);f.connect(gn);gn.connect(fx);s.start(t);s.stop(t+0.3)}// v2 synth smash = fallback until the files are ready
@@ -403,7 +424,7 @@ cv.addEventListener('pointerdown',e=>{if(state!=='play')return;Snd.resume();e.pr
   const i=hitTestHole(e.clientX,e.clientY);if(i>=0)smashAt(i);else{if(!G.superBusy){swingTo(e.clientX,e.clientY,null);Snd.whiff()}}},{passive:false});
 const endT=e=>touches.delete(e.pointerId);cv.addEventListener('pointerup',endT);cv.addEventListener('pointercancel',endT);
 const KEYMAP={q:0,w:1,e:2,a:3,s:4,d:5,z:6,x:7,c:8,'7':0,'8':1,'9':2,'4':3,'5':4,'6':5,'1':6,'2':7,'3':8};
-window.addEventListener('keydown',e=>{if(e.target&&e.target.id==='psHandle'){if(e.key==='Enter'&&!e.repeat&&state==='title'){e.preventDefault();e.target.blur();startFlow()}return}const k=e.key.toLowerCase();if(k===' ')e.preventDefault();if(e.repeat)return;
+window.addEventListener('keydown',e=>{if(volOpen()){if(e.key==='Escape'){e.preventDefault();volClose(true);return}if(e.target&&e.target.closest&&e.target.closest('#volPop'))return}if(e.target&&e.target.id==='psHandle'){if(e.key==='Enter'&&!e.repeat&&state==='title'){e.preventDefault();e.target.blur();startFlow()}return}const k=e.key.toLowerCase();if(k===' ')e.preventDefault();if(e.repeat)return;
   if(k==='m'){toggleMute();return}
   if(state==='play'){if(k===' '||k==='f'){triggerSuper();return}if(k in KEYMAP){smashAt(KEYMAP[k]);return}if(k==='p'||k==='escape')pauseGame()}
   else if((state==='title'||state==='over')&&(k==='enter'||k===' ')&&$('topOv').classList.contains('hidden'))startFlow();
@@ -712,9 +733,20 @@ function pauseGame(){if(state!=='play')return;state='pause';Snd.stop();show('pau
 function resumeGame(){if(state!=='pause')return;state='play';show(null);Snd.resumeAt(G.time);last=performance.now()}
 function toTitle(){state='title';Snd.stop();pageMusic(false);newGame();layout();$('pause').classList.add('hidden');show('title');updBest()}
 function updBest(){$('bestT').textContent=best>0?'BEST  '+best.toLocaleString():''}
-function toggleMute(){Snd.setMuted(!Snd.muted);updMute()}
+function toggleMute(){if(Snd.muted||Snd.vol===0){Snd.setMuted(false);if(Snd.vol===0)Snd.setVol(60)}else Snd.setMuted(true);updMute()}
 const ICON_ON='<path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" stroke="none"/><path d="M16 8.5a5 5 0 0 1 0 7"/><path d="M18.5 6a8.5 8.5 0 0 1 0 12"/>',ICON_OFF='<path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" stroke="none"/><path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/>';
-const updMute=()=>{$('muteIc').innerHTML=Snd.muted?ICON_OFF:ICON_ON};updMute();$('mute').onclick=e=>{e.stopPropagation();toggleMute()};
+const updMute=()=>{const off=Snd.muted||Snd.vol===0,ic=off?ICON_OFF:ICON_ON;$('muteIc').innerHTML=ic;$('volMuteIc').innerHTML=ic;$('volMute').classList.toggle('off',off);$('volMute').setAttribute('aria-label',off?'Unmute':'Mute');
+  const r=$('volR'),v=off?0:Snd.vol;r.value=v;r.style.setProperty('--v',v+'%');$('volV').textContent=v+'%'};
+// v77: the speaker opens a volume slider. Tap the small speaker in it (or M) to mute, tap outside to close.
+const volOpen=()=>!$('volPop').classList.contains('hidden');
+function volClose(focus){$('volPop').classList.add('hidden');$('mute').setAttribute('aria-expanded','false');if(focus)$('mute').focus()}
+function volShow(){Snd.resume();updMute();$('volPop').classList.remove('hidden');$('mute').setAttribute('aria-expanded','true')}
+updMute();$('mute').onclick=e=>{e.stopPropagation();volOpen()?volClose():volShow()};
+$('volMute').onclick=e=>{e.stopPropagation();toggleMute()};
+$('volR').addEventListener('input',e=>{const v=+e.target.value;Snd.setVol(v);Snd.setMuted(v===0);updMute()});
+['pointerdown','click','touchstart'].forEach(t=>$('volPop').addEventListener(t,e=>e.stopPropagation(),{passive:true}));
+// a tap outside closes the popup and is swallowed, so it never smashes a hole or fires Super
+window.addEventListener('pointerdown',e=>{if(!volOpen())return;const t=e.target;if(t.closest&&(t.closest('#volPop')||t.closest('#mute')))return;volClose();if(t===cv||t.closest&&t.closest('#superBtn')){e.preventDefault();e.stopPropagation()}},true);
 // ================= SHARED TOP 10 =================
 /* Echo1's Pumpkin Smasher Apps Script (its own sheet), same flow as Signal Jammer.
    Only runs with an X handle are sent. If the script can't be reached, the game keeps
