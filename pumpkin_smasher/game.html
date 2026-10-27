@@ -95,15 +95,20 @@ BOTS.forEach((b,i)=>{const im=new Image();im.src=b.src;imgs[i]=im;const d=docume
 // ================= AUDIO + BEAT CLOCK =================
 // The audio scheduler is the master clock: it schedules 16th steps ahead and pushes beat times (in game time) to a queue.
 const Snd=(()=>{let ac=null,master,music,fx,noiseBuf,verb,muted=LS.get('muted',false);
+  // smash sounds: 3 splat files, fetched now, decoded when audio starts
+  const SPLAT_GAIN=0.9,splatData=['splat1.mp3','splat2.mp3','splat3.mp3'].map(u=>fetch(u).then(r=>r.ok?r.arrayBuffer():null).catch(()=>null)),splats=[];let lastSplat=-1;
   const mf=m=>440*Math.pow(2,(m-69)/12);
   function init(){if(ac)return;const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;try{ac=new AC()}catch(e){ac=null;return}
     master=ac.createGain();master.gain.value=muted?0:0.8;const comp=ac.createDynamicsCompressor();comp.threshold.value=-14;comp.ratio.value=4;master.connect(comp);comp.connect(ac.destination);
     music=ac.createGain();music.gain.value=0.55;music.connect(master);fx=ac.createGain();fx.gain.value=0.65;fx.connect(master);
     noiseBuf=ac.createBuffer(1,ac.sampleRate,ac.sampleRate);const d=noiseBuf.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+    splatData.forEach((p,i)=>p.then(b=>b&&new Promise((ok,no)=>ac.decodeAudioData(b,ok,no))).then(buf=>{if(buf)splats[i]=buf}).catch(()=>{}));
     // simple feedback delay as spooky "reverb"
     const dl=ac.createDelay(1);dl.delayTime.value=0.27;const fb=ac.createGain();fb.gain.value=0.35;const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2200;verb=ac.createGain();verb.gain.value=0.5;
     verb.connect(dl);dl.connect(lp);lp.connect(fb);fb.connect(dl);lp.connect(master)}
   function resume(){init();if(ac&&ac.state!=='running')ac.resume()}
+  function playSplat(t){const ready=splats.map((b,i)=>b?i:-1).filter(i=>i>=0);if(!ready.length)return false;const pool=ready.length>1?ready.filter(i=>i!==lastSplat):ready;const i=pool[Math.random()*pool.length|0];lastSplat=i;
+    const s=ac.createBufferSource(),gn=ac.createGain();s.buffer=splats[i];gn.gain.value=SPLAT_GAIN;s.connect(gn);gn.connect(fx);s.start(t);return true}
   function env(gn,t,a,peak,dec){gn.gain.setValueAtTime(0.0001,t);gn.gain.exponentialRampToValueAtTime(Math.max(0.0002,peak),t+a);gn.gain.exponentialRampToValueAtTime(0.0001,t+a+dec)}
   function osc(type,f,t,dur,peak,dest,f2,att,wet){const o=ac.createOscillator(),gn=ac.createGain();o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+dur);env(gn,t,att||0.005,peak,dur);o.connect(gn);gn.connect(dest);if(wet)gn.connect(verb);o.start(t);o.stop(t+(att||0)+dur+0.05);return o}
   function noise(t,dur,peak,type,freq,dest,q){const s=ac.createBufferSource();s.buffer=noiseBuf;const f=ac.createBiquadFilter();f.type=type;f.frequency.value=freq;if(q)f.Q.value=q;const gn=ac.createGain();env(gn,t,0.002,peak,dur);s.connect(f);f.connect(gn);gn.connect(dest);s.start(t,Math.random()*0.5);s.stop(t+dur+0.05)}
@@ -134,9 +139,9 @@ const Snd=(()=>{let ac=null,master,music,fx,noiseBuf,verb,muted=LS.get('muted',f
     setMuted(m){muted=m;LS.set('muted',m);if(master)master.gain.setTargetAtTime(m?0:0.8,ac.currentTime,0.02)},
     get muted(){return muted},
     blip(f){resume();if(!ac)return;osc('square',f,ac.currentTime,0.08,0.12,fx,f*1.5)},
-    smash(perfect,mult){if(!ac)return;const t=ac.currentTime,j=0.9+Math.random()*0.2;osc('sine',125*j,t,0.16,0.85,fx,38);// wet thump
+    smash(perfect,mult){if(!ac)return;const t=ac.currentTime;if(!playSplat(t)){const j=0.9+Math.random()*0.2;osc('sine',125*j,t,0.16,0.85,fx,38);// wet thump
       const s=ac.createBufferSource();s.buffer=noiseBuf;s.playbackRate.setValueAtTime(1.15*j,t);s.playbackRate.exponentialRampToValueAtTime(0.55,t+0.22);const f=ac.createBiquadFilter();f.type='lowpass';f.Q.value=2.5;f.frequency.setValueAtTime(2600*j,t);f.frequency.exponentialRampToValueAtTime(260,t+0.2);const gn=ac.createGain();env(gn,t,0.003,0.75,0.24);s.connect(f);f.connect(gn);gn.connect(fx);s.start(t,Math.random()*0.5);s.stop(t+0.32);// splat
-      [0.045+Math.random()*0.015,0.09+Math.random()*0.025].forEach((d,i)=>{const b=ac.createBufferSource();b.buffer=noiseBuf;const bf=ac.createBiquadFilter();bf.type='bandpass';bf.Q.value=9;const f0=(i?900:1300)*j;bf.frequency.setValueAtTime(f0,t+d);bf.frequency.exponentialRampToValueAtTime(f0*0.3,t+d+0.06);const bg=ac.createGain();env(bg,t+d,0.002,i?0.3:0.38,0.06);b.connect(bf);bf.connect(bg);bg.connect(fx);b.start(t+d,Math.random()*0.5);b.stop(t+d+0.1);osc('sine',(i?420:560)*j,t+d,0.04,0.1,fx,150,0.002)});// squelch blips
+      [0.045+Math.random()*0.015,0.09+Math.random()*0.025].forEach((d,i)=>{const b=ac.createBufferSource();b.buffer=noiseBuf;const bf=ac.createBiquadFilter();bf.type='bandpass';bf.Q.value=9;const f0=(i?900:1300)*j;bf.frequency.setValueAtTime(f0,t+d);bf.frequency.exponentialRampToValueAtTime(f0*0.3,t+d+0.06);const bg=ac.createGain();env(bg,t+d,0.002,i?0.3:0.38,0.06);b.connect(bf);bf.connect(bg);bg.connect(fx);b.start(t+d,Math.random()*0.5);b.stop(t+d+0.1);osc('sine',(i?420:560)*j,t+d,0.04,0.1,fx,150,0.002)});}// squelch blips (synth fallback ends here)
       if(perfect)osc('triangle',mf(74+Math.min(12,mult*2)),t+0.02,0.25,0.18,fx,null,0.003,true)},
     gold(){if(!ac)return;const t=ac.currentTime;[0,0.06,0.12,0.18].forEach((d,i)=>osc('triangle',mf(81+[0,4,7,12][i]),t+d,0.3,0.15,fx,null,0.003,true))},
     ghost(){if(!ac)return;const t=ac.currentTime;const o=osc('sine',700,t,0.9,0.3,fx,180,0.05,true);const lfo=ac.createOscillator(),lg=ac.createGain();lfo.frequency.value=7;lg.gain.value=40;lfo.connect(lg);lg.connect(o.frequency);lfo.start(t);lfo.stop(t+1);noise(t,0.5,0.25,'bandpass',500,fx,3)},
