@@ -856,13 +856,8 @@ function psGameOver(){
 /* ----- Pumpkin Smasher share card for X (same flow as Glitch Hunt) ----- */
 const PS_URL='https://echo1onchain.xyz/pumpkin_smasher/',PS_SITE='echo1onchain.xyz/pumpkin_smasher';
 function psShareText(r){
-  const s=r.score.toLocaleString(),lv=r.level;
-  const T=[
-    '🎃 I scored '+s+' on ECHO Botz Pumpkin Smasher and made it to level '+lv+'. Think you can smash harder? 👇 @EchoBotzSOL',
-    '🔨 Level '+lv+' in ECHO Botz Pumpkin Smasher with '+s+' points and a best combo of '+r.bestCombo+'. Beat it if you can 👇 @EchoBotzSOL',
-    '🤖 SMASH REPORT: '+s+' points, level '+lv+', '+r.smashed+' pumpkins smashed. The patch never stood a chance. Your move 👇 @EchoBotzSOL'
-  ];
-  return T[Math.floor(Math.random()*T.length)]+'\n'+PS_URL;
+  const s=r.score.toLocaleString('en-US'),lv=r.level;
+  return '🤖 SMASH REPORT: '+s+' points, level '+lv+', '+r.smashed+' pumpkins smashed.\n\nThe patch never stood a chance. Your move 👇\n'+PS_URL+'\n\n@EchoBotzSOL';
 }
 function psRect(x,X,Y,w,h,rad){x.beginPath();x.moveTo(X+rad,Y);x.arcTo(X+w,Y,X+w,Y+h,rad);x.arcTo(X+w,Y+h,X,Y+h,rad);x.arcTo(X,Y+h,X,Y,rad);x.arcTo(X,Y,X+w,Y,rad);x.closePath()}
 function psDrawCard(r,logo){
