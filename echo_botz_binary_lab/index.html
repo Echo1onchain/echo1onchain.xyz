@@ -769,8 +769,50 @@ a.gh-btn.bot-mint{display:block; text-align:center; text-decoration:none}
 .logo.eb-logo{margin-top:0;margin-bottom:.5rem}
 @media (max-width:720px){main{padding-top:15.5rem}}
 </style>
+<style>
+/* ===== Halloween theme: only on while <html> has the "halloween" class (set by the date check below), so the normal look comes back by itself on Nov 1 ===== */
+.hw-decor{display:none}
+html.halloween .hw-decor{display:block; position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden}
+html.halloween .hw-decor *{pointer-events:none}
+html.halloween .hw-moon{position:absolute; top:clamp(4.5rem,9vh,6rem); right:clamp(1rem,7vw,7rem); width:clamp(56px,7vw,96px); aspect-ratio:1; border-radius:50%;
+  background:radial-gradient(circle at 38% 36%, #FFF7DD 0 18%, #FFD98A 55%, #F2A94A 100%); opacity:.55;
+  box-shadow:0 0 40px 10px rgba(255,170,70,.28), 0 0 120px 40px rgba(155,77,255,.16); animation:hwGlow 9s ease-in-out infinite}
+html.halloween .hw-moon::after{content:""; position:absolute; inset:0; border-radius:50%; background:radial-gradient(circle at 64% 60%, rgba(190,120,40,.35) 0 9%, transparent 10%), radial-gradient(circle at 40% 70%, rgba(190,120,40,.25) 0 6%, transparent 7%)}
+html.halloween .hw-fog{position:absolute; left:-15%; width:130%; height:34vh; bottom:-6vh; opacity:.5;
+  background:radial-gradient(ellipse 30% 60% at 20% 70%, rgba(155,77,255,.22), transparent 70%), radial-gradient(ellipse 35% 55% at 70% 80%, rgba(255,138,30,.13), transparent 70%), radial-gradient(ellipse 40% 50% at 45% 90%, rgba(200,190,255,.12), transparent 70%);
+  animation:hwFog 48s ease-in-out infinite alternate}
+html.halloween .hw-fog.hw-fog2{bottom:auto; top:-8vh; height:26vh; opacity:.35; animation-duration:64s; animation-direction:alternate-reverse}
+html.halloween .hw-bat{position:absolute; left:0; width:var(--w,34px); transform:translateX(var(--x)); animation:hwFly var(--d,46s) linear infinite; animation-delay:var(--dl,0s); opacity:.8}
+html.halloween .hw-bat svg{display:block; width:100%; height:auto; fill:#4A2A7A; filter:drop-shadow(0 0 5px rgba(180,120,255,.75)); animation:hwBob 6s ease-in-out infinite}
+html.halloween .hw-pumpkin{position:absolute; bottom:clamp(.6rem,2vh,1.4rem); width:clamp(38px,4.2vw,58px); opacity:.75; filter:drop-shadow(0 0 10px rgba(255,138,30,.45))}
+html.halloween .hw-pumpkin svg{display:block; width:100%; height:auto}
+html.halloween .hw-pumpkin .hw-face{animation:hwFlicker 5s ease-in-out infinite}
+html.halloween .hw-pumpkin.hw-p2 .hw-face{animation-delay:-2.2s}
+@keyframes hwFly{from{transform:translate(-80px,0)}to{transform:translate(calc(100vw + 80px),-4vh)}}
+@keyframes hwBob{0%,100%{transform:translateY(0)}50%{transform:translateY(10px)}}
+@keyframes hwFog{from{transform:translateX(-4%)}to{transform:translateX(4%)}}
+@keyframes hwGlow{0%,100%{opacity:.5}50%{opacity:.62}}
+@keyframes hwFlicker{0%,100%{opacity:1}45%{opacity:.82}55%{opacity:.9}}
+/* orange and purple accents on the neon outlines (the Mint is LIVE card keeps its gold look) */
+html.halloween .grid{background-image:linear-gradient(rgba(155,77,255,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255,138,30,.05) 1px, transparent 1px)}
+html.halloween .console:not(.mcp)::before, html.halloween .chat::before, html.halloween .spotify::before, html.halloween .x-link::before, html.halloween .tl::before{
+  background:linear-gradient(135deg, rgba(255,138,30,.92), rgba(155,77,255,.92))}
+html.halloween .console:not(.mcp){box-shadow:0 0 30px rgba(255,138,30,.26), 0 0 60px rgba(155,77,255,.22)}
+html.halloween .console:not(.mcp) h2{text-shadow:0 0 12px rgba(255,138,30,.5), 0 0 26px rgba(155,77,255,.35)}
+html.halloween .crew-card{box-shadow:0 0 22px rgba(255,138,30,.24), 0 0 10px rgba(155,77,255,.2)}
+/* a faint cobweb in the top right corner of the main panels, painted under the panel content so it never covers anything */
+html.halloween .console:not(.mcp)::after{content:""; position:absolute; top:3px; right:3px; width:clamp(48px,7vw,72px); aspect-ratio:1; z-index:-1; pointer-events:none;
+  border-top-right-radius:17px; opacity:.22; background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 80' fill='none' stroke='%23E9DDFF' stroke-width='.8' stroke-linecap='round'%3E%3Cpath d='M80 0L8 6M80 0L22 40M80 0L48 64M80 0L74 78'/%3E%3Cpath d='M60 1.7Q62 10 54.7 14.7Q63 19 63.3 25Q69 21 75.3 25.5Q72 16 75 4'/%3E%3Cpath d='M42 3.2Q45 17 34.6 23.6Q45 31 46 38.6Q57 36 64.5 46Q61 31 67 18Q60 14 61 3'/%3E%3Cpath d='M24 4.7Q27 22 14 32Q26 42 29 52Q44 52 57 66.5Q53 47 64 32'/%3E%3C/svg%3E") no-repeat top right / 100% 100%}
+@media (prefers-reduced-motion: reduce){html.halloween .hw-decor, html.halloween .hw-decor *, html.halloween .hw-decor *::after{animation:none !important}}
+</style>
+<script>
+/* Halloween theme: on only in 2026 and only before Nov 1 at midnight (visitor's local time); checked again every minute */
+(function(){var r=document.documentElement;function hw(){var d=new Date();r.classList.toggle('halloween',d.getFullYear()===2026&&d<new Date(2026,10,1))}hw();setInterval(hw,60000)})();
+</script>
 </head>
 <body>
+<!-- Halloween decor (hidden unless the halloween class is on) -->
+<div class="hw-decor" aria-hidden="true"><div class="hw-fog hw-fog2"></div><div class="hw-moon"></div><div class="hw-bat" style="top:12vh;--w:40px;--x:14vw;--d:52s;--dl:-8s"><svg viewBox="0 0 64 30"><path d="M32 9c-1.6 0-2.6 1.4-2.6 1.4L28 7.6l-.9 3.8C22.4 5.6 13.6 3.4 3 6.6c4 2.2 6 6 6.2 10.4 3-2 7-1.8 9.2 1 2.2-2.8 6.2-3 8.4-.2.8-2 2.8-3.2 5.2-3.2s4.4 1.2 5.2 3.2c2.2-2.8 6.2-2.6 8.4.2 2.2-2.8 6.2-3 9.2-1 .2-4.4 2.2-8.2 6.2-10.4-10.6-3.2-19.4-1-24.1 4.8L36 7.6l-1.4 2.8S33.6 9 32 9z"/></svg></div><div class="hw-bat" style="top:22vh;--w:30px;--x:62vw;--d:68s;--dl:-40s"><svg viewBox="0 0 64 30"><path d="M32 9c-1.6 0-2.6 1.4-2.6 1.4L28 7.6l-.9 3.8C22.4 5.6 13.6 3.4 3 6.6c4 2.2 6 6 6.2 10.4 3-2 7-1.8 9.2 1 2.2-2.8 6.2-3 8.4-.2.8-2 2.8-3.2 5.2-3.2s4.4 1.2 5.2 3.2c2.2-2.8 6.2-2.6 8.4.2 2.2-2.8 6.2-3 9.2-1 .2-4.4 2.2-8.2 6.2-10.4-10.6-3.2-19.4-1-24.1 4.8L36 7.6l-1.4 2.8S33.6 9 32 9z"/></svg></div><div class="hw-bat" style="top:8vh;--w:34px;--x:82vw;--d:60s;--dl:-25s"><svg viewBox="0 0 64 30"><path d="M32 9c-1.6 0-2.6 1.4-2.6 1.4L28 7.6l-.9 3.8C22.4 5.6 13.6 3.4 3 6.6c4 2.2 6 6 6.2 10.4 3-2 7-1.8 9.2 1 2.2-2.8 6.2-3 8.4-.2.8-2 2.8-3.2 5.2-3.2s4.4 1.2 5.2 3.2c2.2-2.8 6.2-2.6 8.4.2 2.2-2.8 6.2-3 9.2-1 .2-4.4 2.2-8.2 6.2-10.4-10.6-3.2-19.4-1-24.1 4.8L36 7.6l-1.4 2.8S33.6 9 32 9z"/></svg></div><div class="hw-pumpkin" style="left:clamp(.6rem,2vw,1.6rem)"><svg viewBox="0 0 64 56"><path d="M31 10c0-4 1-7 4-9" stroke="#3F7A2B" stroke-width="3.2" fill="none" stroke-linecap="round"/><ellipse cx="20" cy="33" rx="15" ry="20" fill="#D9631A"/><ellipse cx="44" cy="33" rx="15" ry="20" fill="#D9631A"/><ellipse cx="32" cy="33" rx="15" ry="21" fill="#F07A22"/><g class="hw-face" fill="#FFD36B"><path d="M20 28l5-7 5 7z"/><path d="M34 28l5-7 5 7z"/><path d="M19 37q13 10 26 0l-4 1.5-2.5 3-2.5-2.6-4 2.6-4-2.6-2.5 2.6-2.5-3z"/></g></svg></div><div class="hw-pumpkin hw-p2" style="right:clamp(.6rem,2vw,1.6rem)"><svg viewBox="0 0 64 56"><path d="M31 10c0-4 1-7 4-9" stroke="#3F7A2B" stroke-width="3.2" fill="none" stroke-linecap="round"/><ellipse cx="20" cy="33" rx="15" ry="20" fill="#D9631A"/><ellipse cx="44" cy="33" rx="15" ry="20" fill="#D9631A"/><ellipse cx="32" cy="33" rx="15" ry="21" fill="#F07A22"/><g class="hw-face" fill="#FFD36B"><path d="M20 28l5-7 5 7z"/><path d="M34 28l5-7 5 7z"/><path d="M19 37q13 10 26 0l-4 1.5-2.5 3-2.5-2.6-4 2.6-4-2.6-2.5 2.6-2.5-3z"/></g></svg></div><div class="hw-fog"></div></div>
 <div class="grid"></div>
 <canvas id="net"></canvas>
 <canvas id="critters" aria-hidden="true"></canvas>
