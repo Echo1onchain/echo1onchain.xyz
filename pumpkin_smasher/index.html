@@ -622,6 +622,25 @@ button.tl{font:inherit; font-size:.85rem; font-weight:600; border:0; cursor:poin
 .mcp.mcp-live .mcp-live-msg{display:block; margin:.4rem 0 0; font-family:"JetBrains Mono",ui-monospace,monospace; font-weight:700; font-size:clamp(1.2rem,4.5vw,1.6rem);
   letter-spacing:.08em; color:#FFC93C; text-shadow:0 0 8px rgba(255,201,60,.6)}
 .mcp.mcp-live .mcp-btn{margin-top:.8rem; border-color:#FFC93C; box-shadow:0 0 14px rgba(255,201,60,.35)}
+/* Mint ECHO Botz button (Mint is LIVE card): a calm breathe plus a gold light that travels around the outline */
+@property --mcpA{syntax:'<angle>'; initial-value:0deg; inherits:false}
+.mcp.mcp-live .mcp-btn{position:relative; animation:mcpBreathe 3s ease-in-out infinite; will-change:transform}
+@keyframes mcpBreathe{
+  0%,100%{transform:scale(1); box-shadow:0 0 14px rgba(255,201,60,.35)}
+  50%{transform:scale(1.04); box-shadow:0 0 24px rgba(255,201,60,.6), 0 0 46px rgba(255,201,60,.25)}
+}
+@supports ((mask-composite:exclude) or (-webkit-mask-composite:xor)){
+  .mcp.mcp-live .mcp-btn{border-color:transparent}
+  .mcp.mcp-live .mcp-btn::before{
+    content:""; position:absolute; inset:-1.5px; padding:1.5px; border-radius:inherit; pointer-events:none;
+    background:conic-gradient(from var(--mcpA,0deg), #FFC93C 0deg, #FFC93C 150deg, #FF8A1E 220deg, #FFF4C8 270deg, #FF8A1E 310deg, #FFC93C 360deg);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor;
+    mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    animation:mcpSpin 6s linear infinite;
+  }
+}
+@keyframes mcpSpin{to{--mcpA:360deg}}
+@media (prefers-reduced-motion: reduce){.mcp.mcp-live .mcp-btn,.mcp.mcp-live .mcp-btn::before{animation:none}}
 /* LIVE card: 3 ECHO Botz on each side of the "Mint is LIVE" text. Before the mint they sit in a row under the title and under the button */
 .mcp-bots{display:flex; justify-content:center; gap:clamp(.4rem,1.2vw,.8rem); margin-top:.9rem}
 .mcp.mcp-live .mcp-bots{margin-top:0}

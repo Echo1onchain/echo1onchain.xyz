@@ -173,6 +173,11 @@ kbd{font:700 .92em var(--ff);color:var(--tx);background:rgba(255,255,255,.08);bo
 .gh-input:focus{outline:none;border-color:var(--cy);box-shadow:0 0 0 3px rgba(34,228,245,.2)}
 @media (max-height:640px) and (orientation:portrait){.gh-input{padding:.5rem .7rem}}
 .psnote{margin:.4em 0 0;color:var(--mu);font-size:clamp(11px,2vh,14px);line-height:1.4;max-width:520px;min-height:1.4em}
+.btn.gh-x{display:inline-flex;align-items:center;justify-content:center;gap:.55rem;color:#fff;background:#000;border:1px solid var(--tx);box-shadow:0 0 14px rgba(34,228,245,.25)}
+.btn.gh-x:hover{filter:none;border-color:var(--cy);box-shadow:0 0 20px rgba(34,228,245,.5)}
+.gh-x svg{width:16px;height:16px;flex:none}
+.gh-share-note{min-height:1.2rem;margin:.45rem 0 0;font-size:.8rem;color:var(--mu)}
+.gh-share-note.ok{color:var(--cy)}
 .btn .crown{width:1.2em;height:.9em;vertical-align:-.1em;margin-right:.5em;fill:#FFC93C;filter:drop-shadow(0 0 4px rgba(255,201,60,.8))}
 </style>
 </head>
@@ -236,7 +241,8 @@ kbd{font:700 .92em var(--ff);color:var(--tx);background:rgba(255,255,255,.08);bo
  </div>
  <p class="psnote" id="overNote" aria-live="polite"></p>
  <div class="medals" id="medals"></div>
- <div class="btns"><button class="btn" id="again">Play again</button><button class="btn alt" id="topBtn"><svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d="M2 15.5h20l1.2-11-5.7 4.6L12 1.5 6.5 9.1.8 4.5z"/></svg>Top 10</button><button class="btn alt" id="menu">Menu</button></div>
+ <div class="btns"><button class="btn gh-x" type="button" id="psShare"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.2 2.5h3.4l-7.4 8.5 8.7 11.5h-6.8l-5.3-7-6.1 7H1.3l7.9-9.1L.9 2.5h7l4.8 6.4 5.5-6.4zm-1.2 18h1.9L7.1 4.4H5.1L17 20.5z"/></svg>Share to X</button><button class="btn" id="again">Play again</button><button class="btn alt" id="topBtn"><svg class="crown" viewBox="0 0 24 18" aria-hidden="true"><path d="M2 15.5h20l1.2-11-5.7 4.6L12 1.5 6.5 9.1.8 4.5z"/></svg>Top 10</button><button class="btn alt" id="menu">Menu</button></div>
+ <p class="gh-share-note" id="psShareNote" aria-live="polite"></p>
 </div>
 
 <div id="topOv" class="ov hidden">
@@ -728,7 +734,8 @@ function endGame(){G.dead=true;state='over';Snd.stop();pageMusic(false);Snd.over
   $('sS').textContent=G.score.toLocaleString();$('sP').textContent=G.smashed;$('sC').textContent=G.bestCombo;$('sB').textContent=best.toLocaleString();$('nb').classList.toggle('hidden',!nb);$('overT').textContent=nb?'NEW HIGH SCORE!':'PATCH CLOSED';
   const owned=new Set(LS.get('medals',[]));const md=$('medals');md.innerHTML='';
   for(const m of MEDALS){const on=m.ok(G.st);const isNew=on&&!owned.has(m.id);if(on)owned.add(m.id);const d=document.createElement('div');d.className='medal'+(on?' on':'');d.dataset.id=m.id;d.innerHTML=(isNew?'<span class="new">NEW</span>':'')+'<div class="mi">'+m.i+'</div><div class="mn">'+m.n+'</div><div class="md">'+m.d+'</div>';md.appendChild(d)}
-  LS.set('medals',[...owned]);psGameOver();setTimeout(()=>{if(state==='over')show('over')},800)}
+  LS.set('medals',[...owned]);psGameOver();
+  try{psPrepareShare({score:G.score,level:G.level,smashed:G.smashed,bestCombo:G.bestCombo,perfects:G.st.perfects,handle:cleanHandle(),newBest:nb,medals:MEDALS.filter(m=>m.ok(G.st))})}catch(e){}setTimeout(()=>{if(state==='over')show('over')},800)}
 function pauseGame(){if(state!=='play')return;state='pause';Snd.stop();show('paused')}
 function resumeGame(){if(state!=='pause')return;state='play';show(null);Snd.resumeAt(G.time);last=performance.now()}
 function toTitle(){state='title';Snd.stop();pageMusic(false);newGame();layout();$('pause').classList.add('hidden');show('title');updBest()}
@@ -846,6 +853,174 @@ function psGameOver(){
   $('overNote').textContent=idx>=0?`That run is #${idx+1} on this device’s Top 10.`:'Run it back and push past your best.';
   psScoreEnd(s,lv);
 }
+/* ----- Pumpkin Smasher share card for X (same flow as Glitch Hunt) ----- */
+const PS_URL='https://echo1onchain.xyz/pumpkin_smasher/',PS_SITE='echo1onchain.xyz/pumpkin_smasher';
+function psShareText(r){
+  const s=r.score.toLocaleString(),lv=r.level;
+  const T=[
+    '🎃 I scored '+s+' on ECHO Botz Pumpkin Smasher and made it to level '+lv+'. Think you can smash harder? 👇 @EchoBotzSOL',
+    '🔨 Level '+lv+' in ECHO Botz Pumpkin Smasher with '+s+' points and a best combo of '+r.bestCombo+'. Beat it if you can 👇 @EchoBotzSOL',
+    '🤖 SMASH REPORT: '+s+' points, level '+lv+', '+r.smashed+' pumpkins smashed. The patch never stood a chance. Your move 👇 @EchoBotzSOL'
+  ];
+  return T[Math.floor(Math.random()*T.length)]+'\n'+PS_URL;
+}
+function psRect(x,X,Y,w,h,rad){x.beginPath();x.moveTo(X+rad,Y);x.arcTo(X+w,Y,X+w,Y+h,rad);x.arcTo(X+w,Y+h,X,Y+h,rad);x.arcTo(X,Y+h,X,Y,rad);x.arcTo(X,Y,X+w,Y,rad);x.closePath()}
+function psDrawCard(r,logo){
+  const c=document.createElement('canvas');c.width=1200;c.height=630;
+  const x=c.getContext('2d'),F=FF,M='"JetBrains Mono", ui-monospace, monospace';
+  const INK='#F2F6FF',MUTED='#B7A8D6',OR='#FF9A1F',GD='#FFC93C',PK='#FF2D9B',PU='#9B5CFF';
+  const spaced=(txt,X,Y,tr,align)=>{let w=0;for(const ch of txt)w+=x.measureText(ch).width+tr;w-=tr;
+    let tx=align==='center'?X-w/2:align==='right'?X-w:X;x.textAlign='left';for(const ch of txt){x.fillText(ch,tx,Y);tx+=x.measureText(ch).width+tr}return w};
+  const glowText=(fn,col,blur)=>{x.save();x.shadowColor=col;x.shadowBlur=blur;fn();x.restore()};
+  x.textBaseline='alphabetic';
+  // backdrop: dark night, orange grid, orange and purple bloom, like the share card
+  x.fillStyle='#06040E';x.fillRect(0,0,1200,630);
+  let gr=x.createRadialGradient(600,170,0,600,170,620);gr.addColorStop(0,'rgba(255,130,30,.16)');gr.addColorStop(1,'rgba(255,130,30,0)');x.fillStyle=gr;x.fillRect(0,0,1200,630);
+  gr=x.createRadialGradient(600,600,0,600,600,620);gr.addColorStop(0,'rgba(160,70,255,.13)');gr.addColorStop(1,'rgba(160,70,255,0)');x.fillStyle=gr;x.fillRect(0,0,1200,630);
+  x.strokeStyle='rgba(255,154,31,.05)';x.lineWidth=1;
+  for(let i=0;i<=1200;i+=40){x.beginPath();x.moveTo(i+.5,0);x.lineTo(i+.5,630);x.stroke()}
+  for(let j=0;j<=630;j+=40){x.beginPath();x.moveTo(0,j+.5);x.lineTo(1200,j+.5);x.stroke()}
+  const bar=x.createLinearGradient(0,0,1200,0);bar.addColorStop(0,OR);bar.addColorStop(.5,PK);bar.addColorStop(1,PU);x.fillStyle=bar;x.fillRect(0,0,1200,5);
+  // main panel, like the Glitch Hunt card: dark fill, orange to purple edge, soft glow
+  const PX=40,PY=26,PW=1120,PH=580;
+  x.save();psRect(x,PX,PY,PW,PH,26);x.fillStyle='#0C0A1C';x.shadowColor='rgba(255,154,31,.22)';x.shadowBlur=34;x.fill();x.restore();
+  x.save();psRect(x,PX,PY,PW,PH,26);x.clip();x.fillStyle='rgba(242,246,255,.018)';for(let j=PY;j<PY+PH;j+=4)x.fillRect(PX,j,PW,1);x.restore();
+  const edge=x.createLinearGradient(PX,PY,PX+PW,PY+PH);edge.addColorStop(0,'rgba(255,154,31,.9)');edge.addColorStop(.5,'rgba(255,45,155,.8)');edge.addColorStop(1,'rgba(155,92,255,.9)');
+  psRect(x,PX+1.5,PY+1.5,PW-3,PH-3,25);x.lineWidth=3;x.strokeStyle=edge;x.stroke();
+  // header: the game's ECHO Botz lockup, then the title with a pumpkin on each side
+  if(logo){const w=430,h=w*logo.naturalHeight/logo.naturalWidth;x.drawImage(logo,(1200-w)/2,50,w,h)}
+  else{x.font='600 22px '+M;x.fillStyle=PK;spaced('ECHO BOTZ',600,92,9,'center')}
+  x.font='900 66px '+F;const title='PUMPKIN SMASHER';
+  let ttw=0;for(const ch of title)ttw+=x.measureText(ch).width+2;ttw-=2;
+  const tg=x.createLinearGradient(0,128,0,186);tg.addColorStop(0,'#ffe07a');tg.addColorStop(.3,GD);tg.addColorStop(.7,'#ff7a1a');tg.addColorStop(1,'#e0452a');
+  x.fillStyle=tg;glowText(()=>spaced(title,600,184,2,'center'),'rgba(255,122,26,.55)',18);
+  const old=g;try{g=x;pumpkinShape(600-ttw/2-58,160,74,58,'norm',1,true,1);pumpkinShape(600+ttw/2+58,160,74,58,'norm',2,true,1)}catch(e){}g=old;
+  const dv=x.createLinearGradient(110,0,1090,0);dv.addColorStop(0,'rgba(255,154,31,0)');dv.addColorStop(.5,'rgba(255,154,31,.45)');dv.addColorStop(1,'rgba(255,154,31,0)');
+  x.fillStyle=dv;x.fillRect(110,216,980,1);
+  // score, with the player's handle and pills on the right
+  const CX=96,CW=1008;
+  x.font='600 14px '+M;x.fillStyle=MUTED;spaced('SCORE',CX,262,4);
+  x.font='900 84px '+F;x.textAlign='left';x.fillStyle=GD;glowText(()=>x.fillText(r.score.toLocaleString(),CX,342),'rgba(255,201,60,.55)',16);
+  const pill=(txt,right,y,fill,stroke,col)=>{x.font='600 15px '+M;let w=0;for(const ch of txt)w+=x.measureText(ch).width+2.5;w+=28-2.5;
+    const X=right-w;psRect(x,X,y,w,34,10);
+    if(fill){x.save();x.fillStyle=fill;x.shadowColor=fill;x.shadowBlur=12;x.fill();x.restore()}
+    else{x.fillStyle='rgba(2,4,12,.7)';x.fill();x.lineWidth=1.5;x.strokeStyle=stroke;x.stroke()}
+    x.fillStyle=col;spaced(txt,X+14,y+23,2.5);return X};
+  if(r.handle){x.font='600 14px '+M;x.fillStyle=MUTED;spaced('SMASHER',CX+CW,262,4,'right');
+    const who='@'+r.handle;let z=36;do{x.font='700 '+z+'px '+F}while(x.measureText(who).width>440&&--z>18);
+    x.fillStyle=INK;x.textAlign='right';x.fillText(who,CX+CW,302);x.textAlign='left'}
+  let pr=CX+CW;const py=r.handle?314:282;
+  if(r.newBest)pr=pill('NEW BEST',pr,py,GD,null,'#1a1200')-10;
+  pill('LEVEL '+r.level,pr,py,null,OR,OR);
+  // stat tiles
+  const tiles=[[String(r.level),'LEVEL'],[String(r.smashed),'SMASHED'],[String(r.bestCombo),'BEST COMBO'],[String(r.perfects),'PERFECT HITS']];
+  const TW=(CW-48)/4,TY=370,TH=104;
+  tiles.forEach((t,i)=>{const X=CX+i*(TW+16);
+    psRect(x,X,TY,TW,TH,12);x.fillStyle='rgba(2,4,12,.7)';x.fill();x.lineWidth=1;x.strokeStyle='rgba(255,154,31,.35)';x.stroke();
+    x.font='600 12px '+M;x.fillStyle=MUTED;spaced(t[1],X+20,TY+32,3);
+    let s=40;do{x.font='800 '+s+'px '+F}while(x.measureText(t[0]).width>TW-40&&--s>14);
+    x.fillStyle=INK;x.textAlign='left';glowText(()=>x.fillText(t[0],X+20,TY+82),'rgba(255,154,31,.5)',10)});
+  // medals earned this run, the same ones the game over screen lights up
+  const MY=496;x.font='600 12px '+M;x.fillStyle=MUTED;spaced('MEDALS',CX,MY+22,3);
+  let mx=CX+92;x.font='700 16px '+F;
+  if(!r.medals.length){x.fillStyle='rgba(183,168,214,.7)';x.textAlign='left';x.fillText('None this run. Run it back!',mx,MY+23)}
+  r.medals.forEach(m=>{x.font='700 16px '+F;const w=x.measureText(m.i+'  '+m.n).width+28;if(mx+w>CX+CW)return;
+    psRect(x,mx,MY,w,34,17);x.fillStyle='rgba(255,201,60,.08)';x.fill();x.lineWidth=1.5;x.strokeStyle='rgba(255,201,60,.6)';x.stroke();
+    x.fillStyle=GD;x.textAlign='left';x.fillText(m.i,mx+14,MY+23);x.fillStyle=INK;x.fillText(m.n,mx+14+x.measureText(m.i+'  ').width,MY+23);mx+=w+10});
+  // footer
+  x.fillStyle='rgba(255,154,31,.16)';x.fillRect(CX,550,CW,1);
+  x.font='600 21px '+F;const sw=x.measureText(PS_SITE).width;
+  x.fillStyle=OR;glowText(()=>{x.textAlign='right';x.fillText(PS_SITE,CX+CW,582)},'rgba(255,154,31,.6)',10);
+  x.font='400 21px '+F;x.fillStyle=MUTED;x.textAlign='right';x.fillText('Beat my score at ',CX+CW-sw,582);
+  x.font='600 12px '+M;x.fillStyle='rgba(183,168,214,.7)';spaced('ECHO BOTZ · SCORE CARD',CX,578,3);
+  x.textAlign='left';
+  return c;
+}
+/* score card header: a still frame of the game's own ECHO Botz lockup, with its fonts built in so it draws the same */
+var PS_CARD_PROPS=['display','visibility','opacity','transform','transform-origin','transform-box','rotate','scale','translate','fill','fill-opacity','stroke','stroke-opacity','stroke-dasharray','stroke-dashoffset'];
+var psCardFontCss=null;
+function psCardFonts(){
+  if(psCardFontCss)return psCardFontCss;
+  var link=document.querySelector('link[href*="fonts.googleapis.com/css"]');
+  if(!link||!window.fetch||!window.FileReader)return Promise.resolve('');
+  psCardFontCss=fetch(link.href).then(function(res){return res.text()}).then(function(css){
+    var blocks=css.split('/* ').filter(function(b){return /^latin \*\//.test(b)});
+    return Promise.all(blocks.map(function(b){
+      var m=b.match(/url\((https:[^)]+)\)/);if(!m)return '';
+      return fetch(m[1]).then(function(res){return res.blob()}).then(function(bl){return new Promise(function(done){
+        var fr=new FileReader();
+        fr.onload=function(){done(b.slice(b.indexOf('@font-face')).split(m[1]).join(fr.result))};
+        fr.onerror=function(){done('')};
+        fr.readAsDataURL(bl);
+      })}).catch(function(){return ''});
+    })).then(function(a){return a.join('\n')});
+  }).catch(function(){return ''});
+  psCardFontCss.then(function(css){if(!css)psCardFontCss=null});
+  return psCardFontCss;
+}
+function psCardHeader(){
+  var svg=document.querySelector('svg.eblogo');
+  if(!svg||!window.XMLSerializer)return Promise.resolve(null);
+  return psCardFonts().then(function(fonts){
+    var copy=svg.cloneNode(true),live=svg.querySelectorAll('*'),dup=copy.querySelectorAll('*'),i,NS='http://www.w3.org/2000/svg';
+    for(i=0;i<live.length;i++){
+      if(!live[i].getAttribute('class'))continue;
+      var cs=getComputedStyle(live[i]),st='';
+      PS_CARD_PROPS.forEach(function(p){var v=cs.getPropertyValue(p);if(!v||((p==='fill'||p==='stroke')&&/url\(/.test(v)))return;st+=p+':'+v+';'});
+      dup[i].setAttribute('style',(dup[i].getAttribute('style')||'')+';'+st);
+      dup[i].removeAttribute('class');
+    }
+    var vb=(svg.getAttribute('viewBox')||'290 14 700 100').split(/[\s,]+/).map(Number);
+    copy.removeAttribute('class');copy.removeAttribute('style');
+    copy.setAttribute('xmlns',NS);copy.setAttribute('width',vb[2]*2);copy.setAttribute('height',vb[3]*2);
+    if(fonts){var s=document.createElementNS(NS,'style');s.textContent=fonts;copy.insertBefore(s,copy.firstChild)}
+    var src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(new XMLSerializer().serializeToString(copy));
+    return new Promise(function(done){
+      var im=new Image();
+      im.onload=function(){(im.decode?im.decode().catch(function(){}):Promise.resolve()).then(function(){done(im)})};
+      im.onerror=function(){done(null)};
+      im.src=src;
+    });
+  }).catch(function(){return null});
+}
+const psBlob=c=>new Promise((res,rej)=>{try{c.toBlob(b=>b?res(b):rej(new Error('no image')),'image/png')}catch(e){rej(e)}});
+async function psMakeCard(r){
+  try{await document.fonts.ready}catch(e){}
+  const hdr=await psCardHeader();
+  try{return await psBlob(psDrawCard(r,hdr))}
+  catch(e){return await psBlob(psDrawCard(r,null))}
+}
+let psLast=null;
+const psUseShareSheet=()=>window.matchMedia('(pointer: coarse)').matches&&!!navigator.canShare;
+function psShareNote(msg){const n=$('psShareNote');n.textContent=msg;n.classList.add('ok')}
+function psPrepareShare(r){
+  psLast=r;
+  r.blobP=psMakeCard(r);
+  r.blobP.then(b=>{try{r.file=new File([b],'pumpkin-smasher-score.png',{type:'image/png'})}catch(e){}},()=>{});
+  const note=$('psShareNote');note.classList.remove('ok');
+  note.textContent=psUseShareSheet()?'Opens your share menu with your score card. Pick X.':'Copies your score card, then opens X. Paste it into your post.';
+}
+function psDownload(b){
+  const u=URL.createObjectURL(b),a=document.createElement('a');
+  a.href=u;a.download='pumpkin-smasher-score.png';document.body.append(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(u),4000);
+}
+$('psShare').addEventListener('click',()=>{
+  const r=psLast;if(!r)return;
+  const text=psShareText(r);
+  if(psUseShareSheet()&&r.file&&navigator.canShare({files:[r.file]})){
+    navigator.share({files:[r.file],text}).catch(()=>{});
+    return;
+  }
+  let copied;
+  try{copied=navigator.clipboard.write([new ClipboardItem({'image/png':r.blobP})])}
+  catch(e){copied=Promise.reject(e)}
+  window.open('https://x.com/intent/post?text='+encodeURIComponent(text),'_blank','noopener');
+  copied.then(
+    ()=>psShareNote('Card copied. In the X tab, click in the post and paste (Ctrl+V, or ⌘V on a Mac).'),
+    ()=>r.blobP.then(b=>{psDownload(b);psShareNote('Your card was saved as an image. Attach it to your post on X.')},()=>psShareNote('Couldn’t make the card image here, but X is open with your score.'))
+  );
+});
 $('topBtn').onclick=()=>{show('topOv');$('topClose').focus({preventScroll:true})};
 $('topClose').onclick=()=>{show('over');$('topBtn').focus({preventScroll:true})};
 window.addEventListener('message',e=>{if(e.source===parent&&e.origin===location.origin&&e.data&&e.data.type==='psReload'){if(e.data.hello)lbRender(psMe);else psLoadTop()}});
