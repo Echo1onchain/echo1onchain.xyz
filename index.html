@@ -214,14 +214,25 @@ footer{margin-top:2rem; padding:2.5rem 0 3rem; border-top:1px solid var(--line);
   color:var(--cyan); text-decoration:none; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.78rem; letter-spacing:.12em; text-transform:uppercase}
 .scroll-cue span{color:#BFD0EE; transition:color .2s}
 .scroll-cue:hover span{color:var(--ink)}
-.scroll-cue svg{width:34px; height:54px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; overflow:visible;
+.scroll-cue svg{width:34px; height:74px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; overflow:visible;
   filter:drop-shadow(0 0 6px rgba(34,228,245,.8)) drop-shadow(0 0 14px rgba(255,45,155,.45))}
-/* waterfall: three chevrons light up and fade one after another, top to bottom */
-.scroll-cue path{opacity:.15; animation:cueFall 2s ease-in-out infinite}
-.scroll-cue path:nth-child(1){animation-delay:-1.4s}
-.scroll-cue path:nth-child(2){animation-delay:-.9s}
-.scroll-cue path:nth-child(3){animation-delay:-.4s}
-@keyframes cueFall{0%,100%{opacity:.15; transform:translateY(-2px)}30%{opacity:1; transform:translateY(0)}65%{opacity:.15; transform:translateY(2px)}}
+/* waterfall: five chevrons light up and fade one after another, top to bottom, 0.4s apart */
+.scroll-cue path{opacity:.15; animation:cueFall 2.6s ease-in-out infinite}
+.scroll-cue path:nth-child(1){animation-delay:-2.6s}
+.scroll-cue path:nth-child(2){animation-delay:-2.2s}
+.scroll-cue path:nth-child(3){animation-delay:-1.8s}
+.scroll-cue path:nth-child(4){animation-delay:-1.4s}
+.scroll-cue path:nth-child(5){animation-delay:-1s}
+@keyframes cueFall{0%,100%{opacity:.15; transform:translateY(-2px)}20%{opacity:1; transform:translateY(0)}50%{opacity:.15; transform:translateY(2px)}}
+
+/* hero placement: full first screen, more room at the top, spacing that tightens on short screens so the arrow stays in view */
+.hero{min-height:100vh; min-height:100svh; align-content:center;
+  padding:calc(clamp(4.5rem, 13vh, 8rem) + env(safe-area-inset-top, 0px)) 0 clamp(1.25rem, 4vh, 3rem)}
+.hero h1{font-size:min(clamp(3rem,13vw,7rem), 14vh)}
+.visor{margin-bottom:clamp(1rem, 3.5vh, 2rem)}
+.mint-wrap{margin-top:clamp(1.25rem, 4vh, 2.25rem)}
+.scroll-cue{margin-top:clamp(.75rem, 3.5vh, 2.25rem)}
+@media (max-height:640px){.tagline{margin-top:.75rem} .mint-note{margin-top:.6rem} .scroll-cue{gap:.2rem} .scroll-cue svg{width:29px; height:63px} .hero{padding-bottom:.75rem}}
 
 /* gold outline on the title: the mint button gold, with a slow soft glare sweeping across it */
 .hero h1{position:relative; -webkit-text-stroke:3px #FFC93C; paint-order:stroke fill}
@@ -238,7 +249,7 @@ footer{margin-top:2rem; padding:2.5rem 0 3rem; border-top:1px solid var(--line);
   .hero .wrap::before, .hero h1, .scroll-cue svg, .scroll-cue path{animation:none}
   .scroll-cue svg{opacity:1}
   .scroll-cue path{transform:none}
-  .scroll-cue path:nth-child(1){opacity:1} .scroll-cue path:nth-child(2){opacity:.7} .scroll-cue path:nth-child(3){opacity:.4}
+  .scroll-cue path:nth-child(1){opacity:1} .scroll-cue path:nth-child(2){opacity:.8} .scroll-cue path:nth-child(3){opacity:.6} .scroll-cue path:nth-child(4){opacity:.42} .scroll-cue path:nth-child(5){opacity:.28}
   .hero h1::after{display:none}
 }
 </style>
@@ -312,7 +323,7 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
         <a class="mcp-btn" href="https://www.solonchain.io/mint/echo-botz" target="_blank" rel="noopener">Mint ECHO Botz</a>
       </div>
       <span class="mint-note">Minting opens in a new tab.</span>
-      <a class="scroll-cue" href="#featured"><span>Play the games</span><svg viewBox="0 0 24 38" aria-hidden="true"><path d="M6 4l6 6 6-6"/><path d="M6 15l6 6 6-6"/><path d="M6 26l6 6 6-6"/></svg></a>
+      <a class="scroll-cue" href="#featured"><span>Play the games</span><svg viewBox="0 0 24 52" aria-hidden="true"><path d="M6 4l6 6 6-6"/><path d="M6 13l6 6 6-6"/><path d="M6 22l6 6 6-6"/><path d="M6 31l6 6 6-6"/><path d="M6 40l6 6 6-6"/></svg></a>
     </div>
   </header>
 
