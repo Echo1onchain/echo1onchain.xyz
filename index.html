@@ -196,6 +196,32 @@ footer{margin-top:2rem; padding:2.5rem 0 3rem; border-top:1px solid var(--line);
   .card{transition:none}
   .card:hover, .card:focus-within{transform:none}
 }
+/* hero pop: calm glow using the game pages' breathe timing (6.2s, like the logo breathe) */
+.hero .wrap{position:relative; isolation:isolate}
+.hero .wrap::before{content:""; position:absolute; left:50%; top:46%; width:min(820px,120%); aspect-ratio:1.6; transform:translate(-50%,-50%); z-index:-1; pointer-events:none;
+  background:radial-gradient(ellipse at 38% 50%, rgba(255,45,155,.16), transparent 60%), radial-gradient(ellipse at 62% 50%, rgba(34,228,245,.13), transparent 62%);
+  filter:blur(24px); animation:heroGlow 6.2s cubic-bezier(.45,0,.55,1) infinite}
+@keyframes heroGlow{0%,100%{opacity:.75}50%{opacity:1}}
+.hero h1{animation:titleGlow 6.2s cubic-bezier(.45,0,.55,1) infinite}
+@keyframes titleGlow{
+  0%,100%{text-shadow:-2px 0 rgba(255,45,155,.85), 2px 0 rgba(34,228,245,.85), 0 0 18px rgba(255,45,155,.55), 0 0 40px rgba(34,228,245,.2)}
+  50%{text-shadow:-2px 0 rgba(255,45,155,.95), 2px 0 rgba(34,228,245,.95), 0 0 26px rgba(255,45,155,.75), 0 0 60px rgba(34,228,245,.38)}
+}
+.hero .mcp-btn{font-size:1.15rem; padding:.75rem 2rem}
+
+/* scroll cue: a slow bobbing chevron down to the games */
+.scroll-cue{display:inline-flex; flex-direction:column; align-items:center; gap:.35rem; margin-top:2.25rem; padding:.4rem .8rem; border-radius:12px;
+  color:var(--cyan); text-decoration:none; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.78rem; letter-spacing:.12em; text-transform:uppercase}
+.scroll-cue span{color:#BFD0EE; transition:color .2s}
+.scroll-cue:hover span{color:var(--ink)}
+.scroll-cue svg{width:42px; height:42px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round;
+  filter:drop-shadow(0 0 6px rgba(34,228,245,.8)) drop-shadow(0 0 14px rgba(255,45,155,.45)); animation:cueBob 2s ease-in-out infinite}
+@keyframes cueBob{0%,100%{transform:translateY(0); opacity:.6}50%{transform:translateY(8px); opacity:1}}
+
+@media (prefers-reduced-motion: reduce){
+  .hero .wrap::before, .hero h1, .scroll-cue svg{animation:none}
+  .scroll-cue svg{opacity:1}
+}
 </style>
 <style>
 /* ===== Halloween theme: only on while <html> has the "halloween" class (set by the date check below), so the normal look comes back by itself on Nov 1 ===== */
@@ -267,11 +293,12 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
         <a class="mcp-btn" href="https://www.solonchain.io/mint/echo-botz" target="_blank" rel="noopener">Mint ECHO Botz</a>
       </div>
       <span class="mint-note">Minting opens in a new tab.</span>
+      <a class="scroll-cue" href="#featured"><span>Play the games</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg></a>
     </div>
   </header>
 
   <!-- 2. Featured seasonal game -->
-  <section aria-labelledby="featured-title">
+  <section id="featured" aria-labelledby="featured-title">
     <div class="wrap">
       <article class="console featured">
         <div class="featured-media">
@@ -321,6 +348,7 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
     <ul class="socials">
       <li><a class="tl" href="https://x.com/Echo1OnChain" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.2 2.5h3.4l-7.4 8.5 8.7 11.5h-6.8l-5.3-7-6.1 7H1.3l7.9-9.1L.9 2.5h7l4.8 6.4 5.5-6.4zm-1.2 18h1.9L7.1 4.4H5.1L17 20.5z"/></svg><span>@Echo1OnChain</span></a></li>
       <li><a class="tl" href="https://x.com/EchoBotzSOL" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.2 2.5h3.4l-7.4 8.5 8.7 11.5h-6.8l-5.3-7-6.1 7H1.3l7.9-9.1L.9 2.5h7l4.8 6.4 5.5-6.4zm-1.2 18h1.9L7.1 4.4H5.1L17 20.5z"/></svg><span>@EchoBotzSOL</span></a></li>
+      <li><a class="tl" href="https://open.spotify.com/artist/63XWxjfJb7v7pSwdn9F8u6?si=_q8RapZsSOGyA2FKauzSTQ" target="_blank" rel="noopener" aria-label="Listen to ECHO1 on Spotify"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#1ED760"/><path d="M6.5 9.3c3.6-1.1 8-.8 11 1M7 12.4c3-.9 6.6-.6 9.2.9M7.6 15.3c2.4-.6 5-.4 7.1.8" stroke="#04060E" stroke-width="1.7" stroke-linecap="round" fill="none"/></svg><span>Listen on Spotify</span></a></li>
     </ul>
     <p class="copy">© <span id="year">2026</span> ECHO Botz. Built on Solana.</p>
   </div>
