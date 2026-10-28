@@ -145,6 +145,18 @@ a.gh-btn{display:inline-flex; align-items:center; justify-content:center; gap:.5
 .featured h2{margin:.9rem 0 .6rem; font-size:clamp(2rem,8vw,3.2rem); line-height:1.05; letter-spacing:.02em; text-shadow:-2px 0 rgba(255,45,155,.75),2px 0 rgba(34,228,245,.75)}
 .featured p{margin:0 0 1.6rem; color:var(--muted); max-width:42ch}
 .featured .gh-btn{width:auto; padding:.75rem 2rem; font-size:1.1rem}
+/* Play buttons: the same gold light that travels around the Mint ECHO Botz outline */
+#game-grid .gh-btn, #featured .gh-btn{position:relative}
+@supports ((mask-composite:exclude) or (-webkit-mask-composite:xor)){
+  #game-grid .gh-btn::before, #featured .gh-btn::before{
+    content:""; position:absolute; inset:-1.5px; padding:1.5px; border-radius:inherit; pointer-events:none;
+    background:conic-gradient(from var(--mcpA,0deg), #FFC93C 0deg, #FFC93C 150deg, #FF8A1E 220deg, #FFF4C8 270deg, #FF8A1E 310deg, #FFC93C 360deg);
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor;
+    mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+    animation:mcpSpin 6s linear infinite;
+  }
+}
+@media (prefers-reduced-motion: reduce){#game-grid .gh-btn::before, #featured .gh-btn::before{animation:none}}
 
 /* games grid */
 .games-grid{list-style:none; margin:0; padding:0; display:grid; gap:1.25rem; grid-template-columns:repeat(auto-fill, minmax(min(100%, 280px), 1fr))}
@@ -393,8 +405,8 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
     { name: "Glitch Hunt",      folder: "glitch_hunt", img: "/glitch_hunt/card-header.png?v=1",                line: "Two scans. Something glitched. Find every difference." },
     { name: "Memory Protocol",  folder: "echo_botz_memory_protocol", img: "/echo_botz_memory_protocol/card-header.png?v=1",  line: "Watch the lights, then tap them back in the same order." },
     { name: "Binary Lab",       folder: "echo_botz_binary_lab", img: "/echo_botz_binary_lab/card-header.png?v=1",       line: "Read ECHO Botz messages in ones and zeros, or write your own." },
-    { name: "Signal Jammer",    folder: "signal_jammer",              line: "Blast the creaturez with rainbow soundwaves and clear the signal." },
-    { name: "Pumpkin Smasher",  folder: "pumpkin_smasher",            line: "Smash pumpkins all through spooky season." }
+    { name: "Signal Jammer",    folder: "signal_jammer", img: "/signal_jammer/card-header.png?v=1",              line: "Blast the creaturez with rainbow soundwaves and clear the signal." },
+    { name: "Pumpkin Smasher",  folder: "pumpkin_smasher", img: "/pumpkin_smasher/card-header.png?v=1",            line: "Smash pumpkins all through spooky season." }
   ];
 
   const grid = document.getElementById("game-grid");
