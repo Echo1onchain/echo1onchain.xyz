@@ -497,6 +497,7 @@ footer{margin-top:2rem; padding:2.5rem 0 3rem; border-top:1px solid var(--line);
 .hero .wrap.watching{--idle:0}
 .hero .wrap{transition:--idle .42s ease}
 .hero .wrap.watching .visor, .hero .wrap.watching .visor span, .hero .wrap.watching .bot-neck{transition-duration:.34s}
+.hero .wrap.following, .hero .wrap.following .visor, .hero .wrap.following .visor span, .hero .wrap.following .bot-neck{transition:none}
 @media (prefers-reduced-motion: reduce){.visor span{animation:none; opacity:1; translate:none; scale:none}}
 
 @media (prefers-reduced-motion: reduce){
@@ -826,21 +827,27 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
   if (reduce) draw(); else loop();
 })();
 </script>
-<script>/* Hero bot watches presses: on pointerdown the head turns a little toward the press point, holds, then eases back. Passive, never blocks anything. Reduced motion: eyes only. */
+<script>/* Hero bot watches: on touch, a tap turns the head toward the tap point, holds, then eases back (CSS transitions). With a hovering mouse, the head and eyes follow the cursor (eased in rAF, only while moving or settling); a click gives a quick stronger look. Still for 3 s or pointer leaves: ease back to the idle look around. Off screen: nothing runs. Passive listeners only. Reduced motion: eyes only. */
 (function(){
   var wrap=document.querySelector('.hero .wrap'), visor=wrap&&wrap.querySelector('.visor');
   if(!visor) return;
   var mq=window.matchMedia('(prefers-reduced-motion: reduce)'), timer=0;
+  var hov=window.matchMedia('(hover: hover) and (pointer: fine)');
+  var VARS=['--htx','--hry','--hrx','--hrz','--hex','--hey'];
   function cl(v,a,b){return v<a?a:v>b?b:v}
   function set(k,v){wrap.style.setProperty(k,v)}
-  function rest(){wrap.classList.remove('watching');['--htx','--hry','--hrx','--hrz','--hex','--hey'].forEach(function(k){wrap.style.removeProperty(k)})}
-  document.addEventListener('pointerdown',function(e){
+  function aim(x,y,cx,cy){
+    var nx=cl((x-cx)/Math.max(innerWidth*.42,160),-1,1);
+    var ny=cl((y-cy)/Math.max(innerHeight*.3,160),-1,1);
+    if(ny>0) ny=Math.min(ny,.6);
+    return [nx,ny];
+  }
+  /* touch / pen taps: unchanged behaviour */
+  function rest(){wrap.classList.remove('watching');VARS.forEach(function(k){wrap.style.removeProperty(k)})}
+  function tap(e){
     var r=visor.getBoundingClientRect();
     if(r.bottom<0||r.top>innerHeight) return;
-    var cx=r.left+r.width/2, cy=r.top+r.height/2;
-    var nx=cl((e.clientX-cx)/Math.max(innerWidth*.42,160),-1,1);
-    var dy=e.clientY-cy, ny=cl(dy/Math.max(innerHeight*.3,160),-1,1);
-    if(ny>0) ny=Math.min(ny,.6);
+    var n=aim(e.clientX,e.clientY,r.left+r.width/2,r.top+r.height/2), nx=n[0], ny=n[1];
     wrap.classList.add('watching');
     set('--hex',(nx*12).toFixed(2)+'px'); set('--hey',(ny*(ny>0?13:8)).toFixed(2)+'px');
     if(!mq.matches){
@@ -848,7 +855,57 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
       set('--hrz',(nx*1.2).toFixed(2)+'deg'); set('--htx',(nx*4).toFixed(2)+'px');
     }
     clearTimeout(timer); timer=setTimeout(rest,2100);
+  }
+  /* mouse follow */
+  var cur={tx:0,ry:0,rx:0,rz:0,ex:0,ey:0,idle:1}, tgt={tx:0,ry:0,rx:0,rz:0,ex:0,ey:0,idle:1};
+  var vis=true, raf=0, last=0, following=false, still=0, kick=0, mx=0, my=0, home=null;
+  function measure(){ if(following) return; var r=visor.getBoundingClientRect(); home={x:r.left+r.width/2+scrollX, y:r.top+r.height/2+scrollY} }
+  function target(){
+    if(!home) measure();
+    var n=aim(mx,my,home.x-scrollX,home.y-scrollY), nx=n[0], ny=n[1], k=1+.3*kick, m=mq.matches?0:1;
+    tgt.ex=cl(nx*12*k,-13,13); tgt.ey=cl(ny*(ny>0?13:8)*k,-9,13);
+    tgt.ry=m*nx*15*k; tgt.rx=m*(-ny*12*k-2.5*kick); tgt.rz=m*nx*1.2*k; tgt.tx=m*nx*4; tgt.idle=0;
+  }
+  function home0(){ for(var k in tgt) tgt[k]=0; tgt.idle=1 }
+  function write(){
+    set('--htx',cur.tx.toFixed(2)+'px'); set('--hry',cur.ry.toFixed(2)+'deg'); set('--hrx',cur.rx.toFixed(2)+'deg');
+    set('--hrz',cur.rz.toFixed(2)+'deg'); set('--hex',cur.ex.toFixed(2)+'px'); set('--hey',cur.ey.toFixed(2)+'px'); set('--idle',cur.idle.toFixed(3));
+  }
+  function clear(){ wrap.classList.remove('following'); VARS.concat('--idle').forEach(function(k){wrap.style.removeProperty(k)}); for(var k in cur) cur[k]=tgt[k]=(k==='idle'?1:0) }
+  function frame(t){
+    raf=0; var dt=last?Math.min(t-last,64):16; last=t;
+    if(kick>0){ kick=Math.max(0,kick-dt/450); if(following) target() }
+    var a=1-Math.exp(-dt/(kick>0?70:following?140:200)), done=true;
+    for(var k in cur){ var d=tgt[k]-cur[k]; cur[k]+=d*(k==='idle'?1-Math.exp(-dt/260):a); if(Math.abs(d)>(k==='idle'?.002:.02)) done=false; else if(Math.abs(d)<1e-3) cur[k]=tgt[k] }
+    if(done && !following){ clear(); last=0; return }
+    write();
+    if(done && kick===0){ last=0; return }
+    raf=requestAnimationFrame(frame);
+  }
+  function go(){ if(!raf){ last=0; raf=requestAnimationFrame(frame) } }
+  function stopFollow(){ following=false; clearTimeout(still); home0(); go() }
+  function move(e){
+    if(e.pointerType!=='mouse'||!hov.matches||!vis) return;
+    mx=e.clientX; my=e.clientY;
+    if(!following){ clearTimeout(timer); rest(); measure(); following=true; wrap.classList.add('following') }
+    target(); go();
+    clearTimeout(still); still=setTimeout(stopFollow,3000);
+  }
+  document.addEventListener('pointermove',move,{passive:true});
+  document.addEventListener('pointerdown',function(e){
+    if(e.pointerType==='mouse'&&hov.matches){ if(!vis) return; move(e); kick=1; target(); go(); return }
+    if(following){ clearTimeout(still); following=false; if(raf) cancelAnimationFrame(raf); raf=0; clear() }
+    tap(e);
   },{passive:true});
+  document.documentElement.addEventListener('mouseleave',function(){ if(following) stopFollow() },{passive:true});
+  window.addEventListener('blur',function(){ if(following) stopFollow() });
+  window.addEventListener('resize',function(){ home=null },{passive:true});
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(function(es){
+      vis=es[es.length-1].isIntersecting;
+      if(!vis){ clearTimeout(still); following=false; kick=0; if(raf) cancelAnimationFrame(raf); raf=0; clear() }
+    }).observe(visor);
+  }
 })();
 </script>
 </body>
