@@ -214,13 +214,32 @@ footer{margin-top:2rem; padding:2.5rem 0 3rem; border-top:1px solid var(--line);
   color:var(--cyan); text-decoration:none; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.78rem; letter-spacing:.12em; text-transform:uppercase}
 .scroll-cue span{color:#BFD0EE; transition:color .2s}
 .scroll-cue:hover span{color:var(--ink)}
-.scroll-cue svg{width:42px; height:42px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round;
-  filter:drop-shadow(0 0 6px rgba(34,228,245,.8)) drop-shadow(0 0 14px rgba(255,45,155,.45)); animation:cueBob 2s ease-in-out infinite}
-@keyframes cueBob{0%,100%{transform:translateY(0); opacity:.6}50%{transform:translateY(8px); opacity:1}}
+.scroll-cue svg{width:34px; height:54px; fill:none; stroke:currentColor; stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round; overflow:visible;
+  filter:drop-shadow(0 0 6px rgba(34,228,245,.8)) drop-shadow(0 0 14px rgba(255,45,155,.45))}
+/* waterfall: three chevrons light up and fade one after another, top to bottom */
+.scroll-cue path{opacity:.15; animation:cueFall 2s ease-in-out infinite}
+.scroll-cue path:nth-child(1){animation-delay:-1.4s}
+.scroll-cue path:nth-child(2){animation-delay:-.9s}
+.scroll-cue path:nth-child(3){animation-delay:-.4s}
+@keyframes cueFall{0%,100%{opacity:.15; transform:translateY(-2px)}30%{opacity:1; transform:translateY(0)}65%{opacity:.15; transform:translateY(2px)}}
+
+/* gold outline on the title: the mint button gold, with a slow soft glare sweeping across it */
+.hero h1{position:relative; -webkit-text-stroke:3px #FFC93C; paint-order:stroke fill}
+.hero h1::after{content:attr(data-text); content:attr(data-text) / ""; position:absolute; inset:0; pointer-events:none; text-shadow:none;
+  color:transparent; -webkit-text-stroke:3px #FFF1BF; paint-order:stroke fill; filter:drop-shadow(0 0 2px rgba(255,214,110,.6));
+  -webkit-mask-image:linear-gradient(105deg, transparent 42%, #000 50%, transparent 58%); mask-image:linear-gradient(105deg, transparent 42%, #000 50%, transparent 58%);
+  -webkit-mask-size:300% 100%; mask-size:300% 100%; -webkit-mask-repeat:no-repeat; mask-repeat:no-repeat;
+  -webkit-mask-position:100% 0; mask-position:100% 0; animation:titleGlare 6.5s cubic-bezier(.45,0,.55,1) infinite}
+@keyframes titleGlare{0%{-webkit-mask-position:100% 0; mask-position:100% 0}62%,100%{-webkit-mask-position:0 0; mask-position:0 0}}
+@supports not ((-webkit-mask-image:linear-gradient(#000,#000)) or (mask-image:linear-gradient(#000,#000))){.hero h1::after{display:none}}
+@supports not (-webkit-text-stroke:1px #000){.hero h1::after{display:none}}
 
 @media (prefers-reduced-motion: reduce){
-  .hero .wrap::before, .hero h1, .scroll-cue svg{animation:none}
+  .hero .wrap::before, .hero h1, .scroll-cue svg, .scroll-cue path{animation:none}
   .scroll-cue svg{opacity:1}
+  .scroll-cue path{transform:none}
+  .scroll-cue path:nth-child(1){opacity:1} .scroll-cue path:nth-child(2){opacity:.7} .scroll-cue path:nth-child(3){opacity:.4}
+  .hero h1::after{display:none}
 }
 </style>
 <style>
@@ -287,13 +306,13 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
   <header class="hero">
     <div class="wrap">
       <div class="visor" aria-hidden="true"><span></span><span></span></div>
-      <h1>ECHO Botz</h1>
+      <h1 data-text="ECHO Botz">ECHO Botz</h1>
       <p class="tagline">Neon robots on Solana. Collect a bot, then play its games right in your browser.</p>
       <div class="mint-wrap mcp mcp-live">
         <a class="mcp-btn" href="https://www.solonchain.io/mint/echo-botz" target="_blank" rel="noopener">Mint ECHO Botz</a>
       </div>
       <span class="mint-note">Minting opens in a new tab.</span>
-      <a class="scroll-cue" href="#featured"><span>Play the games</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg></a>
+      <a class="scroll-cue" href="#featured"><span>Play the games</span><svg viewBox="0 0 24 38" aria-hidden="true"><path d="M6 4l6 6 6-6"/><path d="M6 15l6 6 6-6"/><path d="M6 26l6 6 6-6"/></svg></a>
     </div>
   </header>
 
