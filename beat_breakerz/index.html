@@ -1192,10 +1192,12 @@ a.gh-btn.bot-mint{display:block; text-align:center; text-decoration:none}
 @keyframes bbEq{from{transform:scaleY(.45)}to{transform:scaleY(1)}}
 .bb-note{transform-box:fill-box; transform-origin:center; animation:bbBob 3.1s ease-in-out infinite}
 @keyframes bbBob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-8px) rotate(4deg)}}
-.bb-n{opacity:0; animation:bbSlide 6.2s linear infinite; animation-delay:var(--d)}
-@keyframes bbSlide{0%{transform:translateX(0); opacity:0}8%{opacity:1}92%{opacity:1}100%{transform:translateX(420px); opacity:0}}
-.bb-hit{transform-box:fill-box; transform-origin:center; animation:bbHit 1.55s ease-out infinite}
-@keyframes bbHit{0%,100%{transform:scale(1); stroke-opacity:.5}12%{transform:scale(1.35); stroke-opacity:1}}
+.bb-n{transform-box:fill-box; transform-origin:center; opacity:0; animation:bbSlide 6.2s linear infinite; animation-delay:var(--d)}
+/* each dot slides to the ring and lands dead center on the beat (75% = 4.65s = 3 beats), then pops softly with the ring */
+@keyframes bbSlide{0%{transform:translateX(0) scale(1); opacity:0; animation-timing-function:linear}6%{opacity:1}75%{transform:translateX(420px) scale(1); opacity:1; animation-timing-function:cubic-bezier(.2,.6,.35,1)}87%,100%{transform:translateX(420px) scale(1.55); opacity:0}}
+.bb-hit{transform-box:fill-box; transform-origin:center; animation:bbHit 1.55s linear infinite}
+/* ring peaks exactly when a dot lands (start of every 1.55s beat) */
+@keyframes bbHit{0%{transform:scale(1.3); stroke-opacity:1; animation-timing-function:cubic-bezier(.2,.6,.35,1)}40%{transform:scale(1); stroke-opacity:.5}88%{transform:scale(1); stroke-opacity:.5; animation-timing-function:cubic-bezier(.55,0,.8,.4)}100%{transform:scale(1.3); stroke-opacity:1}}
 /* solid letters striped in the 4 lane colors, with a light sweep across them once per breath */
 .bb-shine{animation:bbShine 6.2s ease-in-out infinite}
 @keyframes bbShine{0%,55%{transform:translateX(0)}85%,100%{transform:translateX(1240px)}}
@@ -1412,7 +1414,7 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
     <g>
       <path d="M430 320 H850" stroke="#F2F6FF" stroke-opacity=".18" stroke-width="3" stroke-linecap="round"/>
       <circle class="bb-hit" cx="850" cy="320" r="13" fill="none" stroke="#F2F6FF" stroke-width="3"/>
-      <circle class="bb-n" style="--d:0.00s" cx="430" cy="320" r="8" fill="#FF2D9B"/><circle class="bb-n" style="--d:1.55s" cx="430" cy="320" r="8" fill="#FFC93C"/><circle class="bb-n" style="--d:3.10s" cx="430" cy="320" r="8" fill="#4DFF6A"/><circle class="bb-n" style="--d:4.65s" cx="430" cy="320" r="8" fill="#22E4F5"/>
+      <circle class="bb-n" style="--d:-6.20s" cx="430" cy="320" r="8" fill="#FF2D9B"/><circle class="bb-n" style="--d:-4.65s" cx="430" cy="320" r="8" fill="#FFC93C"/><circle class="bb-n" style="--d:-3.10s" cx="430" cy="320" r="8" fill="#4DFF6A"/><circle class="bb-n" style="--d:-1.55s" cx="430" cy="320" r="8" fill="#22E4F5"/>
     </g>
   </svg>
   <!-- ===== MINT COUNTDOWN panel: counts to Mon Oct 26, 2026 4:44 PM New York time, then turns into a small "Mint is LIVE" card ===== -->
