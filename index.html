@@ -389,10 +389,10 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
 <script>
   // Edit this list to add, remove or reorder games.
   const games = [
-    { name: "Beat Breakerz",    folder: "beat_breakerz",              line: "Notes fall to the beat of ECHO1's tracks. Hit them in time." },
-    { name: "Glitch Hunt",      folder: "glitch_hunt",                line: "Two scans. Something glitched. Find every difference." },
-    { name: "Memory Protocol",  folder: "echo_botz_memory_protocol",  line: "Watch the lights, then tap them back in the same order." },
-    { name: "Binary Lab",       folder: "echo_botz_binary_lab",       line: "Read ECHO Botz messages in ones and zeros, or write your own." },
+    { name: "Beat Breakerz",    folder: "beat_breakerz", img: "/beat_breakerz/card-header.png?v=1",              line: "Notes fall to the beat of ECHO1's tracks. Hit them in time." },
+    { name: "Glitch Hunt",      folder: "glitch_hunt", img: "/glitch_hunt/card-header.png?v=1",                line: "Two scans. Something glitched. Find every difference." },
+    { name: "Memory Protocol",  folder: "echo_botz_memory_protocol", img: "/echo_botz_memory_protocol/card-header.png?v=1",  line: "Watch the lights, then tap them back in the same order." },
+    { name: "Binary Lab",       folder: "echo_botz_binary_lab", img: "/echo_botz_binary_lab/card-header.png?v=1",       line: "Read ECHO Botz messages in ones and zeros, or write your own." },
     { name: "Signal Jammer",    folder: "signal_jammer",              line: "Blast the creaturez with rainbow soundwaves and clear the signal." },
     { name: "Pumpkin Smasher",  folder: "pumpkin_smasher",            line: "Smash pumpkins all through spooky season." }
   ];
@@ -405,7 +405,7 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
     li.innerHTML =
       '<article class="console card">' +
         '<div class="thumb">' +
-          '<img src="/' + g.folder + '/og.png" alt="' + g.name + ' game preview" width="1200" height="630" loading="lazy" decoding="async">' +
+          '<img src="' + (g.img || '/' + g.folder + '/og.png') + '" alt="' + g.name + ' game preview" width="1200" height="630" loading="lazy" decoding="async">' +
           '<div class="placeholder" aria-hidden="true">' + g.name + '</div>' +
         '</div>' +
         '<div class="card-body">' +
