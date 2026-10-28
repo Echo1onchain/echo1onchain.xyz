@@ -157,6 +157,25 @@ a.gh-btn{display:inline-flex; align-items:center; justify-content:center; gap:.5
   }
 }
 @media (prefers-reduced-motion: reduce){#game-grid .gh-btn::before, #featured .gh-btn::before{animation:none}}
+/* card animations: a small calm loop in the empty space under each card logo */
+.card-fx{position:absolute; left:50%; bottom:7.5%; width:30%; height:14%; transform:translateX(-50%); pointer-events:none}
+.fx-bb{display:flex; align-items:flex-end; justify-content:space-between; filter:drop-shadow(0 0 3px rgba(182,124,255,.35))}
+.fx-bb::after{content:""; position:absolute; left:-4%; right:-4%; bottom:-7%; height:1px; border-radius:1px; opacity:.45;
+  background:linear-gradient(90deg, transparent, #FF2D9B 12%, #FF8A2B, #FFC93C, #4DFF6A, #22E4F5, #7FA8FF, #B67CFF 88%, transparent)}
+.fx-bb i{display:block; width:3.4%; height:100%; border-radius:2px; transform-origin:50% 100%; transform:scaleY(var(--lo));
+  background:linear-gradient(90deg, #FF2D9B, #FF8A2B, #FFC93C, #4DFF6A, #22E4F5, #7FA8FF, #B67CFF); background-size:2940% 100%; background-position:var(--x) 0;
+  animation:bbEq var(--d) cubic-bezier(.45,0,.55,1) var(--dl) infinite alternate; will-change:transform}
+@keyframes bbEq{0%{transform:scaleY(var(--lo))} 100%{transform:scaleY(var(--hi))}}
+.fx-off *{animation-play-state:paused}
+/* Beat Breakerz: the live slider from its page logo, drawn in the logo's own units over the card image.
+   Each dot slides to the ring and lands dead center on the beat (every 1.55s), the ring and the dot pulse together. */
+.card-slider{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible}
+.cbb-n{transform-box:fill-box; transform-origin:center; opacity:0; animation:cbbSlide 6.2s linear infinite; animation-delay:var(--d)}
+@keyframes cbbSlide{0%{transform:translateX(0) scale(1); opacity:0; animation-timing-function:linear}6%{opacity:1}75%{transform:translateX(420px) scale(1); opacity:1; animation-timing-function:cubic-bezier(.2,.6,.35,1)}87%,100%{transform:translateX(420px) scale(1.55); opacity:0}}
+.cbb-hit{transform-box:fill-box; transform-origin:center; animation:cbbHit 1.55s linear infinite}
+@keyframes cbbHit{0%{transform:scale(1.3); stroke-opacity:1; animation-timing-function:cubic-bezier(.2,.6,.35,1)}40%{transform:scale(1); stroke-opacity:.5}88%{transform:scale(1); stroke-opacity:.5; animation-timing-function:cubic-bezier(.55,0,.8,.4)}100%{transform:scale(1.3); stroke-opacity:1}}
+@media (prefers-reduced-motion: reduce){.cbb-n,.cbb-hit{animation:none}.cbb-n{opacity:1; transform:translateX(var(--st))}}
+@media (prefers-reduced-motion: reduce){.fx-bb i{animation:none; transform:scaleY(var(--st))}}
 
 /* games grid */
 .games-grid{list-style:none; margin:0; padding:0; display:grid; gap:1.25rem; grid-template-columns:repeat(auto-fill, minmax(min(100%, 280px), 1fr))}
@@ -401,7 +420,7 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
 <script>
   // Edit this list to add, remove or reorder games.
   const games = [
-    { name: "Beat Breakerz",    folder: "beat_breakerz", img: "/beat_breakerz/card-header.png?v=1",              line: "Notes fall to the beat of ECHO1's tracks. Hit them in time." },
+    { name: "Beat Breakerz",    folder: "beat_breakerz", fx: "bb", img: "/beat_breakerz/card-header.png?v=2",              line: "Notes fall to the beat of ECHO1's tracks. Hit them in time." },
     { name: "Glitch Hunt",      folder: "glitch_hunt", img: "/glitch_hunt/card-header.png?v=1",                line: "Two scans. Something glitched. Find every difference." },
     { name: "Memory Protocol",  folder: "echo_botz_memory_protocol", img: "/echo_botz_memory_protocol/card-header.png?v=1",  line: "Watch the lights, then tap them back in the same order." },
     { name: "Binary Lab",       folder: "echo_botz_binary_lab", img: "/echo_botz_binary_lab/card-header.png?v=1",       line: "Read ECHO Botz messages in ones and zeros, or write your own." },
@@ -412,6 +431,29 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
   const grid = document.getElementById("game-grid");
   const playIcon = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1.5v13l11.5-6.5z"/></svg>';
 
+  // Card animations (decorative). Beat Breakerz: a soft rainbow equalizer like the one in its page logo.
+  const FX = {
+    bb: function () {
+      const n = 14, env = [.45,.6,.72,.82,.9,.96,1,1,.96,.9,.82,.72,.6,.45], dur = [2.6,3.4,2.9,3.8,3.1,2.7,3.6,3.3,2.8,3.7,3.0,3.5,2.7,3.2];
+      let h = '';
+      for (let i = 0; i < n; i++) {
+        const lo = (.16 + .1 * ((i * 7) % 5) / 4).toFixed(2), hi = (env[i] * (.78 + .22 * ((i * 3) % 4) / 3)).toFixed(2);
+        const st = (env[i] * (.5 + .4 * ((i * 5) % 3) / 2)).toFixed(2);
+        h += '<i style="--lo:' + lo + ';--hi:' + hi + ';--st:' + st + ';--d:' + (dur[i] / 2).toFixed(2) + 's;--dl:-' + ((i * 0.37) % 1.9).toFixed(2) + 's;--x:' + (i / (n - 1) * 100).toFixed(2) + '%"></i>';
+      }
+      // Slider: same geometry as the page logo (track 430 to 850 at y 320), mapped onto the 1200x630 card image.
+      const cols = ['#FF2D9B', '#FFC93C', '#4DFF6A', '#22E4F5'];
+      let dots = '';
+      for (let k = 0; k < 4; k++) dots += '<circle class="cbb-n" style="--d:' + (k * 1.55 - 6.2).toFixed(2) + 's;--st:' + (420 - k * 105) + 'px" cx="430" cy="320" r="8" fill="' + cols[k] + '"/>';
+      return '<div class="card-fx fx-bb" aria-hidden="true">' + h + '</div>' +
+        '<svg class="card-slider" viewBox="0 0 1200 630" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">' +
+          '<g transform="translate(46.15 154.06) scale(.8833)">' +
+            '<path d="M430 320 H850" stroke="#F2F6FF" stroke-opacity=".18" stroke-width="3" stroke-linecap="round"/>' +
+            '<circle class="cbb-hit" cx="850" cy="320" r="13" fill="none" stroke="#F2F6FF" stroke-width="3"/>' + dots +
+          '</g></svg>';
+    }
+  };
+
   games.forEach(function (g) {
     const li = document.createElement("li");
     li.innerHTML =
@@ -419,6 +461,7 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
         '<div class="thumb">' +
           '<img src="' + (g.img || '/' + g.folder + '/og.png') + '" alt="' + g.name + ' game preview" width="1200" height="630" loading="lazy" decoding="async">' +
           '<div class="placeholder" aria-hidden="true">' + g.name + '</div>' +
+          (FX[g.fx] ? FX[g.fx]() : '') +
         '</div>' +
         '<div class="card-body">' +
           '<h3>' + g.name + '</h3>' +
@@ -433,6 +476,14 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
 
     grid.appendChild(li);
   });
+
+  // Pause card animations while they are off screen.
+  if ("IntersectionObserver" in window) {
+    const fxObs = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { e.target.classList.toggle("fx-off", !e.isIntersecting); });
+    });
+    document.querySelectorAll(".card-fx, .card-slider").forEach(function (el) { fxObs.observe(el); });
+  }
 
   // Catch any image that already failed before listeners were attached.
   document.querySelectorAll(".thumb img, .featured-media img").forEach(function (img) {
