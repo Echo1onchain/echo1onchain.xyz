@@ -851,6 +851,11 @@ html.halloween .ebf-tl::before{background:linear-gradient(135deg, rgba(255,138,3
 body.watch .ebf{opacity:0; visibility:hidden; pointer-events:none}
 @media (prefers-reduced-motion: reduce){.ebf{transition:none}}
 </style>
+<style>/* Galactic Records credit: soft gradient text with a slow shimmer */
+.ebf-gal{font-weight:600; letter-spacing:.03em; background:linear-gradient(90deg,#FF2D9B 0%,#B67CFF 30%,#22E4F5 50%,#B67CFF 70%,#FF2D9B 100%); background-size:200% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent; animation:ebfGal 9s ease-in-out infinite alternate}
+@keyframes ebfGal{from{background-position:0% 50%}to{background-position:100% 50%}}
+@media (prefers-reduced-motion: reduce){.ebf-gal{animation:none; background-position:25% 50%}}
+</style>
 </head>
 <body>
 <div class="grid"></div>
@@ -957,7 +962,7 @@ body.watch .ebf{opacity:0; visibility:hidden; pointer-events:none}
     </ul>
     <div class="ebf-copy">
       <p class="ebf-line">© 2026 ECHO Botz. Built on Solana.</p>
-      <p class="ebf-line ebf-label">Music by Echo1 on Galactic Records</p>
+      <p class="ebf-line ebf-label">Music by Echo1 on <span class="ebf-gal">Galactic Records</span></p>
       <a class="ebf-more" href="https://echo1onchain.xyz/">Play more games</a>
     </div>
   </div>
