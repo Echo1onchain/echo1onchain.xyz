@@ -1045,6 +1045,11 @@ html.halloween .hw-pumpkin{translate:0 calc(-1 * var(--ebf-lift, 0px))}
 .ebf-egg:hover,.ebf-egg:focus-visible{opacity:.6}
 .ebf-egg:focus-visible{outline:1px solid var(--line); outline-offset:3px; border-radius:4px}
 </style>
+<style>/* Galactic Records credit: soft gradient text with a slow shimmer */
+.ebf-gal{font-weight:600; letter-spacing:.03em; background:linear-gradient(90deg,#FF2D9B 0%,#B67CFF 30%,#22E4F5 50%,#B67CFF 70%,#FF2D9B 100%); background-size:200% 100%; -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent; animation:ebfGal 9s ease-in-out infinite alternate}
+@keyframes ebfGal{from{background-position:0% 50%}to{background-position:100% 50%}}
+@media (prefers-reduced-motion: reduce){.ebf-gal{animation:none; background-position:25% 50%}}
+</style>
 </head>
 <body>
 <!-- Halloween decor (hidden unless the halloween class is on) -->
@@ -1170,7 +1175,7 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
     </ul>
     <div class="ebf-copy">
       <p class="ebf-line">© 2026 ECHO Botz. Built on Solana.</p>
-      <p class="ebf-line ebf-label">Music by Echo1 on Galactic Records</p>
+      <p class="ebf-line ebf-label">Music by Echo1 on <span class="ebf-gal">Galactic Records</span></p>
       <a class="ebf-more" href="https://echo1onchain.xyz/">Play more games</a><a class="ebf-egg" href="/pumpkin_smasher/replay.html" aria-label="Replays"><svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor"><path d="M12 2C12.7 8.4 15.6 11.3 22 12C15.6 12.7 12.7 15.6 12 22C11.3 15.6 8.4 12.7 2 12C8.4 11.3 11.3 8.4 12 2Z"/></svg></a>
     </div>
   </div>
