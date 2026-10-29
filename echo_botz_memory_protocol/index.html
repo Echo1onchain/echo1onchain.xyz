@@ -1059,6 +1059,43 @@ html.halloween .console:not(.mcp)::after{content:""; position:absolute; top:3px;
   };
 })();
 </script>
+<style>
+/* ECHO Botz site footer: the home page footer, scoped with ebf- names so it can't clash with this page's styles */
+.ebf{position:relative; z-index:2; display:block; margin:2rem 0 0; padding:2.5rem 0 3rem; border-top:1px solid var(--line); color:var(--muted); font-size:.88rem; line-height:1.5; text-align:left; background:none}
+.ebf-wrap{width:min(1120px, 100% - 2.5rem); margin-inline:auto}
+.ebf-foot{display:flex; flex-wrap:wrap; gap:1.25rem 2rem; align-items:center; justify-content:space-between}
+.ebf-brand{font-weight:700; font-size:1.25rem; color:var(--ink); letter-spacing:.02em; text-shadow:-2px 0 rgba(255,45,155,.75),2px 0 rgba(34,228,245,.75)}
+.ebf-socials{display:flex; flex-wrap:wrap; gap:.75rem; list-style:none; margin:0; padding:0}
+.ebf-socials li{margin:0; padding:0; list-style:none}
+.ebf-tl{
+  position:relative; display:flex; align-items:center; gap:.5rem; padding:.45rem .9rem .45rem .7rem; margin:0;
+  border-radius:999px; text-decoration:none; color:var(--ink); font-size:.85rem; font-weight:600; line-height:1.5;
+  background:rgba(4,6,14,.88); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  box-shadow:0 0 18px rgba(255,45,155,.25), 0 0 36px rgba(34,228,245,.12); transition:box-shadow .2s;
+}
+.ebf-tl::before{
+  content:""; position:absolute; inset:0; padding:2px; border-radius:inherit; pointer-events:none;
+  background:linear-gradient(135deg, rgba(255,45,155,.9), rgba(34,228,245,.9));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+.ebf-tl svg{width:16px; height:16px; flex:none}
+.ebf-tl:hover{box-shadow:0 0 26px rgba(255,45,155,.45), 0 0 50px rgba(34,228,245,.25)}
+.ebf-tl:focus-visible{outline:2px solid var(--pink); outline-offset:3px}
+html.halloween .ebf-tl::before{background:linear-gradient(135deg, rgba(255,138,30,.92), rgba(155,77,255,.92))}
+.ebf-copy{width:100%; margin:0; font-size:.85rem; color:var(--muted)}
+.ebf-line{margin:0; font-size:.85rem; color:var(--muted)}
+.ebf-label{margin-top:.2rem; font-size:.8rem; opacity:.85}
+.ebf-more{display:inline-block; margin-top:.4rem; color:var(--muted); font-size:.85rem; text-decoration:underline; text-decoration-color:rgba(143,163,200,.35); text-underline-offset:3px; transition:color .2s, text-decoration-color .2s}
+.ebf-more:hover{color:var(--ink); text-decoration-color:currentColor}
+.ebf-more:focus-visible{outline:2px solid var(--pink); outline-offset:3px; border-radius:3px}
+/* Watch visuals hides the page content: hide the footer with it */
+.ebf{transition:opacity .5s ease, visibility .5s}
+body.watch .ebf{opacity:0; visibility:hidden; pointer-events:none}
+@media (prefers-reduced-motion: reduce){.ebf{transition:none}}
+/* Halloween corner pumpkins: when the footer scrolls into view, lift them so they stay above its top line */
+html.halloween .hw-pumpkin{translate:0 calc(-1 * var(--ebf-lift, 0px))}
+</style>
 </head>
 <body>
 <!-- Halloween decor (hidden unless the halloween class is on) -->
@@ -1225,6 +1262,26 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
     </div>
   </div>
 </main>
+<footer class="ebf">
+  <div class="ebf-wrap ebf-foot">
+    <span class="ebf-brand">ECHO Botz</span>
+    <ul class="ebf-socials">
+      <li><a class="ebf-tl" href="https://x.com/Echo1OnChain" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.2 2.5h3.4l-7.4 8.5 8.7 11.5h-6.8l-5.3-7-6.1 7H1.3l7.9-9.1L.9 2.5h7l4.8 6.4 5.5-6.4zm-1.2 18h1.9L7.1 4.4H5.1L17 20.5z"/></svg><span>@Echo1OnChain</span></a></li>
+      <li><a class="ebf-tl" href="https://x.com/EchoBotzSOL" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.2 2.5h3.4l-7.4 8.5 8.7 11.5h-6.8l-5.3-7-6.1 7H1.3l7.9-9.1L.9 2.5h7l4.8 6.4 5.5-6.4zm-1.2 18h1.9L7.1 4.4H5.1L17 20.5z"/></svg><span>@EchoBotzSOL</span></a></li>
+      <li><a class="ebf-tl" href="https://open.spotify.com/artist/63XWxjfJb7v7pSwdn9F8u6?si=_q8RapZsSOGyA2FKauzSTQ" target="_blank" rel="noopener" aria-label="Listen to ECHO1 on Spotify"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#1ED760"/><path d="M6.5 9.3c3.6-1.1 8-.8 11 1M7 12.4c3-.9 6.6-.6 9.2.9M7.6 15.3c2.4-.6 5-.4 7.1.8" stroke="#04060E" stroke-width="1.7" stroke-linecap="round" fill="none"/></svg><span>Listen on Spotify</span></a></li>
+    </ul>
+    <div class="ebf-copy">
+      <p class="ebf-line">© 2026 ECHO Botz. Built on Solana.</p>
+      <p class="ebf-line ebf-label">Music by Echo1 on Galactic Records</p>
+      <a class="ebf-more" href="https://echo1onchain.xyz/">Play more games</a>
+    </div>
+  </div>
+</footer>
+<script>/* Halloween corner pumpkins: keep them above the footer's top line while the footer is on screen; normal spot otherwise */
+(function(){var d=document.querySelector('.hw-decor'),f=document.querySelector('footer.ebf');if(!d||!f)return;var q=0;
+function u(){q=0;var l=Math.max(0,Math.round(window.innerHeight-f.getBoundingClientRect().top+16));d.style.setProperty('--ebf-lift',l+'px')}
+function s(){if(!q)q=requestAnimationFrame(u)}addEventListener('scroll',s,{passive:true});addEventListener('resize',s);u()})();
+</script>
 <div class="corner">
   <div class="sound" id="soundCtl">
     <div class="sound-row">
