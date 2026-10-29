@@ -254,7 +254,7 @@ kbd{font:700 .92em var(--ff);color:var(--tx);background:rgba(255,255,255,.08);bo
 </div>
 
 <div id="topOv" class="ov hidden">
- <div class="gh-lb ps-lb">
+ <div class="gh-lb ps-lb" data-board-bot>
   <div class="gh-lb-head"><h3 id="psLbTitle">Top 10</h3><span class="gh-lb-col">Score</span></div>
   <div class="gh-lb-set">Pumpkin Smasher</div>
   <ol class="gh-lb-list" id="psLbList" aria-live="polite" aria-labelledby="psLbTitle"><li class="gh-lb-empty">Loading scores…</li></ol>
@@ -1586,5 +1586,6 @@ setBot(botIdx);setSkin(skinIdx);layout();updBest();drawIcons();skinImgs.forEach(
   requestAnimationFrame(draw)})();
 </script>
 <div style="position:fixed;left:6px;bottom:6px;z-index:99;pointer-events:none;font:600 10px/1 'JetBrains Mono',monospace;letter-spacing:.08em;color:rgba(255,236,200,.55);background:rgba(0,0,0,.35);padding:4px 6px;border-radius:5px">TEST PAGE · scores not sent</div>
+<script src="/board_bot.js?v=1" defer></script>
 </body>
 </html>
