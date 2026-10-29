@@ -411,10 +411,10 @@ function spawnPumpkin(force,forceH){const P=levelParams();const busy=new Set(G.p
   if(!type){const r=Math.random();type=G.time<2?'norm':r<P.ghost?'ghost':r<P.ghost+P.gold?'gold':r<P.ghost+P.gold+P.bomb?'bomb':r<P.ghost+P.gold+P.bomb+P.power?POWERS[Math.floor(Math.random()*3)]:'norm';
     if(type==='battery'&&G.lives>=5)type='candy'}
   const up=type==='gold'?P.up*0.75:POWERS.includes(type)?P.up*0.9:type==='bomb'?P.up*1.1:P.up;
-  const p={h,type,t:0,up,smashed:false,seed:Math.random()*10,lean:(Math.random()-0.5)*0.15};G.pumps.push(p);return p}
+  const p={h,type,t:0,up,smashed:false,seed:Math.random()*10,lean:(Math.random()-0.5)*0.15};G.pumps.push(p);REC.e(11,h,REC.TY[type],Math.round(up*1000));return p}
 function startBoss(){const P=levelParams();G.pumps=G.pumps.filter(p=>p.h!==4);const hp=6+Math.floor(G.level/2);
-  const p={h:4,type:'boss',t:0,up:1e9,smashed:false,seed:3,lean:0,hp,max:hp,hit:0};G.pumps.push(p);G.boss={p,t:0,dur:12};callout('BOSS PUMPKIN!',C.or);Snd.bossIn();G.shake=Math.max(G.shake,0.4);return p}
-function startSwarm(row){G.swarm={row:row===undefined?Math.floor(Math.random()*3):row,t:0,dur:3.2,bats:Array.from({length:16},()=>({o:Math.random(),y:(Math.random()-0.5),s:0.6+Math.random()*0.6,p:Math.random()*6}))};callout('BAT SWARM!',C.pu)}
+  const p={h:4,type:'boss',t:0,up:1e9,smashed:false,seed:3,lean:0,hp,max:hp,hit:0};G.pumps.push(p);G.boss={p,t:0,dur:12};REC.e(6,hp);callout('BOSS PUMPKIN!',C.or);Snd.bossIn();G.shake=Math.max(G.shake,0.4);return p}
+function startSwarm(row){G.swarm={row:row===undefined?Math.floor(Math.random()*3):row,t:0,dur:3.2,bats:Array.from({length:16},()=>({o:Math.random(),y:(Math.random()-0.5),s:0.6+Math.random()*0.6,p:Math.random()*6}))};REC.e(14,G.swarm.row);callout('BAT SWARM!',C.pu)}
 function onBeat(b){G.beatPulse=1;G.lastBeatT=b.t;const P=levelParams();if(Math.random()<P.perBeat)spawnPumpkin();if(b.n%8===0&&G.level>=4&&Math.random()<0.5)spawnPumpkin();
   if(G.level>=5&&!G.swarm&&b.n>0&&b.n%16===0&&Math.random()<0.35)startSwarm()}
 
@@ -438,6 +438,26 @@ window.addEventListener('keydown',e=>{if(volOpen()){if(e.key==='Escape'){e.preve
   else if(state==='pause'&&(k==='p'||k==='escape'||k==='enter'))resumeGame()});
 $('superBtn').addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();Snd.resume();triggerSuper()});
 
+// ================= REPLAY LOG (v86) =================
+/* Each run keeps a small log of what happened: taps, smashes and their points, lives, levels,
+   bosses, Super Smash and pauses, timed in game ms. It is sent with the score so the shared
+   Top 10 can replay the run and check the points add up. Nothing personal goes in it. */
+const REC=(()=>{const TY={norm:0,gold:1,bomb:2,candy:3,clock:4,battery:5,ghost:6,boss:7},JU={PERFECT:0,GOOD:1,EARLY:2,LATE:3,BLAST:4,SUPER:5};
+  let ev=[],lt=0,on=false,pz=0,last=null;
+  function e(...a){if(!on)return;const t=Math.round(G.time*1000);a.splice(1,0,Math.max(0,t-lt));lt=Math.max(lt,t);ev.push(a);if(ev.length>=400000)on=false}
+  const fl=()=>(G.fever?1:0)|(G.pow.double>0?2:0);
+  async function pack(o){const s=JSON.stringify(o);
+    try{if(typeof CompressionStream==='function'){const b=new Uint8Array(await new Response(new Blob([s]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());
+      let bin='';for(let i=0;i<b.length;i+=0x8000)bin+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return 'g1:'+btoa(bin)}}catch(err){}
+    return 'j1:'+s}
+  return{TY,JU,fl,e,
+    begin(){ev=[];lt=0;on=true;pz=0;last=null},
+    pauseStart(){if(on)pz=performance.now()},
+    pauseEnd(){if(on&&pz){e(9,Math.round(performance.now()-pz));pz=0}},
+    finish(){if(!on&&!ev.length)return null;e(12,G.score,G.level,G.smashed,G.lives);on=false;const o={v:1,game:'pumpkin_smasher',build:'v86',song:!!Snd.songOn,e:ev};ev=[];last=pack(o);return last},
+    take(){const p=last;last=null;return p},
+    get events(){return ev}}})();
+
 // ================= SMASH LOGIC =================
 function nearestBeatDiff(){const spb=60/G.bpm;let cands=[];if(G.lastBeatT!==undefined)cands.push(G.lastBeatT);for(const b of Snd.beats)cands.push(b.t);if(G.lastBeatT!==undefined)cands.push(G.lastBeatT+spb);
   let best=1e9;for(const t of cands){const d=G.time-t;if(Math.abs(d)<Math.abs(best))best=d}return best}
@@ -453,25 +473,25 @@ function addCombo(judge){if(judge==='PERFECT'||judge==='GOOD'){G.combo++;G.bestC
     if(G.combo>=20&&!G.fever){G.fever=true;G.st.fever=true;callout('FEVER MODE!',C.mg);Snd.fever()}}
   else breakCombo();Snd.combo=G.combo}
 function addSuper(v){if(G.superBusy)return;G.super=Math.max(0,Math.min(1,G.super+v));const r=G.super>=1;if(r&&!G.superReady){callout('SUPER READY!',C.cy);Snd.ready()}G.superReady=r}
-function levelCheck(){while(G.smashed>=G.level*12-4){G.level++;if(Snd.songOn)G.bpm=Snd.setLevel(G.level);else{G.bpm=Math.min(140,104+(G.level-1)*5);Snd.clock.bpm=G.bpm}callout('LEVEL '+G.level+'  ·  '+G.bpm+' BPM',C.cy);Snd.level();
+function levelCheck(){while(G.smashed>=G.level*12-4){G.level++;REC.e(5,G.level);if(Snd.songOn)G.bpm=Snd.setLevel(G.level);else{G.bpm=Math.min(140,104+(G.level-1)*5);Snd.clock.bpm=G.bpm}callout('LEVEL '+G.level+'  ·  '+G.bpm+' BPM',C.cy);Snd.level();
   if(G.level>=5&&G.st.ghostHits===0)G.st.noGhostL5=true;if(G.level%4===0&&!G.boss)setTimeout(()=>{if(state==='play'&&!G.boss&&!G.dead)startBoss()},600)}}
 function smashAt(i){if(G.dead||G.superBusy)return;const h=holes[i];const p=G.pumps.find(q=>q.h===i&&!q.smashed&&q.t>0.05);
   const ty=h.y-h.rx*0.55;
-  if(!p){swingTo(h.x,ty,()=>dirtPuff(h));Snd.whiff();breakCombo('MISS');return}
-  const judge=judgeOf(nearestBeatDiff());
+  if(!p){REC.e(0,i,-1);swingTo(h.x,ty,()=>dirtPuff(h));Snd.whiff();breakCombo('MISS');return}
+  const bd=nearestBeatDiff(),judge=judgeOf(bd);REC.e(0,i,REC.TY[p.type],REC.JU[judge],Math.round(bd*1000));
   if(p.type==='ghost'){p.smashed=true;swingTo(h.x,ty,()=>ghostHit(p,h));return}
   addCombo(judge);
   if(p.type==='boss'){swingTo(h.x,h.y-h.rx*0.9,()=>bossHit(p,judge==='PERFECT'?2:1,judge));return}
   p.smashed=true;if(!POWERS.includes(p.type)){G.smashed++;levelCheck()}
   swingTo(h.x,ty,()=>hitPump(p,judge))}
 function breakCombo(s){if(G.combo>=5)callout('COMBO LOST',C.red);G.combo=0;Snd.combo=0;if(G.fever){G.fever=false}}
-function loseLife(why){if(G.dead)return;G.lives--;G.redFlash=1;G.shake=Math.max(G.shake,0.35);breakCombo();callout(why,C.red);if(G.lives<=0)endGame()}
+function loseLife(why,hh){if(G.dead)return;G.lives--;REC.e(4,why==='ONE GOT AWAY'?0:why==='THE BOSS ESCAPED'?2:1,G.lives,hh===undefined?-1:hh);G.redFlash=1;G.shake=Math.max(G.shake,0.35);breakCombo();callout(why,C.red);if(G.lives<=0)endGame()}
 function removeP(p){G.pumps=G.pumps.filter(q=>q!==p)}
 function ghostHit(p,h){removeP(p);Snd.ghost();for(let i=0;i<26;i++)part(h.x,h.y-h.rx*0.6,'#cfefff',h.rx*0.12,6);G.st.ghostHits++;G.super=Math.max(0,G.super-0.25);G.superReady=G.super>=1;loseLife("BOO! DON'T HIT GHOSTS")}
 function ghostPoof(p,h){removeP(p);for(let i=0;i<18;i++)part(h.x,h.y-h.rx*0.6,'#cfefff',h.rx*0.1,5)}
 const BASE={norm:100,gold:500,bomb:200,candy:50,clock:50,battery:50};
 function popXY(h){const side=G.bot.side||1;return[h.x-side*h.rx*0.6,h.y-h.rx*0.55-h.rx*1.25]}
-function hitPump(p,judge,opt){opt=opt||{};const h=holes[p.h];const mult=multOf();const k=(judge==='PERFECT'?1.5:1)*bonusOf()*(opt.super?2:1);const pts=Math.round(BASE[p.type]*mult*k);G.score+=pts;
+function hitPump(p,judge,opt){opt=opt||{};const h=holes[p.h];const mult=multOf();const k=(judge==='PERFECT'?1.5:1)*bonusOf()*(opt.super?2:1);const pts=Math.round(BASE[p.type]*mult*k);G.score+=pts;REC.e(1,p.h,REC.TY[p.type],REC.JU[judge],mult,REC.fl(),pts);
   if(!opt.quiet){const[px,py]=popXY(h);const col=judge==='PERFECT'?C.gr:judge==='GOOD'?C.gd:judge==='BLAST'?C.or:C.red;addPop(judge,'+'+pts.toLocaleString()+(mult>1?'  ×'+mult:''),px,py,col,p.type==='gold'?1.15:1)}
   if(!opt.super)addSuper(0.07+(judge==='PERFECT'?0.05:0)+(p.type==='gold'?0.1:0)+(p.type==='bomb'?0.05:0));
   if(p.type==='gold'){G.st.golds++;Snd.gold()}
@@ -484,15 +504,15 @@ function bombBlast(p,h,fromSuper){Snd.bomb();G.shake=Math.max(G.shake,0.6);G.fla
     if(q.type==='ghost'){ghostPoof(q,hh);continue}if(q.type==='boss'){bossHit(q,2,'BLAST');continue}
     q.smashed=true;if(!POWERS.includes(q.type))G.smashed++;tot+=hitPump(q,'BLAST',{quiet:true});n++}
   G.st.maxBlast=Math.max(G.st.maxBlast,n);if(n){const[px,py]=popXY(h);addPop('BOMB ×'+n,'+'+tot.toLocaleString(),px,py-h.rx*0.6,C.or,1.1);levelCheck()}}
-function bossHit(p,dmg,judge){if(!G.boss||G.boss.p!==p)return;const h=holes[4];p.hp-=dmg;p.hit=0.25;const mult=multOf();const pts=Math.round(150*mult*bonusOf()*(judge==='PERFECT'?1.5:1));G.score+=pts;addSuper(0.03);
+function bossHit(p,dmg,judge){if(!G.boss||G.boss.p!==p)return;const h=holes[4];p.hp-=dmg;p.hit=0.25;const mult=multOf();const pts=Math.round(150*mult*bonusOf()*(judge==='PERFECT'?1.5:1));G.score+=pts;REC.e(2,dmg,REC.JU[judge],mult,REC.fl(),pts);addSuper(0.03);
   Snd.bossHit();G.shake=Math.max(G.shake,0.3);impactFx(h.x,h.y-h.rx*1.0,h.rx,C.or,judge==='PERFECT',Math.min(1,G.combo/20));G.hitStop=Math.max(G.hitStop||0,0.04);for(let i=0;i<14;i++)part(h.x,h.y-h.rx*1.0,C.gr,h.rx*0.09,h.rx*0.15,true);
   const[px,py]=popXY(h);if(judge!=='SUPER')addPop(judge==='BLAST'?'BLAST':judge,'+'+pts.toLocaleString()+'  −'+dmg+' HP',px-(G.bot.side||1)*h.rx*0.5,py-h.rx*0.5,judge==='PERFECT'?C.gr:C.gd);
   if(p.hp<=0)bossDown(p,h)}
-function bossDown(p,h){removeP(p);G.boss=null;const bonus=Math.round(2500*multOf()*bonusOf());G.score+=bonus;G.st.bosses++;G.smashed++;addSuper(0.5);callout('BOSS SMASHED!  +'+bonus.toLocaleString(),C.gd);Snd.bossDown();
+function bossDown(p,h){removeP(p);G.boss=null;const bonus=Math.round(2500*multOf()*bonusOf());G.score+=bonus;REC.e(3,multOf(),REC.fl(),bonus);G.st.bosses++;G.smashed++;addSuper(0.5);callout('BOSS SMASHED!  +'+bonus.toLocaleString(),C.gd);Snd.bossDown();
   for(let i=0;i<70;i++)part(h.x,h.y-h.rx,i%2?C.gr:C.or,h.rx*(0.08+Math.random()*0.12),h.rx*0.25,i%2===0,i%3===0);impactFx(h.x,h.y-h.rx,h.rx*1.6,C.gd,true,1);G.hitStop=0.12;G.shake=0.8;G.flash=0.8;G.flashCol='255,220,120';G.rings.push({x:h.x,y:h.y-h.rx,t:0,dur:0.6,R:h.rx*5,col:C.gd,w:12});levelCheck()}
-function triggerSuper(){if(state!=='play'||G.dead||G.super<1||G.superBusy)return false;G.super=0;G.superReady=false;G.superBusy=true;Snd.riser();callout('SUPER SMASH!',C.mg);
+function triggerSuper(){if(state!=='play'||G.dead||G.super<1||G.superBusy)return false;G.super=0;G.superReady=false;G.superBusy=true;REC.e(7);Snd.riser();callout('SUPER SMASH!',C.mg);
   const h=holes[4];swingTo(h.x,h.y-h.rx*0.4,superImpact,{super:true});return true}
-function superImpact(){const h=holes[4];G.st.supers++;G.slowT=0.9;G.shake=1.0;G.flash=1;G.flashCol='255,255,255';G.shock={x:h.x,y:h.y-h.rx*0.3,t:0,seed:Math.random()*6};Snd.bassDrop();
+function superImpact(){const h=holes[4];REC.e(8);G.st.supers++;G.slowT=0.9;G.shake=1.0;G.flash=1;G.flashCol='255,255,255';G.shock={x:h.x,y:h.y-h.rx*0.3,t:0,seed:Math.random()*6};Snd.bassDrop();
   let tot=0,n=0;for(const q of [...G.pumps]){const hh=holes[q.h];if(q.type==='ghost'){ghostPoof(q,hh);continue}if(q.type==='boss'){bossHit(q,4,'SUPER');continue}if(q.smashed)continue;
     q.smashed=true;if(!POWERS.includes(q.type))G.smashed++;tot+=hitPump(q,'SUPER',{super:true,quiet:true});n++}
   for(let i=0;i<40;i++)part(h.x,h.y,i%2?C.cy:C.mg,h.rx*0.1,h.rx*0.3,true);
@@ -559,7 +579,7 @@ function update(dt){G.time+=dt;if(Snd.clock.running)Snd.sched(G.time);if(Snd.son
   G.pow.double=Math.max(0,G.pow.double-dt);G.pow.slow=Math.max(0,G.pow.slow-dt);
   if(G.swarm){G.swarm.t+=dt;if(G.swarm.t>G.swarm.dur)G.swarm=null}
   for(const p of G.pumps){p.t+=pdt;if(p.hit)p.hit=Math.max(0,p.hit-dt);if(p.smashed&&p.type!=='boss'){p.sm=(p.sm||0)+dt;if(p.sm>0.8){p.gone=true;continue}}
-    if(p.type!=='boss'&&!p.smashed&&p.t>p.up+0.3){p.gone=true;if(p.type==='norm'){if(G.swarm&&holes[p.h].r===G.swarm.row)callout('SAVED BY THE BATS',C.pu);else{Snd.escape();loseLife('ONE GOT AWAY')}}}}
+    if(p.type!=='boss'&&!p.smashed&&p.t>p.up+0.3){p.gone=true;REC.e(13,p.h);if(p.type==='norm'){if(G.swarm&&holes[p.h].r===G.swarm.row)callout('SAVED BY THE BATS',C.pu);else{Snd.escape();loseLife('ONE GOT AWAY',p.h)}}}}
   G.pumps=G.pumps.filter(p=>!p.gone);
   if(G.boss){G.boss.t+=pdt;if(G.boss.t>G.boss.dur){removeP(G.boss.p);G.boss=null;Snd.escape();loseLife('THE BOSS ESCAPED')}}
   stepBot(vdt);stepFx(vdt,dt);G.st.score=G.score;updSuperBtn()}
@@ -727,8 +747,8 @@ function loop(now){const dt=Math.min(0.05,(now-last)/1000);last=now;T+=dt;
 setInterval(()=>{if(state==='play'&&Snd.clock.running)Snd.sched(G.time)},25);
 function show(id){['title','tutorial','over','paused','topOv'].forEach(k=>$(k).classList.toggle('hidden',k!==id));$('superBtn').classList.toggle('hidden',!(state==='play'&&id===null))}
 function startFlow(){Snd.resume();Snd.blip(700);if(!LS.get('tutSeen',false)){state='tut';show('tutorial');drawIcons()}else beginRun()}
-function beginRun(){LS.set('tutSeen',true);psBegin();newGame();layout();state='play';show(null);$('pause').classList.remove('hidden');Snd.combo=0;Snd.clock.bpm=G.bpm;Snd.start(G.time);if(Snd.songOn)G.bpm=Snd.setLevel(G.level);lastPct=-1;updSuperBtn()}
-function endGame(){G.dead=true;state='over';Snd.stop();pageMusic(false);Snd.over();$('pause').classList.add('hidden');$('superBtn').classList.add('hidden');G.st.score=G.score;
+function beginRun(){LS.set('tutSeen',true);psBegin();newGame();REC.begin();layout();state='play';show(null);$('pause').classList.remove('hidden');Snd.combo=0;Snd.clock.bpm=G.bpm;Snd.start(G.time);if(Snd.songOn)G.bpm=Snd.setLevel(G.level);lastPct=-1;updSuperBtn()}
+function endGame(){G.dead=true;REC.finish();state='over';Snd.stop();pageMusic(false);Snd.over();$('pause').classList.add('hidden');$('superBtn').classList.add('hidden');G.st.score=G.score;
   const prev=best;const nb=prev>0&&G.score>prev;// only a real "new best" when beating an existing saved best
   if(G.score>best){best=G.score;LS.set('best',best)}
   $('sS').textContent=G.score.toLocaleString();$('sP').textContent=G.smashed;$('sC').textContent=G.bestCombo;$('sB').textContent=best.toLocaleString();$('nb').classList.toggle('hidden',!nb);$('overT').textContent=nb?'NEW HIGH SCORE!':'PATCH CLOSED';
@@ -736,8 +756,8 @@ function endGame(){G.dead=true;state='over';Snd.stop();pageMusic(false);Snd.over
   for(const m of MEDALS){const on=m.ok(G.st);const isNew=on&&!owned.has(m.id);if(on)owned.add(m.id);const d=document.createElement('div');d.className='medal'+(on?' on':'');d.dataset.id=m.id;d.innerHTML=(isNew?'<span class="new">NEW</span>':'')+'<div class="mi">'+m.i+'</div><div class="mn">'+m.n+'</div><div class="md">'+m.d+'</div>';md.appendChild(d)}
   LS.set('medals',[...owned]);psGameOver();
   try{psPrepareShare({score:G.score,level:G.level,smashed:G.smashed,bestCombo:G.bestCombo,perfects:G.st.perfects,handle:cleanHandle(),newBest:nb,medals:MEDALS.filter(m=>m.ok(G.st))})}catch(e){}setTimeout(()=>{if(state==='over')show('over')},800)}
-function pauseGame(){if(state!=='play')return;state='pause';Snd.stop();show('paused')}
-function resumeGame(){if(state!=='pause')return;state='play';show(null);Snd.resumeAt(G.time);last=performance.now()}
+function pauseGame(){if(state!=='play')return;state='pause';REC.pauseStart();Snd.stop();show('paused')}
+function resumeGame(){if(state!=='pause')return;state='play';REC.pauseEnd();show(null);Snd.resumeAt(G.time);last=performance.now()}
 function toTitle(){state='title';Snd.stop();pageMusic(false);newGame();layout();$('pause').classList.add('hidden');show('title');updBest()}
 function updBest(){$('bestT').textContent=best>0?'BEST  '+best.toLocaleString():''}
 function toggleMute(){if(Snd.muted||Snd.vol===0){Snd.setMuted(false);if(Snd.vol===0)Snd.setVol(60)}else Snd.setMuted(true);updMute()}
@@ -828,7 +848,7 @@ function psScoreStart(h){
   psSession=psPost({action:'start',handle:h}).then(r=>(r&&r.ok&&r.session)||null).catch(()=>null);
 }
 function psScoreEnd(s,lv){
-  if(psSent)return;psSent=true;
+  if(psSent)return;psSent=true;const rp=REC.take();
   const id=psRunId,h=cleanHandle(),sess=psSession;
   const note=t=>{if(id===psRunId&&state==='over')$('overNote').textContent=t};
   if(s<=0||!h||!sess)return;
@@ -836,8 +856,8 @@ function psScoreEnd(s,lv){
   const fail=()=>note('Couldn’t reach the shared Top 10 right now. Your run is saved on this device.');
   sess.then(session=>{
     if(!session)return fail();
-    return psPost({action:'submit',session,score:s,level:lv}).then(res=>{
-      if(!res.ok)return note(res.error==='session'?'That run’s session ran out, so it stayed on this device. Run it back!':res.error==='score'?'That run couldn’t be checked, so it stayed on this device. Run it back!':'Couldn’t reach the shared Top 10 right now. Your run is saved on this device.');
+    return Promise.resolve(rp).then(replay=>psPost({action:'submit',session,score:s,level:lv,replay:replay||''})).then(res=>{
+      if(!res.ok)return note(res.error==='session'?'That run’s session ran out, so it stayed on this device. Run it back!':(res.error==='score'||res.error==='replay')?'That run couldn’t be checked, so it stayed on this device. Run it back!':'Couldn’t reach the shared Top 10 right now. Your run is saved on this device.');
       const rank=+res.rank||0;
       if(Array.isArray(res.top))psUseTop(res.top,rank>=1&&rank<=10&&id===psRunId?rank-1:-1);else psLoadTop();
       if(rank>=1&&rank<=10)note(`That run is #${rank} on the Top 10.`);
