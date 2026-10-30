@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Echo1 Music | ECHO Botz</title>
+<meta name="description" content="Listen to Echo1 on Galactic Records. Albums, EPs and singles, with Spotify, Apple Music and Deezer links.">
+<meta name="theme-color" content="#04060E">
+<link rel="canonical" href="https://echo1onchain.xyz/music/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://echo1onchain.xyz/music/">
+<meta property="og:title" content="Echo1 Music">
+<meta property="og:description" content="Albums, EPs and singles by Echo1 on Galactic Records.">
+<meta name="twitter:site" content="@Echo1OnChain">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🤖</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* colors and fonts: the same as the ECHO Botz home and game pages */
+:root{
+  --bg:#04060E; --panel:rgba(8,12,28,.72); --ink:#F2F6FF; --muted:#8FA3C8;
+  --cyan:#22E4F5; --pink:#FF2D9B; --line:rgba(34,228,245,.28); --gold:#FFC93C;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth; -webkit-text-size-adjust:100%; background:var(--bg)}
+body{margin:0; min-height:100vh; background:var(--bg); color:var(--ink);
+  font-family:"Chakra Petch",system-ui,-apple-system,"Segoe UI",sans-serif; line-height:1.5; overflow-x:hidden}
+img{max-width:100%; display:block}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--pink); outline-offset:3px}
+
+/* background: the site's neon grid plus two slow, soft glows */
+.grid{position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-image:linear-gradient(rgba(34,228,245,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(34,228,245,.06) 1px, transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(ellipse at 50% 40%, #000 30%, transparent 85%);
+  -webkit-mask-image:radial-gradient(ellipse at 50% 40%, #000 30%, transparent 85%)}
+.glow{position:fixed; z-index:0; pointer-events:none; width:60vmax; height:60vmax; border-radius:50%; filter:blur(80px); opacity:.16}
+.glow.g1{left:-20vmax; top:-22vmax; background:var(--pink); animation:drift 26s ease-in-out infinite alternate}
+.glow.g2{right:-22vmax; bottom:-26vmax; background:var(--cyan); animation:drift 32s ease-in-out infinite alternate-reverse}
+@keyframes drift{from{transform:translate(0,0)}to{transform:translate(6vmax,4vmax)}}
+main, footer, .top-links{position:relative; z-index:2}
+
+.wrap{width:min(1120px, 100% - 2.5rem); margin-inline:auto}
+
+/* top pills (same look as the game pages) */
+.top-links{display:flex; gap:.6rem; padding:calc(1rem + env(safe-area-inset-top,0px)) 1.25rem 0; flex-wrap:wrap}
+.tl{position:relative; display:inline-flex; align-items:center; gap:.5rem; padding:.45rem .9rem .45rem .7rem;
+  border-radius:999px; text-decoration:none; color:var(--ink); font-size:.85rem; font-weight:600; font-family:inherit; cursor:pointer; border:0;
+  background:rgba(4,6,14,.88); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  box-shadow:0 0 18px rgba(255,45,155,.25), 0 0 36px rgba(34,228,245,.12); transition:box-shadow .25s}
+.tl::before{content:""; position:absolute; inset:0; padding:2px; border-radius:inherit; pointer-events:none;
+  background:linear-gradient(135deg, rgba(255,45,155,.9), rgba(34,228,245,.9));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0)}
+.tl svg{width:16px; height:16px; flex:none}
+.tl:hover{box-shadow:0 0 26px rgba(255,45,155,.45), 0 0 50px rgba(34,228,245,.25)}
+
+/* hero */
+.hero{text-align:center; padding:2.5rem 0 1.5rem}
+.visor{width:112px; height:52px; margin:0 auto 1.6rem; border-radius:26px; display:flex; align-items:center; justify-content:center; gap:22px;
+  background:rgba(2,4,12,.7); border:1px solid var(--line); box-shadow:inset 0 0 18px rgba(34,228,245,.12), 0 0 14px rgba(255,45,155,.15)}
+.visor span{width:16px; height:16px; border-radius:50%; background:var(--cyan); animation:eye 4s ease-in-out infinite}
+@keyframes eye{0%,100%{opacity:.65; box-shadow:0 0 8px var(--cyan), 0 0 16px rgba(34,228,245,.5)} 50%{opacity:1; box-shadow:0 0 14px var(--cyan), 0 0 34px rgba(34,228,245,.85)}}
+.eyebrow{display:inline-block; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.78rem; letter-spacing:.18em; text-transform:uppercase; color:var(--cyan); margin-bottom:.6rem}
+.hero h1{margin:0; font-weight:700; letter-spacing:.1em; font-size:clamp(2.6rem,10vw,5.2rem); line-height:1.05; color:#fff;
+  text-shadow:-2px 0 rgba(255,45,155,.85), 2px 0 rgba(34,228,245,.85), 0 0 18px rgba(255,45,155,.55)}
+.tagline{margin:1rem auto 0; max-width:36rem; color:var(--muted); font-size:clamp(1rem,3.4vw,1.2rem)}
+.gal{font-weight:600; letter-spacing:.03em; background:linear-gradient(90deg,#FF2D9B 0%,#B67CFF 30%,#22E4F5 50%,#B67CFF 70%,#FF2D9B 100%); background-size:200% 100%;
+  -webkit-background-clip:text; background-clip:text; color:transparent; -webkit-text-fill-color:transparent; animation:galS 9s ease-in-out infinite alternate}
+@keyframes galS{from{background-position:0% 50%}to{background-position:100% 50%}}
+.follow{display:inline-flex; align-items:center; gap:.6rem; margin-top:1.6rem; padding:.75rem 1.7rem; border-radius:999px; text-decoration:none;
+  font-weight:700; font-size:1.05rem; letter-spacing:.02em; color:#04060E; background:#1ED760;
+  box-shadow:0 0 18px rgba(30,215,96,.35), 0 0 40px rgba(34,228,245,.15); transition:box-shadow .3s, transform .3s}
+.follow:hover{transform:translateY(-2px); box-shadow:0 0 26px rgba(30,215,96,.55), 0 0 50px rgba(34,228,245,.25)}
+.follow svg{width:22px; height:22px}
+.stats{margin-top:1rem; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.8rem; color:var(--muted); letter-spacing:.04em}
+
+/* filter chips */
+.chips{display:flex; flex-wrap:wrap; justify-content:center; gap:.5rem; margin:2rem 0 1.75rem}
+.chip{font:inherit; font-size:.88rem; font-weight:600; color:var(--muted); cursor:pointer; padding:.4rem 1rem; border-radius:999px;
+  background:rgba(4,6,14,.7); border:1px solid var(--line); transition:color .25s, border-color .25s, box-shadow .25s, background .25s}
+.chip:hover{color:var(--ink)}
+.chip[aria-pressed="true"]{color:#04060E; background:linear-gradient(90deg,var(--pink),var(--cyan)); border-color:transparent; box-shadow:0 0 16px rgba(255,45,155,.35)}
+
+/* release grid */
+.rel-grid{list-style:none; margin:0; padding:0 0 2rem; display:grid; gap:1.25rem; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr))}
+.rel{position:relative; display:flex; flex-direction:column; border-radius:18px; background:var(--panel);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  box-shadow:0 0 22px rgba(255,45,155,.22), 0 0 44px rgba(34,228,245,.12);
+  transition:transform .6s ease, box-shadow .6s ease, opacity .7s ease;
+  opacity:0; transform:translateY(14px)}
+.rel.in{opacity:1; transform:none}
+.rel::before{content:""; position:absolute; inset:-1px; padding:2px; border-radius:inherit; pointer-events:none; z-index:3;
+  background:linear-gradient(135deg, rgba(255,45,155,.9), rgba(34,228,245,.9));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0)}
+.rel.in:hover, .rel.in:focus-within{transform:translateY(-4px); box-shadow:0 0 34px rgba(255,45,155,.42), 0 0 66px rgba(34,228,245,.26)}
+.rel.playing{box-shadow:0 0 30px rgba(30,215,96,.45), 0 0 60px rgba(34,228,245,.25)}
+.rel.playing::before{background:linear-gradient(135deg, #1ED760, rgba(34,228,245,.9))}
+.rel[hidden]{display:none}
+
+.cover{position:relative; margin:0; aspect-ratio:1; overflow:hidden; border-radius:18px 18px 0 0; background:#0A1022; cursor:pointer; border:0; padding:0; width:100%; display:block}
+.cover img{width:100%; height:100%; object-fit:cover; transition:transform 1s ease, filter .6s ease}
+.rel:hover .cover img{transform:scale(1.04)}
+.cover .shade{position:absolute; inset:0; background:linear-gradient(180deg, rgba(4,6,14,0) 50%, rgba(4,6,14,.55)); opacity:.0; transition:opacity .5s}
+.rel:hover .cover .shade, .cover:focus-visible .shade{opacity:1}
+.play{position:absolute; right:12px; bottom:12px; width:52px; height:52px; border-radius:50%; display:grid; place-items:center;
+  background:#1ED760; color:#04060E; box-shadow:0 6px 20px rgba(0,0,0,.45), 0 0 18px rgba(30,215,96,.45);
+  opacity:.92; transform:translateY(4px); transition:opacity .4s, transform .4s}
+.rel:hover .play, .cover:focus-visible .play, .rel.playing .play{opacity:1; transform:none}
+.play svg{width:20px; height:20px; margin-left:3px}
+.rel.playing .play svg{margin-left:0}
+.play .i-eq{display:none}
+.rel.playing .play .i-play{display:none}
+.rel.playing .play .i-eq{display:block}
+.i-eq rect{animation:eq 1.2s ease-in-out infinite; transform-origin:50% 100%; transform-box:fill-box}
+.i-eq rect:nth-child(2){animation-delay:-.4s}
+.i-eq rect:nth-child(3){animation-delay:-.8s}
+@keyframes eq{0%,100%{transform:scaleY(.4)}50%{transform:scaleY(1)}}
+
+/* NEW RELEASE ribbon across the top left corner */
+.ribbon{position:absolute; top:0; left:0; width:120px; height:120px; overflow:hidden; pointer-events:none; z-index:2; border-top-left-radius:18px}
+.ribbon span{position:absolute; top:22px; left:-36px; width:160px; transform:rotate(-45deg); text-align:center;
+  font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.68rem; font-weight:600; letter-spacing:.12em; color:#04060E;
+  padding:5px 0; background:linear-gradient(90deg,#FFC93C,#FFE38A,#FFC93C); box-shadow:0 2px 10px rgba(0,0,0,.4), 0 0 14px rgba(255,201,60,.45)}
+
+.rel-body{display:flex; flex-direction:column; flex:1; padding:.85rem 1rem 1rem}
+.rel h3{margin:0; font-size:1.08rem; font-weight:700; line-height:1.25}
+.meta{margin:.25rem 0 0; color:var(--muted); font-size:.85rem}
+.meta b{font-family:"JetBrains Mono",ui-monospace,monospace; font-weight:600; font-size:.7rem; letter-spacing:.12em; text-transform:uppercase; color:var(--cyan); margin-right:.35rem}
+.links{display:flex; gap:.45rem; margin-top:auto; padding-top:.8rem}
+.lk{width:34px; height:34px; border-radius:50%; display:grid; place-items:center; background:rgba(4,6,14,.85); border:1px solid var(--line);
+  transition:border-color .3s, box-shadow .3s, transform .3s}
+.lk:hover{transform:translateY(-2px); border-color:rgba(255,255,255,.5); box-shadow:0 0 14px rgba(34,228,245,.35)}
+.lk svg{width:18px; height:18px}
+
+/* sticky player at the bottom: the Spotify iframe only loads after a play click */
+.dock{position:fixed; left:50%; bottom:calc(14px + env(safe-area-inset-bottom,0px)); z-index:20; width:min(760px, 100% - 1.5rem);
+  transform:translate(-50%, 140%); visibility:hidden; transition:transform .55s cubic-bezier(.2,.8,.2,1), visibility 0s linear .55s; border-radius:18px; padding:10px;
+  background:rgba(6,10,24,.92); backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  box-shadow:0 0 30px rgba(255,45,155,.3), 0 0 60px rgba(34,228,245,.18), 0 18px 50px rgba(0,0,0,.6)}
+.dock::before{content:""; position:absolute; inset:-1px; padding:2px; border-radius:inherit; pointer-events:none;
+  background:linear-gradient(135deg, rgba(255,45,155,.9), rgba(34,228,245,.9));
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0)}
+.dock.open{transform:translate(-50%, 0); visibility:visible; transition:transform .55s cubic-bezier(.2,.8,.2,1), visibility 0s}
+.dock-frame{border-radius:12px; overflow:hidden; height:152px; background:#0A1022}
+.dock-frame iframe{display:block; width:100%; height:152px; border:0}
+.dock-x{position:absolute; top:-14px; right:-10px; width:32px; height:32px; border-radius:50%; border:0; cursor:pointer; display:grid; place-items:center;
+  color:var(--ink); background:#0B1228; box-shadow:0 0 0 2px rgba(34,228,245,.55), 0 4px 14px rgba(0,0,0,.5)}
+.dock-x svg{width:14px; height:14px}
+body.has-dock footer{padding-bottom:13rem}
+
+/* footer: the same as the game pages */
+footer{margin-top:1rem; padding:2.5rem 0 3rem; border-top:1px solid var(--line); color:var(--muted); font-size:.88rem}
+.foot{display:flex; flex-wrap:wrap; gap:1.25rem 2rem; align-items:center; justify-content:space-between}
+.foot-brand{font-weight:700; font-size:1.25rem; color:var(--ink); letter-spacing:.02em; text-shadow:-2px 0 rgba(255,45,155,.75),2px 0 rgba(34,228,245,.75)}
+.socials{display:flex; flex-wrap:wrap; gap:.75rem; list-style:none; margin:0; padding:0}
+.copy{width:100%; margin:0}
+.copy p{margin:0; font-size:.85rem}
+.copy .label{margin-top:.2rem; font-size:.8rem; opacity:.85}
+.more{display:inline-block; margin-top:.4rem; color:var(--muted); font-size:.85rem; text-decoration:underline; text-decoration-color:rgba(143,163,200,.35); text-underline-offset:3px}
+.more:hover{color:var(--ink)}
+
+@media (max-width:620px){
+  .rel-grid{grid-template-columns:repeat(2, minmax(0,1fr)); gap:.85rem}
+  .rel-body{padding:.7rem .75rem .8rem}
+  .rel h3{font-size:.95rem}
+  .meta{font-size:.78rem}
+  .meta b{display:block; margin:0 0 .1rem}
+  .play{width:42px; height:42px; right:8px; bottom:8px}
+  .play svg{width:16px; height:16px}
+  .lk{width:30px; height:30px}
+  .lk svg{width:16px; height:16px}
+  .ribbon{width:96px; height:96px}
+  .ribbon span{top:16px; left:-38px; width:140px; font-size:.56rem; padding:4px 0}
+  .hero{padding-top:1.75rem}
+}
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  .glow, .visor span, .gal, .i-eq rect{animation:none}
+  .rel, .rel.in{opacity:1; transform:none; transition:none}
+  .cover img{transition:none}
+  .dock{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="grid"></div>
+<div class="glow g1" aria-hidden="true"></div>
+<div class="glow g2" aria-hidden="true"></div>
+
+<nav class="top-links" aria-label="ECHO Botz links">
+  <a class="tl" href="https://echo1onchain.xyz/"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg><span>ECHO Botz Home</span></a>
+</nav>
+
+<main>
+  <header class="hero">
+    <div class="wrap">
+      <div class="visor" aria-hidden="true"><span></span><span></span></div>
+      <span class="eyebrow">Galactic Records</span>
+      <h1>Echo1 Music</h1>
+      <p class="tagline">Tap any cover to listen right here, or open it on your favorite streaming app.</p>
+      <a class="follow" href="https://open.spotify.com/artist/63XWxjfJb7v7pSwdn9F8u6" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#04060E"/><path d="M6.5 9.3c3.6-1.1 8-.8 11 1M7 12.4c3-.9 6.6-.6 9.2.9M7.6 15.3c2.4-.6 5-.4 7.1.8" stroke="#1ED760" stroke-width="1.7" stroke-linecap="round" fill="none"/></svg>Follow on Spotify</a>
+      <p class="stats" id="stats"></p>
+    </div>
+  </header>
+
+  <section aria-labelledby="rel-title">
+    <div class="wrap">
+      <h2 id="rel-title" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Releases</h2>
+      <div class="chips" role="group" aria-label="Filter releases">
+        <button class="chip" type="button" data-f="all" aria-pressed="true">All</button>
+        <button class="chip" type="button" data-f="ALBUM" aria-pressed="false">Albums</button>
+        <button class="chip" type="button" data-f="EP" aria-pressed="false">EPs</button>
+        <button class="chip" type="button" data-f="SINGLE" aria-pressed="false">Singles</button>
+      </div>
+      <ul class="rel-grid" id="rel-grid"></ul>
+      <noscript><p style="text-align:center"><a href="https://open.spotify.com/artist/63XWxjfJb7v7pSwdn9F8u6">Listen to Echo1 on Spotify</a></p></noscript>
+    </div>
+  </section>
+</main>
+
+<div class="dock" id="dock" aria-live="polite">
+  <button class="dock-x" id="dockX" type="button" aria-label="Close player"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <div class="dock-frame" id="dockFrame"></div>
+</div>
+
+<footer>
+  <div class="wrap foot">
+    <span class="foot-brand">ECHO Botz</span>
+    <ul class="socials">
+      <li><a class="tl" href="https://x.com/Echo1OnChain" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.2 2.5h3.4l-7.4 8.5 8.7 11.5h-6.8l-5.3-7-6.1 7H1.3l7.9-9.1L.9 2.5h7l4.8 6.4 5.5-6.4zm-1.2 18h1.9L7.1 4.4H5.1L17 20.5z"/></svg><span>@Echo1OnChain</span></a></li>
+      <li><a class="tl" href="https://x.com/EchoBotzSOL" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M18.2 2.5h3.4l-7.4 8.5 8.7 11.5h-6.8l-5.3-7-6.1 7H1.3l7.9-9.1L.9 2.5h7l4.8 6.4 5.5-6.4zm-1.2 18h1.9L7.1 4.4H5.1L17 20.5z"/></svg><span>@EchoBotzSOL</span></a></li>
+      <li><a class="tl" href="https://open.spotify.com/artist/63XWxjfJb7v7pSwdn9F8u6" target="_blank" rel="noopener" aria-label="Listen to Echo1 on Spotify"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#1ED760"/><path d="M6.5 9.3c3.6-1.1 8-.8 11 1M7 12.4c3-.9 6.6-.6 9.2.9M7.6 15.3c2.4-.6 5-.4 7.1.8" stroke="#04060E" stroke-width="1.7" stroke-linecap="round" fill="none"/></svg><span>Listen on Spotify</span></a></li>
+    </ul>
+    <div class="copy">
+      <p>© 2026 ECHO Botz. Built on Solana.</p>
+      <p class="label">Music by Echo1 on <span class="gal">Galactic Records</span></p>
+      <a class="more" href="https://echo1onchain.xyz/">Play the ECHO Botz games</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* Releases: pulled from Echo1's Spotify artist page. Apple Music and Deezer links come from each store's own catalog. Newest first. */
+const RELEASES = [{"id":"7xP7d32awNvNAUUGdo1miW","title":"BullBears Tilt","date":"2026-07-29","type":"SINGLE","tracks":1,"feat":[],"apple":"https://music.apple.com/us/album/bullbears-tilt-single/6795895593","deezer":"https://www.deezer.com/album/1040971052","cover":"covers/7xP7d32awNvNAUUGdo1miW.webp"},{"id":"3ozymhuFfPSBMwKuRIYCJd","title":"Rasta Baby","date":"2026-07-29","type":"SINGLE","tracks":2,"feat":[],"apple":"https://music.apple.com/us/album/rasta-baby-single/6795884883","deezer":"https://www.deezer.com/album/1041039252","cover":"covers/3ozymhuFfPSBMwKuRIYCJd.webp"},{"id":"34duVXBtDiWeKZXoHSfisr","title":"BullBears Bob and Wiggle","date":"2026-07-25","type":"SINGLE","tracks":1,"feat":[],"apple":"https://music.apple.com/us/album/bullbears-bob-and-wiggle-single/6794588274","deezer":"https://www.deezer.com/album/1037752242","cover":"covers/34duVXBtDiWeKZXoHSfisr.webp"},{"id":"4FYGUZxDPGP3cz0bJYnYTd","title":"BullBears Vol. 2: The BullBear Revolution","date":"2026-07-10","type":"ALBUM","tracks":14,"feat":[],"apple":"https://music.apple.com/us/album/bullbears-vol-2-the-bullbear-revolution/6789461304","deezer":"https://www.deezer.com/album/1025618692","cover":"covers/4FYGUZxDPGP3cz0bJYnYTd.webp"},{"id":"2F0GS027QyQCHTFebwDzSC","title":"Stargazer","date":"2026-07-02","type":"EP","tracks":6,"feat":["X a.d."],"apple":"https://music.apple.com/us/album/stargazer-feat-x-a-d-ep/6787303541","deezer":"https://www.deezer.com/album/1020217551","cover":"covers/2F0GS027QyQCHTFebwDzSC.webp"},{"id":"6yM0vV2kioMjr1bqCHr5Ng","title":"Happy for a Change","date":"2026-05-08","type":"ALBUM","tracks":10,"feat":[],"apple":"https://music.apple.com/us/album/happy-for-a-change/6766176894","deezer":"https://www.deezer.com/album/973751411","cover":"covers/6yM0vV2kioMjr1bqCHr5Ng.webp"},{"id":"1AcqJFOAhmV0KUJGsXKyDx","title":"Phantom Frequency","date":"2026-04-17","type":"EP","tracks":5,"feat":[],"apple":"https://music.apple.com/us/album/phantom-frequency-ep/1891390323","deezer":"https://www.deezer.com/album/955176721","cover":"covers/1AcqJFOAhmV0KUJGsXKyDx.webp"},{"id":"5eCJdPcTQD8sSa9nDVVdJi","title":"Echo's in the Void","date":"2026-04-01","type":"ALBUM","tracks":10,"feat":[],"apple":"https://music.apple.com/us/album/echos-in-the-void/1886944711","deezer":"https://www.deezer.com/album/942473101","cover":"covers/5eCJdPcTQD8sSa9nDVVdJi.webp"},{"id":"2UyqvIXp1Aww4Fo1Zwjinv","title":"Galaxy's Heartbeat","date":"2026-03-24","type":"SINGLE","tracks":1,"feat":["X a.d."],"apple":"https://music.apple.com/us/album/galaxys-heartbeat-feat-x-a-d-single/1887930200","deezer":"https://www.deezer.com/album/946874021","cover":"covers/2UyqvIXp1Aww4Fo1Zwjinv.webp"},{"id":"6Yk9IABM06dws7b9ALYaxt","title":"Turn it up Tonight","date":"2026-03-20","type":"SINGLE","tracks":1,"feat":[],"apple":"https://music.apple.com/us/album/turn-it-up-tonight-single/1886808665","deezer":"https://www.deezer.com/album/943934481","cover":"covers/6Yk9IABM06dws7b9ALYaxt.webp"},{"id":"3DlTgA49DK72GmVbfFMI8o","title":"Shadow Circuit","date":"2026-03-18","type":"SINGLE","tracks":1,"feat":[],"apple":"https://music.apple.com/us/album/shadow-circuit-single/1886416120","deezer":"https://www.deezer.com/album/942427411","cover":"covers/3DlTgA49DK72GmVbfFMI8o.webp"},{"id":"0Itm8QHFyQHAU6QkBuRHvg","title":"Thank you, Mom","date":"2026-03-16","type":"SINGLE","tracks":1,"feat":[],"apple":"https://music.apple.com/us/album/thank-you-mom-single/1886343761","deezer":"https://www.deezer.com/album/940673631","cover":"covers/0Itm8QHFyQHAU6QkBuRHvg.webp"},{"id":"01YC1RwAF8igs0YNFUL5To","title":"BullBears Vol. 1: The BullBear Era","date":"2026-03-15","type":"ALBUM","tracks":11,"feat":[],"apple":"https://music.apple.com/us/album/bullbears-vol-1-the-bullbear-era/1886153239","deezer":"https://www.deezer.com/album/940635251","cover":"covers/01YC1RwAF8igs0YNFUL5To.webp"},{"id":"4iM9C9tlk4BjGcvq2SD93Y","title":"Alone Between the Stars","date":"2026-03-15","type":"SINGLE","tracks":1,"feat":[],"apple":"https://music.apple.com/us/album/alone-between-the-stars-single/1886036835","deezer":"https://www.deezer.com/album/940248551","cover":"covers/4iM9C9tlk4BjGcvq2SD93Y.webp"},{"id":"3RHLVBBTZEBzRNvjV4kGeb","title":"Black Hole Glow","date":"2026-03-15","type":"SINGLE","tracks":1,"feat":[],"apple":"https://music.apple.com/us/album/black-hole-glow-single/1886343639","deezer":"https://www.deezer.com/album/940193061","cover":"covers/3RHLVBBTZEBzRNvjV4kGeb.webp"},{"id":"7LUUwbXL8Uy6UBPUU3MKJq","title":"Bloodline","date":"2026-03-15","type":"SINGLE","tracks":1,"feat":[],"apple":"https://music.apple.com/us/album/bloodline-single/1886152857","deezer":"https://www.deezer.com/album/940594571","cover":"covers/7LUUwbXL8Uy6UBPUU3MKJq.webp"},{"id":"15ywtiw9ULr3VsLl4cTmDL","title":"Locked in the Loop","date":"2026-03-15","type":"SINGLE","tracks":1,"feat":[],"apple":"https://music.apple.com/us/album/locked-in-the-loop-single/1886100638","deezer":"https://www.deezer.com/album/940232021","cover":"covers/15ywtiw9ULr3VsLl4cTmDL.webp"},{"id":"3zxxRgMPmnv2VdN9iclNQu","title":"Low Orbit Lullaby","date":"2026-03-15","type":"SINGLE","tracks":1,"feat":[],"apple":"https://music.apple.com/us/album/low-orbit-lullaby-single/1886343763","deezer":"https://www.deezer.com/album/940340741","cover":"covers/3zxxRgMPmnv2VdN9iclNQu.webp"},{"id":"2P6z7VAH8LfZYeSlG5ZmWu","title":"Make Your Move","date":"2026-03-15","type":"SINGLE","tracks":1,"feat":[],"apple":"https://music.apple.com/us/album/make-your-move-single/1886100846","deezer":"https://www.deezer.com/album/940276651","cover":"covers/2P6z7VAH8LfZYeSlG5ZmWu.webp"},{"id":"5DDTeLbCOIgycAn2gxNEzJ","title":"Quite Warning","date":"2026-03-15","type":"SINGLE","tracks":1,"feat":[],"apple":"https://music.apple.com/us/album/quite-warning-single/1886037867","deezer":"https://www.deezer.com/album/940597781","cover":"covers/5DDTeLbCOIgycAn2gxNEzJ.webp"},{"id":"6DwQrimfhUV8F0XKMzamjx","title":"Red-Zone Ghost with the Blackout Sound","date":"2026-03-15","type":"SINGLE","tracks":1,"feat":[],"apple":"https://music.apple.com/us/album/red-zone-ghost-with-the-blackout-sound-single/1886037698","deezer":"https://www.deezer.com/album/940594871","cover":"covers/6DwQrimfhUV8F0XKMzamjx.webp"},{"id":"4KC2QTcOeMb9EprjgT7FUO","title":"Shadows in the Flow","date":"2026-03-15","type":"SINGLE","tracks":1,"feat":[],"apple":"https://music.apple.com/us/album/shadows-in-the-flow-single/1886343731","deezer":"https://www.deezer.com/album/940596031","cover":"covers/4KC2QTcOeMb9EprjgT7FUO.webp"},{"id":"0r1ANzSm7UkA4FL10BtZQ5","title":"Something Else","date":"2026-03-15","type":"SINGLE","tracks":1,"feat":["X a.d."],"apple":"https://music.apple.com/us/album/something-else-feat-x-a-d-single/1886152655","deezer":"https://www.deezer.com/album/940857651","cover":"covers/0r1ANzSm7UkA4FL10BtZQ5.webp"},{"id":"2mlN9rwOvHLXWfX7kazN92","title":"Static in the Stars (Starlight Pulse Remix)","date":"2026-03-15","type":"SINGLE","tracks":1,"feat":[],"apple":null,"deezer":"https://www.deezer.com/album/940157571","cover":"covers/2mlN9rwOvHLXWfX7kazN92.webp"},{"id":"5xAsftUSUzWO0YySA1K5E0","title":"Wild Weekend","date":"2026-03-15","type":"SINGLE","tracks":1,"feat":[],"apple":"https://music.apple.com/us/album/wild-weekend-single/1886152855","deezer":"https://www.deezer.com/album/940595691","cover":"covers/5xAsftUSUzWO0YySA1K5E0.webp"},{"id":"5BTGkvcKxk28t75SusZcw8","title":"Static in the Stars","date":"2026-03-14","type":"SINGLE","tracks":1,"feat":[],"apple":"https://music.apple.com/us/album/static-in-the-stars-single/1886153023","deezer":"https://www.deezer.com/album/940132851","cover":"covers/5BTGkvcKxk28t75SusZcw8.webp"}];
+const NEW_COUNT = 2;
+const ICON = {
+  spotify: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#1ED760"/><path d="M6.5 9.3c3.6-1.1 8-.8 11 1M7 12.4c3-.9 6.6-.6 9.2.9M7.6 15.3c2.4-.6 5-.4 7.1.8" stroke="#04060E" stroke-width="1.7" stroke-linecap="round" fill="none"/></svg>',
+  apple: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#FA2D55"/><path d="M15.8 5.2v9.3a2.3 2.3 0 1 1-1.4-2.1V8.2l-4.6 1.1v6.6a2.3 2.3 0 1 1-1.4-2.1V7.4z" fill="#fff"/></svg>',
+  deezer: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="12" fill="#A238FF"/><g fill="#fff"><rect x="5" y="14.5" width="3" height="3" rx=".6"/><rect x="9" y="12" width="3" height="5.5" rx=".6"/><rect x="13" y="9.5" width="3" height="8" rx=".6"/><rect x="17" y="7" width="2.4" height="10.5" rx=".6"/></g></svg>'
+};
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const TYPE = {ALBUM:'Album', EP:'EP', SINGLE:'Single'};
+const grid = document.getElementById('rel-grid');
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+RELEASES.forEach((r, i) => {
+  const d = r.date.split('-');
+  const when = MON[+d[1] - 1] + ' ' + d[0];
+  const tracks = r.tracks > 1 ? ' · ' + r.tracks + ' songs' : '';
+  const feat = r.feat.length ? ' with ' + r.feat.join(', ') : '';
+  const sp = 'https://open.spotify.com/album/' + r.id;
+  let links = '<a class="lk" href="' + sp + '" target="_blank" rel="noopener" aria-label="' + esc(r.title) + ' on Spotify" title="Spotify">' + ICON.spotify + '</a>';
+  if (r.apple) links += '<a class="lk" href="' + r.apple + '" target="_blank" rel="noopener" aria-label="' + esc(r.title) + ' on Apple Music" title="Apple Music">' + ICON.apple + '</a>';
+  if (r.deezer) links += '<a class="lk" href="' + r.deezer + '" target="_blank" rel="noopener" aria-label="' + esc(r.title) + ' on Deezer" title="Deezer">' + ICON.deezer + '</a>';
+  const li = document.createElement('li');
+  li.className = 'rel';
+  li.dataset.type = r.type;
+  li.dataset.id = r.id;
+  li.innerHTML =
+    (i < NEW_COUNT ? '<div class="ribbon" aria-hidden="true"><span>NEW RELEASE</span></div>' : '') +
+    '<button class="cover" type="button" aria-label="Play ' + esc(r.title) + '">' +
+      '<img src="' + r.cover + '" alt="" width="400" height="400" loading="' + (i < 8 ? 'eager' : 'lazy') + '" decoding="async">' +
+      '<span class="shade"></span>' +
+      '<span class="play"><svg class="i-play" viewBox="0 0 16 16" fill="currentColor"><path d="M3 1.5v13l11.5-6.5z"/></svg>' +
+      '<svg class="i-eq" viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="3" width="3" height="11" rx="1"/><rect x="6.5" y="3" width="3" height="11" rx="1"/><rect x="11" y="3" width="3" height="11" rx="1"/></svg></span>' +
+    '</button>' +
+    '<div class="rel-body"><h3>' + esc(r.title) + '</h3>' +
+    '<p class="meta"><b>' + TYPE[r.type] + '</b>' + when + tracks + esc(feat) + '</p>' +
+    '<div class="links">' + links + '</div></div>';
+  grid.appendChild(li);
+});
+
+const counts = {ALBUM:0, EP:0, SINGLE:0};
+RELEASES.forEach(r => counts[r.type]++);
+document.getElementById('stats').textContent = counts.ALBUM + ' albums  ·  ' + counts.EP + ' EPs  ·  ' + counts.SINGLE + ' singles';
+
+/* calm fade in as cards come on screen */
+const cards = [...grid.children];
+if ('IntersectionObserver' in window && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  const io = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { const el = e.target; setTimeout(() => el.classList.add('in'), (+el.dataset.k % 4) * 90); io.unobserve(el); }
+  }), {rootMargin: '0px 0px -40px 0px'});
+  cards.forEach((c, k) => { c.dataset.k = k; io.observe(c); });
+} else cards.forEach(c => c.classList.add('in'));
+
+/* filters */
+document.querySelectorAll('.chip').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.chip').forEach(x => x.setAttribute('aria-pressed', x === b));
+  const f = b.dataset.f;
+  cards.forEach(c => { c.hidden = !(f === 'all' || c.dataset.type === f); if (!c.hidden) c.classList.add('in'); });
+}));
+
+/* player: Spotify's official embed, created only on the first play click */
+const dock = document.getElementById('dock'), frame = document.getElementById('dockFrame');
+let ctrl = null, apiLoading = false, pending = null, current = null;
+function mark(id) { cards.forEach(c => c.classList.toggle('playing', c.dataset.id === id)); }
+function openDock() { dock.classList.add('open'); document.body.classList.add('has-dock'); }
+function play(id) {
+  current = id; mark(id); openDock();
+  const uri = 'spotify:album:' + id;
+  if (ctrl) { ctrl.loadUri(uri); ctrl.play(); return; }
+  pending = uri;
+  if (apiLoading) return;
+  apiLoading = true;
+  const el = document.createElement('div'); frame.appendChild(el);
+  window.onSpotifyIframeApiReady = API => {
+    API.createController(el, {uri: pending, width: '100%', height: 152}, c => {
+      ctrl = c;
+      c.addListener('ready', () => { if (pending) { c.play(); pending = null; } });
+    });
+  };
+  const s = document.createElement('script');
+  s.src = 'https://open.spotify.com/embed/iframe-api/v1'; s.async = true;
+  s.onerror = () => { frame.innerHTML = '<iframe src="https://open.spotify.com/embed/album/' + id + '?utm_source=generator&theme=0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" title="Spotify player"></iframe>'; };
+  document.head.appendChild(s);
+}
+grid.addEventListener('click', e => {
+  const b = e.target.closest('.cover'); if (!b) return;
+  play(b.closest('.rel').dataset.id);
+});
+document.getElementById('dockX').addEventListener('click', () => {
+  if (ctrl) ctrl.pause();
+  dock.classList.remove('open'); document.body.classList.remove('has-dock'); mark(null);
+});
+</script>
+</body>
+</html>
