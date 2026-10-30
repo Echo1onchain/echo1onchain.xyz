@@ -702,7 +702,7 @@ function stepFx(vdt,dt){for(const p of G.parts){p.x+=p.vx*vdt;p.y+=p.vy*vdt;if(p
   if(G.shock){G.shock.t+=dt;if(G.shock.t>1.1)G.shock=null}
   if(G.call){G.call.t+=dt*(G.callQ.length?1.7:1);if(G.call.t>1.25)G.call=null}while(G.callQ.length&&G.time-G.callQ[0].at>2.2)G.callQ.shift();if(!G.call&&G.callQ.length)G.call=G.callQ.shift();
   G.shake=Math.max(0,G.shake-dt*1.2);G.flash=Math.max(0,G.flash-dt*2.5);G.redFlash=Math.max(0,G.redFlash-dt*2)}
-function update(dt){G.time+=dt;if(Snd.clock.running)Snd.sched(G.time);if(Snd.songOn&&!G.songSync){G.songSync=true;G.bpm=Snd.setLevel(G.level)}
+function update(dt){G.time+=dt;if(Snd.clock.running)Snd.sched(simNow());if(Snd.songOn&&!G.songSync){G.songSync=true;G.bpm=Snd.setLevel(G.level)}
   while(Snd.beats.length&&Snd.beats[0].t<=G.time){const b=Snd.beats.shift();onBeat(b)}
   G.beatPulse=Math.max(0,G.beatPulse-dt*3);
   G.slowT=Math.max(0,G.slowT-dt);G.hitStop=Math.max(0,(G.hitStop||0)-dt);const vdt=dt*(G.slowT>0?0.35:1)*(G.hitStop>0?0.08:1);const pdt=vdt*(G.pow.slow>0?0.5:1);
@@ -1248,6 +1248,11 @@ function render(){g.save();if(G.shake>0){const s=Math.min(1,G.shake)*Math.min(W,
 
 // ================= FLOW =================
 let last=performance.now();
+/* Game clock: game time keeps up with real time. A slow frame is run as several steps of at most 50 ms,
+   so a slow device is choppier but never slower. One gap over 250 ms (a stall, or coming back to the tab)
+   only moves the game 50 ms, so it holds still instead of jumping ahead. SUBLAG is the part of this frame
+   not run yet, so the music beat lines up with the end of the frame. */
+let SUBLAG=-1;function simNow(){return G.time+(SUBLAG>=0?SUBLAG:Math.min(0.25,Math.max(0,(performance.now()-last)/1000)))}
 function demoTick(dt){G.time+=dt;const spb=60/96;if(G.lastBeatT===undefined||G.time-G.lastBeatT>=spb){G.lastBeatT=G.time;G.beatPulse=1;
     if(Math.random()<0.7){const busy=new Set(G.pumps.map(p=>p.h));const f=holes.map((_,i)=>i).filter(i=>!busy.has(i));const r=Math.random();if(f.length)G.pumps.push(harvestItem({h:f[Math.floor(Math.random()*f.length)],type:r<0.12?'ghost':r<0.21?'gold':r<0.28?'bomb':r<0.33?'candy':harvestPick(),t:0,up:1.6,smashed:false,seed:Math.random()*10,lean:0}))}
     const tgt=G.pumps.find(p=>p.type!=='ghost'&&!p.smashed&&p.t>0.3);if(tgt){const h=holes[tgt.h];tgt.smashed=true;swingTo(h.x,h.y-h.rx*0.55,()=>{G.pumps=G.pumps.filter(q=>q!==tgt);const R=h.rx,y=h.y-R*0.55;demoSplat(tgt,h.x,y,R)})}}
@@ -1257,10 +1262,11 @@ function demoSplat(p,x,y,R){if(p.type!=='turkey'&&holes[p.h])sprHalves(p,holes[p
   if(p.type==='pie'){const f=pieOf(p.seed).fill[1];for(let i=0;i<9;i++){const a=-Math.PI/2+(Math.random()-0.5)*2.8,v=R*(4+Math.random()*6);fxPush({kind:'blob',x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,size:R*(0.08+Math.random()*0.08),col:i%3?'#fff6e6':f,life:0.9,rot:Math.random()*6,vr:0})}}
   if(p.type==='turkey'){const FE=['#ff4d6d','#ff9a2e','#ffd84a','#c87a3e','#fff0c8'];for(let i=0;i<12;i++){const a=-Math.PI/2+(Math.random()-0.5)*3,v=R*(3+Math.random()*5);fxPush({kind:'feather',x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,size:R*0.14,col:FE[i%4],life:1.5,rot:0,vr:0,ph:Math.random()*6})}}
   G.shake=0.1}
-function loop(now){const dt=Math.min(0.05,(now-last)/1000);last=now;T+=dt;
-  if(state==='play')update(dt);else if(state==='title'||state==='tut')demoTick(dt);else if(state==='over')stepFx(dt,dt);
+function loop(now){let rd=(now-last)/1000;last=now;if(!(rd>0))rd=0;else if(rd>0.25)rd=0.05;
+  const n=Math.max(1,Math.ceil(rd/0.05-1e-9)),dt=rd/n;T+=rd;
+  for(let i=0;i<n;i++){SUBLAG=dt*(n-1-i);if(state==='play')update(dt);else if(state==='title'||state==='tut')demoTick(dt);else if(state==='over')stepFx(dt,dt)}SUBLAG=-1;
   render();requestAnimationFrame(loop)}
-setInterval(()=>{if(state==='play'&&Snd.clock.running)Snd.sched(G.time)},25);
+setInterval(()=>{if(state==='play'&&Snd.clock.running)Snd.sched(simNow())},25);
 function show(id){['title','tutorial','over','paused','topOv'].forEach(k=>$(k).classList.toggle('hidden',k!==id));$('superBtn').classList.toggle('hidden',!(state==='play'&&id===null))}
 function startFlow(){Snd.resume();Snd.blip(700);if(!LS.get('tutSeen',false)){state='tut';show('tutorial');drawIcons()}else beginRun()}
 function beginRun(){LS.set('tutSeen',true);psBegin();newGame();REC.begin();layout();state='play';show(null);$('pause').classList.remove('hidden');Snd.combo=0;Snd.clock.bpm=G.bpm;Snd.start(G.time);if(Snd.songOn)G.bpm=Snd.setLevel(G.level);lastPct=-1;updSuperBtn()}
