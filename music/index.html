@@ -90,7 +90,7 @@ main, footer, .top-links{position:relative; z-index:2}
 .rel{position:relative; display:flex; flex-direction:column; border-radius:18px; background:var(--panel);
   backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
   box-shadow:0 0 22px rgba(255,45,155,.22), 0 0 44px rgba(34,228,245,.12);
-  transition:transform .6s ease, box-shadow .6s ease, opacity .7s ease;
+  transition:transform .6s ease, scale .6s ease, box-shadow .6s ease, opacity .7s ease;
   opacity:0; transform:translateY(14px)}
 .rel.in{opacity:1; transform:none}
 .rel::before{content:""; position:absolute; inset:-1px; padding:2px; border-radius:inherit; pointer-events:none; z-index:3;
@@ -98,8 +98,15 @@ main, footer, .top-links{position:relative; z-index:2}
   -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite:xor;
   mask:linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0)}
 .rel.in:hover, .rel.in:focus-within{transform:translateY(-4px); box-shadow:0 0 34px rgba(255,45,155,.42), 0 0 66px rgba(34,228,245,.26)}
-.rel.playing{box-shadow:0 0 30px rgba(30,215,96,.45), 0 0 60px rgba(34,228,245,.25)}
-.rel.playing::before{background:linear-gradient(135deg, #1ED760, rgba(34,228,245,.9))}
+.rel.playing, .rel.in.playing{z-index:4; scale:1.06; box-shadow:0 0 40px rgba(30,215,96,.6), 0 0 80px rgba(34,228,245,.32);
+  animation:rock 6s infinite}
+.rel.playing::before{inset:-2px; padding:4px; background:linear-gradient(135deg, #1ED760, rgba(34,228,245,.9))}
+/* slow, gentle rock on the card that is playing */
+@keyframes rock{
+  0%{rotate:0deg; animation-timing-function:ease-out}
+  25%{rotate:1.5deg; animation-timing-function:ease-in-out}
+  75%{rotate:-1.5deg; animation-timing-function:ease-in}
+  100%{rotate:0deg}}
 .rel[hidden]{display:none}
 
 .cover{position:relative; margin:0; aspect-ratio:1; overflow:hidden; border-radius:18px 18px 0 0; background:#0A1022; cursor:pointer; border:0; padding:0; width:100%; display:block}
@@ -165,6 +172,27 @@ footer{margin-top:1rem; padding:2.5rem 0 3rem; border-top:1px solid var(--line);
 .more{display:inline-block; margin-top:.4rem; color:var(--muted); font-size:.85rem; text-decoration:underline; text-decoration-color:rgba(143,163,200,.35); text-underline-offset:3px}
 .more:hover{color:var(--ink)}
 
+/* autoplay next fallback: if the browser blocks autoplay, a small ECHO Botz rises from the title strip of the next card and points at its play button */
+.rel.nudge{z-index:5; cursor:pointer}
+.rel.nudge .play{opacity:1; transform:none; animation:nbPulse 2.4s ease-in-out infinite}
+@keyframes nbPulse{0%,100%{scale:1; box-shadow:0 6px 20px rgba(0,0,0,.45), 0 0 18px rgba(30,215,96,.45)}
+  50%{scale:1.08; box-shadow:0 6px 20px rgba(0,0,0,.45), 0 0 0 6px rgba(30,215,96,.18), 0 0 34px rgba(30,215,96,.85)}}
+.nbot{position:absolute; right:66px; bottom:-6px; width:115px; height:83px; z-index:2; cursor:pointer; display:block}
+.nbot svg{display:block; width:100%; height:100%; overflow:visible}
+.nbot .nb-rise{animation:nbRise .7s cubic-bezier(.2,.8,.2,1) both}
+.nbot .bw-eyes{transform-box:fill-box; transform-origin:center; transform:translate(2.5px,0)}
+.nbot .bw-blink{transform-box:fill-box; transform-origin:center; animation:nbBlink 6.4s infinite; animation-delay:-1.4s}
+.nbot .nb-bob{animation:nbBob 4.8s ease-in-out infinite}
+.nbot .nb-hover{animation:nbHover 3.6s ease-in-out infinite}
+.nbot .nb-jet{transform-box:fill-box; transform-origin:center; animation:nbJet 3.6s ease-in-out infinite}
+.nbot .nb-point{animation:nbPoint 2.4s ease-in-out .7s infinite}
+@keyframes nbRise{from{transform:translateY(74px)}to{transform:none}}
+@keyframes nbBlink{0%,93%,100%{transform:scaleY(1)}95.5%{transform:scaleY(.12)}}
+@keyframes nbBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.6px)}}
+@keyframes nbHover{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.4px)}}
+@keyframes nbJet{0%,100%{transform:scaleX(1); opacity:.45}50%{transform:scaleX(.8); opacity:.3}}
+@keyframes nbPoint{0%,60%,100%{transform:translate(0,0)} 30%{transform:translate(3px,-.4px)}}
+
 @media (max-width:620px){
   .rel-grid{grid-template-columns:repeat(2, minmax(0,1fr)); gap:.85rem}
   .rel-body{padding:.7rem .75rem .8rem}
@@ -178,13 +206,16 @@ footer{margin-top:1rem; padding:2.5rem 0 3rem; border-top:1px solid var(--line);
   .ribbon{width:96px; height:96px}
   .ribbon span{top:16px; left:-38px; width:140px; font-size:.56rem; padding:4px 0}
   .hero{padding-top:1.75rem}
+  .nbot{right:52px; width:78px; height:56px}
 }
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto}
-  .glow, .visor span, .gal, .i-eq rect{animation:none}
+  .glow, .visor span, .gal, .i-eq rect, .rel.playing, .rel.in.playing{animation:none}
   .rel, .rel.in{opacity:1; transform:none; transition:none}
   .cover img{transition:none}
   .dock{transition:none}
+  .rel.nudge .play{animation:none; box-shadow:0 6px 20px rgba(0,0,0,.45), 0 0 0 5px rgba(30,215,96,.2), 0 0 30px rgba(30,215,96,.8)}
+  .nbot *{animation:none!important}
 }
 </style>
 </head>
@@ -308,11 +339,24 @@ document.querySelectorAll('.chip').forEach(b => b.addEventListener('click', () =
 
 /* player: Spotify's official embed, created only on the first play click */
 const dock = document.getElementById('dock'), frame = document.getElementById('dockFrame');
-let ctrl = null, apiLoading = false, pending = null, current = null;
+let ctrl = null, apiLoading = false, pending = null, current = null, endTimer = null, armed = false, autoTimer = null, waitOk = false;
+/* a small ECHO Botz DJ bot with headphones, used only when the browser blocks autoplay next */
+const nbot = document.createElement('span');
+nbot.className = 'nbot'; nbot.setAttribute('aria-hidden', 'true');
+nbot.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 72" focusable="false"><defs><linearGradient id="nbG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#11203A"/><stop offset="1" stop-color="#040812"/></linearGradient><filter id="nbF" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="1.8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="nbS" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="0" stdDeviation="2.4" flood-color="#B266FF" flood-opacity=".42"/></filter></defs><g filter="url(#nbS)"><g class="nb-rise"><g class="nb-bob"><rect x="20" y="54" width="38" height="30" rx="10" fill="url(#nbG)" stroke="#B266FF" stroke-opacity=".78" stroke-width="1.3"/><circle cx="39" cy="63" r="2" fill="#FF2D9B" filter="url(#nbF)"/><rect x="33" y="46" width="12" height="10" rx="3" fill="url(#nbG)" stroke="#B266FF" stroke-opacity=".78" stroke-width="1.3"/><path d="M23 60 Q14 64 13 76" fill="none" stroke="#B266FF" stroke-opacity=".78" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M23 60 Q14 64 13 76" fill="none" stroke="#11203A" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="11" y="17" width="56" height="31" rx="15.5" fill="url(#nbG)" stroke="#B266FF" stroke-opacity=".78" stroke-width="1.3"/><rect x="14.5" y="20.5" width="49" height="24" rx="12" fill="none" stroke="#B266FF" stroke-opacity=".16"/><g class="bw-eyes"><g class="bw-blink"><circle cx="30" cy="32.5" r="5" fill="#22E4F5" filter="url(#nbF)"/><circle cx="28.4" cy="30.8" r="1.4" fill="#fff" opacity=".75"/><circle cx="48" cy="32.5" r="5" fill="#22E4F5" filter="url(#nbF)"/><circle cx="46.4" cy="30.8" r="1.4" fill="#fff" opacity=".75"/></g></g><path d="M9 31 C9 4 69 4 69 31" fill="none" stroke="#B266FF" stroke-opacity=".78" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 31 C9 4 69 4 69 31" fill="none" stroke="#11203A" stroke-width="1.9999999999999996" stroke-linecap="round" stroke-linejoin="round"/><rect x="4" y="23" width="9" height="17" rx="4" fill="url(#nbG)" stroke="#B266FF" stroke-opacity=".78" stroke-width="1.3"/><rect x="65" y="23" width="9" height="17" rx="4" fill="url(#nbG)" stroke="#B266FF" stroke-opacity=".78" stroke-width="1.3"/><circle cx="8.5" cy="31.5" r="1.8" fill="#FF2D9B" filter="url(#nbF)"/><circle cx="69.5" cy="31.5" r="1.8" fill="#FF2D9B" filter="url(#nbF)"/></g><g class="nb-point"><path d="M55 61 Q65 51 75 37" fill="none" stroke="#B266FF" stroke-opacity=".78" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/><path d="M55 61 Q65 51 75 37" fill="none" stroke="#11203A" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(75 37) scale(1.2)"><rect x="7" y="-5" width="11" height="4.8" rx="2.4" fill="url(#nbG)" stroke="#B266FF" stroke-opacity=".78" stroke-width="1.3"/><rect x="-2" y="-5.6" width="12" height="11.6" rx="5" fill="url(#nbG)" stroke="#B266FF" stroke-opacity=".78" stroke-width="1.3"/><path d="M1.5 1.6h5M1.5 -1.4h3" stroke="#B266FF" stroke-opacity=".4" stroke-linecap="round"/></g></g></g></g></svg>';
+function hideNudge() { cards.forEach(c => c.classList.remove('nudge')); nbot.remove(); }
+function showNudge(id) {
+  const c = cards.find(x => x.dataset.id === id); if (!c) return;
+  mark(null); c.classList.add('nudge'); c.querySelector('.cover').appendChild(nbot);
+}
 function mark(id) { cards.forEach(c => c.classList.toggle('playing', c.dataset.id === id)); }
 function openDock() { dock.classList.add('open'); document.body.classList.add('has-dock'); }
-function play(id) {
+function play(id, auto) {
   current = id; mark(id); openDock();
+  clearTimeout(endTimer); armed = false;
+  clearTimeout(autoTimer); hideNudge(); waitOk = !!auto;
+  /* autoplay next blocked (Safari, iPhone): nothing starts within 2.5 s, so show the bot and wait for a tap */
+  if (auto) autoTimer = setTimeout(() => { if (waitOk && current === id) showNudge(id); }, 2500);
   const uri = 'spotify:album:' + id;
   if (ctrl) { ctrl.loadUri(uri); ctrl.play(); return; }
   pending = uri;
@@ -323,6 +367,20 @@ function play(id) {
     API.createController(el, {uri: pending, width: '100%', height: 152}, c => {
       ctrl = c;
       c.addListener('ready', () => { if (pending) { c.play(); pending = null; } });
+      /* autoplay next: an album plays its own songs in order, and the next song starts right as one ends.
+         When the last song reaches its end and nothing new starts, the release is done, so play the next card. */
+      c.addListener('playback_started', () => { clearTimeout(endTimer); armed = true; });
+      c.addListener('playback_update', e => {
+        const d = e.data || {};
+        if (!armed || !d.duration) return;
+        if (waitOk && !d.isPaused && d.position > 0 && d.position < d.duration - 400) {
+          waitOk = false; clearTimeout(autoTimer); hideNudge(); mark(current);
+        }
+        if (!d.isPaused && d.position >= d.duration - 400) {
+          clearTimeout(endTimer);
+          endTimer = setTimeout(() => { armed = false; playNext(); }, 2500);
+        } else clearTimeout(endTimer);
+      });
     });
   };
   const s = document.createElement('script');
@@ -330,12 +388,22 @@ function play(id) {
   s.onerror = () => { frame.innerHTML = '<iframe src="https://open.spotify.com/embed/album/' + id + '?utm_source=generator&theme=0" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" title="Spotify player"></iframe>'; };
   document.head.appendChild(s);
 }
+function playNext() {
+  if (!current || !dock.classList.contains('open')) return;
+  const all = cards, at = all.findIndex(c => c.dataset.id === current);
+  const next = all.slice(at + 1).find(c => !c.hidden);
+  if (next) play(next.dataset.id, true);
+}
 grid.addEventListener('click', e => {
+  const n = e.target.closest('.rel.nudge');
+  if (n && !e.target.closest('.lk')) { play(n.dataset.id); return; }
   const b = e.target.closest('.cover'); if (!b) return;
   play(b.closest('.rel').dataset.id);
 });
 document.getElementById('dockX').addEventListener('click', () => {
   if (ctrl) ctrl.pause();
+  clearTimeout(endTimer); armed = false;
+  clearTimeout(autoTimer); waitOk = false; hideNudge();
   dock.classList.remove('open'); document.body.classList.remove('has-dock'); mark(null);
 });
 </script>
