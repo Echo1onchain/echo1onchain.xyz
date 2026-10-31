@@ -222,7 +222,7 @@ input:focus{outline:none;border-color:var(--pk);box-shadow:0 0 0 3px rgba(255,47
       <div class="chips" role="group" aria-label="Song source">
         <button class="chip" data-mode="preset" aria-pressed="true">Halloween picks</button>
         <button class="chip" data-mode="echo1">Echo1’s playlist</button>
-        <button class="chip" data-mode="top20">Top 20</button>
+        <button class="chip" data-mode="top20">Top 15</button>
       </div>
     </section>
 
@@ -488,7 +488,7 @@ function startPreset(){
 }
 function startTop20(){
   mode = "top20";
-  queue = shuffle(ECHO1_PL.slice(0, 20)); idx = 0;   // the first 20 songs of Echo1’s playlist
+  queue = shuffle(ECHO1_PL.slice(0, 15)); idx = 0;   // the first 15 songs of Echo1’s playlist
   loadCurrent();
 }
 function startEcho1(){
