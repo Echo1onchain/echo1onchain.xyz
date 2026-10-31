@@ -180,6 +180,33 @@ kbd{font:700 .92em var(--ff);color:var(--tx);background:rgba(255,255,255,.08);bo
 .gh-share-note.ok{color:var(--cy)}
 .btn .crown{width:1.2em;height:.9em;vertical-align:-.1em;margin-right:.5em;fill:#FFC93C;filter:drop-shadow(0 0 4px rgba(255,201,60,.8))}
 </style>
+<style id="walletbot-css">
+/* walletbot v2: your own ECHO Botz under the default Bots (cosmetic only) */
+.wbsec{margin:0 0 clamp(8px,1.6vh,14px);padding-top:clamp(8px,1.4vh,12px);border-top:1px solid rgba(255,255,255,.07)}
+.wbgrid{max-height:calc(2*clamp(30px,7.5vh,60px) + 2*clamp(9px,1.5vh,11px) + 46px);overflow-y:auto;overscroll-behavior:contain;padding:8px 2px 2px;margin:-8px 0 6px;-webkit-overflow-scrolling:touch}
+.wbgrid:empty{display:none}
+.wbgrid .tile{animation:wbIn .35s ease-out both}
+.wbgrid .tile img{opacity:0;transition:opacity .4s}
+.wbgrid .tile img.ok{opacity:1}
+.wbgrid .tile .tag{background:var(--cy);color:#03141a}
+.wbmsg{font-size:clamp(10px,1.55vh,11.5px);color:var(--mu);line-height:1.45;margin:0 0 8px 2px;text-align:left}
+.wbmsg.err{color:#ff8fa3}
+.wbmsg a{color:var(--cy);font-weight:700;text-decoration:none;margin-left:.6em;white-space:nowrap;cursor:pointer}
+.wbmsg a:hover{text-decoration:underline}
+.wbctl{display:flex;gap:8px;align-items:stretch}
+.wbform{display:flex;gap:6px;flex:1;min-width:0}
+.wbform .gh-input{flex:1;min-width:0;font-size:max(16px,.8rem);padding:.42rem .65rem}
+.wbbtn{font:700 clamp(10px,1.55vh,11.5px) var(--ff);letter-spacing:.06em;color:var(--cy);background:rgba(34,228,245,.06);border:1px solid rgba(34,228,245,.45);border-radius:10px;padding:0 12px;min-height:36px;cursor:pointer;white-space:nowrap;transition:background .2s,border-color .2s}
+.wbbtn:hover,.wbbtn:focus-visible{background:rgba(34,228,245,.13);border-color:var(--cy)}
+.wbbtn svg{width:1.2em;height:1.2em;vertical-align:-.25em;margin-right:.45em}
+.wbsafe{display:flex;gap:7px;align-items:flex-start;margin:8px 0 0 2px;font-size:clamp(10px,1.45vh,11px);line-height:1.45;color:var(--mu);text-align:left}
+.wbsafe svg{flex:none;width:13px;height:13px;margin-top:.15em;color:var(--cy);opacity:.8}
+.wbsafe b{color:var(--tx);font-weight:700}
+.wbsec.loaded .wbctl,.wbsec.loaded .wbsafe{display:none}
+@media (max-width:420px){.wbctl{flex-direction:column}.wbbtn{min-height:38px}}
+@keyframes wbIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.wbgrid .tile{animation:none}.wbgrid .tile img{transition:none}}
+</style>
 </head>
 <body>
 <canvas id="c"></canvas>
@@ -208,6 +235,16 @@ kbd{font:700 .92em var(--ff);color:var(--tx);background:rgba(255,255,255,.08);bo
   <div class="pick panel">
    <div class="plabel">Choose your Bot <em id="botName"></em></div>
    <div class="row bots" id="bots"></div>
+   <section class="wbsec" id="wbSec" aria-labelledby="wbT">
+    <div class="plabel" id="wbT">Your ECHO Botz <em id="wbSub">from your wallet</em></div>
+    <div class="row bots wbgrid" id="wbGrid" role="listbox" aria-label="Your ECHO Botz"></div>
+    <p class="wbmsg" id="wbMsg" aria-live="polite">Hold an ECHO Botz? Load it and smash as your own Bot.</p>
+    <div class="wbctl" id="wbCtl">
+     <button class="wbbtn" id="wbConnect" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M16 12.5h2"/><path d="M5 6l10-3 1 3"/></svg>Connect Wallet</button>
+     <form class="wbform" id="wbForm" autocomplete="off"><input class="gh-input" id="wbAddr" type="text" inputmode="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" maxlength="64" placeholder="or paste a Solana address" aria-label="Solana wallet address"><button class="wbbtn" id="wbFind" type="submit">Find</button></form>
+    </div>
+    <p class="wbsafe" id="wbSafe"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span><b>Read-only:</b> connecting only shares your public address. We’ll never ask you to sign or approve anything. If a popup asks, reject it. Prefer not to connect? Just paste your address.</span></p>
+   </section>
    <div class="plabel">Headphone Hammer <em id="skinName"></em></div>
    <div class="row skins" id="skins"></div>
   </div>
@@ -664,7 +701,7 @@ function drawHammerHead(x,y,ang,s){const im=skinImgs[skinIdx];g.save();g.transla
   if(im&&im.complete&&im.naturalWidth){const hgt=s*im.naturalHeight/im.naturalWidth;g.shadowColor="rgba(0,0,0,.6)";g.shadowBlur=s*0.08;g.drawImage(im,-s/2,-hgt*0.04,s,hgt)}
   else{g.fillStyle='#333';g.fillRect(-s*0.5,0,s,s*0.8)}g.restore()}
 function headLen(s){const im=skinImgs[skinIdx];return s*(im&&im.naturalWidth?im.naturalHeight/im.naturalWidth:0.8)}
-function drawBot(){const B=G.bot,bs=G.botSize,im=botImgs[botIdx];const side=B.side;const D=B.dur||{wind:0.04,hit:0.11,hold:0.2,end:0.32,head:1,back:-0.15};
+function drawBot(){const B=G.bot,bs=G.botSize,im=(window.WB&&WB.img())||botImgs[botIdx];const side=B.side;const D=B.dur||{wind:0.04,hit:0.11,hold:0.2,end:0.32,head:1,back:-0.15};
   const px=B.x-side*bs*0.32,py=B.y-bs*0.45;let ang,L,hs=1;const baseS=bs*0.84;
   const idleAng=side>0?-Math.PI/2-0.5:-Math.PI/2+0.5;const idleL=bs*0.62;
   if(B.swing>=0&&B.target){const tx=B.target.x,ty=B.target.y;const a1=Math.atan2(ty-py,tx-px);const sw=D.head>1?2.6:1.9;const a0=a1+(side>0?sw:-sw);
@@ -1091,6 +1128,137 @@ setBot(botIdx);setSkin(skinIdx);layout();updBest();drawIcons();skinImgs.forEach(
       for(let r=0;r<rows;r++){const y=bottom-4-(r+1)*step;g.fillStyle=r<lit?col(r/rows,62,1):'rgba(255,255,255,.06)';g.fillRect(cx1,y,dot,dot);g.fillRect(cx2,y,dot,dot)}
       if(peak[i]>0.04){const py=bottom-4-peak[i]*rows*step-dot;g.save();g.shadowColor=col(peak[i],60,1);g.shadowBlur=14;g.fillStyle=col(peak[i],72,1);g.beginPath();g.arc(x+tw/2,py,Math.min(4,tw/4),0,Math.PI*2);g.fill();g.restore()}}}
   requestAnimationFrame(draw)})();
+</script>
+<script>
+/* ================= PLAY AS YOUR ECHO BOT (walletbot v2) =================
+   Cosmetic only: it swaps the Bot picture. Scoring, timing, the replay log and the Top 10 are untouched.
+   How it finds a holder's ECHO Botz, with no API key:
+   - ECHO Botz are Metaplex Core assets in the Core collection D7fVHzPHoufnAbTPvmeAK8EHR3xbcgUAfuV5yTdnxrTd
+     (update authority Echo1's wallet, 444 minted). The 444 asset addresses are listed below, #1 to #444.
+   - getMultipleAccounts (10 per call, public RPC) reads the first 66 bytes of each asset live from the chain;
+     a Bot counts only if the account belongs to the Core program, is an asset, its owner is the address,
+     and its collection is ECHO Botz. Other collections can never show up.
+   - The pictures are small transparent cut-outs hosted next to the game (botz/<n>.webp for the game,
+     botz/thumbs/<n>.webp for the picker), loaded only for the Bots the address holds. No metadata or full-size art.
+   Wallet connect asks only for the public key (connect()). Nothing is ever signed or sent. */
+(function(){
+"use strict";
+const WB_RPC=['https://solana-rpc.publicnode.com'];
+const BOTZ='botz/';
+const CORE='CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d',COLL='D7fVHzPHoufnAbTPvmeAK8EHR3xbcgUAfuV5yTdnxrTd';
+const ASSETS='CVdgEAc6hSHjgZU9Js6fkGV9kDoijU73qZkYj3zHFrN5,CHG98Dy24H1qdaUhwFkBtV4becVng6sNLwCfjivX289t,KbTgcnRXXd3kNYFQcLtjNsMKKN3s5ech1iptapiRsi4,5TBJkGenzzS1JNiPwNM32eJp7DU3ejd7jkv5bHxLXW25,Fcqyf5LYZSeWaFZpShqpd5ZyRz81pciSRRy27Y85wg8M,4cMCCvWgtKbPPy6rH3zCL2zY4rE7842k9ktzuZcJ7fTz,7a6XPR69L6rjVi6ubMdsVNZgdx5ZrdLRQE3pwmx3Vj8m,8Kv1VNaPtnaKzUJ7LDukEn4vfgfzUZTG4vdZEVLvCRMC,3MEmtDcK5wb3tBxhjfmoVsKYHweEYydHR1j81WQtWPuc,DPWpug8c7rJ131MpWsoZRjTHPKZyK9P8RQkXHQ5Bc6g8,92qs35FjfbTss5GMZn1rB3ETxPxi7mKXgA9M3N7hKft,HsPjdMB89Vze6ezH6u5UNxVfUZjQPgtheyugm5nLUsCX,GxzubJia44qXYW5gJjxkcKJYEjc7rnqyK7v2MZCnnmtr,ECm6UkwVFicifC9B1dNqRjrukLpAnvcpuzVvRdpDhXNu,9NCD6cmrksreReVGcrSVRDW2eLWGJ7JyrRVxjgVBxNWJ,25bCzb3VuQ33bwYT59qyHHDNEnKT9uAyuoT3qyA72zRu,73G9NmEGBNXBvpn8YYGY2Er8poPtgT7BjVH9MfL9m4MR,EFb7Hok9JioworsSpxDvWCpZCW4oftgkLDmfmLEEePSQ,F91rf4fbscjtRF4kZcChNaXKPY3Tot12vkTn2sXvnR4V,9PYCjtXwNVHBzczb7HKz3afadQbBHdR8E1vZVNfg6769,F1MnDcqZFiuYKsmWjMQbUkUqnmgQgWfkWHiMuxvyy4s6,2A3ev5dA6cd9PseJzZZYmqLJbSXfHetCadG9PDzSRbhE,6XtexRBo5AYUDy46LxTnVzBDycRgipmnmKGCmfyF3r8d,AdrHhVsJR2LCrDriPqXaLLLEmW7VnHqGyivQMAZbz5y2,8tiSQmVxdi12xVecaSph53rj4WNLGbM2yea39jyLnZsy,CKAjbyxRouxvZubMyUtwymHD8D9Qbmi7hjK7v1tDsim3,AzQJQe1BUdbQiSSYBwFFR7LDmJyMe8ZgqtaQ3wfUhYt9,G2mvEoDay6LBn7eDcDwRtCuvQLr1Zwx9CNVjWHaByUie,FCNPRVrAZ1wdKsrGqjG6bJ1Wwcm7YwTjHCrC25TAkoq,EHj8fgWqRMeK4oo86fLhy7vYHaBPrTmQLH6xoZ8XP2un,74XUbVCLitrukYsTpJ7UCxJfun5bTH3NjSneSA1xar1Q,DCSa91kKXq68F9VuZi8APZbeD85gzjzGTLF5bPQDSikp,9MJohdaoAVH2LPpxCceNpmnotzE1Qz4F4ex1Stb9PJjd,DnnR9TPSJKKwecv4kWG6Kh2WZGsshPmNoWnUZbSRGafZ,4YT18AM1zSEvC1fKme3BSfUFWVHycB1B13cGjZ7QFNi8,92q5CWnrKXLftAyjzjLTz12cp51HS5pprukjFdTaXmMA,AVEXGHiVxG998kRLUdvEfeKdr6R4AMRqe6cJ3S4nBHJm,FtvZZVemPUBU5ggmfcaZvzcsGHnZrokSM7KgaREXMTn,GddzRiUhPnxe7vWfNns6cLEfEriTQGZr8Ucg2qhZdc8q,BXomG6wUsRtoKnxdjTWY6CEmCN9x9EzB2xfoe6UFtzcb,3gdP543yCXVuagNsMJuLtdEujHNz8Vc8ME87DGh4PXSt,99FuzrrqVWu3DDFb5nSazyrxYNQA3w7MpUmxyaLriJzV,5rGkisvhyjmNUSBwLHcKUMHxNV7yDwWtwckPb5QZL3Ag,9rYJdzS3sYRYpF97WYSVgqi1CX2JuNGzvcc7v6wnGirv,3Rqs4BbcVEiH8atJ8Wo2EqazXWTfP6KGAnGS6SPfADFj,4V2AbtBfmRn6xFKohRKzDb9LpCd7yi5WtaQJo1XD6cgm,7kaKSVUhAAHyepco4KreEvmW1oA6o23v7bQUCBosD3yP,GzRLUQGpS7pGcyaRv4nuDRX9V95hsD8Z1JGs4dmJ5HhS,Dqa45prJTFJsGQ15b7YRY2RYCi7Q1FFY5AJEZ1SnCGh5,3PEH43259Xy3rHzP3itLfD7D5LzUtLhyuhq1cxnYePSZ,8A5cNL5WeescCuBALLwPvNjV45jZJXELQkRG6uCrqnRz,HjRcBzm4mgYCsyR76pKccqhiGgXestovnvHdSuJbxuqV,4CLVAuXrU9t6pJ3ARSrwZm3Kmp8s2WEtjLLYQ9Mpzbc9,21srQBafHgj3wK94k6Z2725CAWxNh8QZJwPB1jw63PZw,HXUbs6BJDvJriergrqCsFr4KkNkc9qFNUE6s14kKZHZF,EfhjAjL6de4Q2DsGbt3zvmbrKkdSNwhrZRdjzsGJzorL,DgzA63cLRxyjCGfCQuRTxUWRceZdD2FMYR3DDuzQgYWV,8pnh3rGUdZgP82oJ4kRZi7CGomMdfsSG9UJd2vJpE9JL,BDKVZdY4fkDWjYkTxJ4NSLxnHFpxtEUJ1ymT3PGa26iy,37EvL71Lj9j3AkJSBJ7cNmti7coXvKZdJnotkzGRJr9c,AFKb7MUEApJdwG6sPFYC27vm7a55jFc8iWKfA3uTuk76,7Zcn9brE1F4Ajz6i5WwmwnBrYqVcK7g8iPomfa3dpas5,Fcya2YLHe7VHvYrGhk9zdMDPkyrMiWZJ71vmduA2QrFD,D7p1qdKLxG8Z4U1dY6NdAj471urhS7KcTMqyJzKYsYdd,7MPuowrDvZ3C38dZrYhNfSBfVQ7D1S8UvTay43dDcFFX,AAWcKo7jpH9ZxWkBxaYBHLhVGNXdNQYwbLnw7PzyFdrF,16RtXNAtQJZBVdxk4rjjMhLnQgnUFzvrmhbDAMG5Fzs,2CxtkksnBYMMX4zRcpeZioCLZedQD1ugTw3bKz2vrUiY,D8QfH4gsYrEuetnLcPf51bfZk1ZuzaCAX5shZLWbehXK,Arespjhkq2fmaJ2SzNJtqfLwgxmJYWvB7rj4kSmDXGLe,84gjHECozZSG7sxAoMLS78vLznMyW4mrFDV5nKjJuySc,CLRpRhCN9QiTTqSZMGt9Kc8ePPjwPwxgsmSeEhLgS6RN,24mFwUqYtQWe2XjHzGmQi8KspNyBZZ2BnidaGAWHjKBv,9zrXuB2N4zfArbWt8GSWtaiup19zNiB6m17g8AUbjeQd,JBvGzXLmnbxNRmonY39UEN3nP3mWuPrpZN4x5D1v2187,9SMBW49P2RsFNcMY3uabd6SBoAF3krri17R7pZGPtQjR,A16Qr9bp4X31Mz4WQu298X865MfVw3QNTXRT78mgVax2,6gxRZLzDjTe42ZwfixpCHThF29BdrYTH8QTHbs1DQnHC,7FjwA5h3RLAcdL5man74VJCrXyzKQW9GhiN7VQz2esqR,BJa32ir7CxezBRd3A3LssJvXjWtNf4LCRo3pD3qrgNEz,BhGbRbHUaotsGXvfvL2YXUHjgG3zBNho32YLTGKCD5rm,7HbWqKeZRTomDYYSPucnyVSWFmVajd8Bpa3QE97dFdC,224pytd6iXu9TATYuCEH5EiAQ4FQzcMZLebudAV81Jax,ByoDfyTTjZadY7XkpyaYknK43qqFNMMFSDsz9XfssfUf,8SF27GSYzkMUZ2B8hDeYwAF511c1xEFig88HjGMD9iKS,F16Me3vAmM5ygaHBeGgL6PcpYrck42PvVfp58j4tx5o5,46nGHyzCXbKERxYyYXPdFM7nQxUKoT4rEGYTsHks5DHX,HSWb35f44CeC4QBQawd9g7Yjf1DNgnJ1B762njTsVQq6,FHdxRdQSLjvtJ5UgcxnDkRfVvohPYWoWEeeNdA3pNUmu,8TVTxWkK3m7Kow87ocsCNa9rPPnsobTaM9CQdXqGkYfC,H1yMNePXaBoGSSGvHVCY8WVNSzWUq4bH4pKb3fUiwuTW,BaZ4M1oMiuGRvUrqNP4o23qKd9yq88cJLz7sHM1JuNJY,F1JEsdsEprr8QsjmSdM1YRNviZLGeRkmj7AwNTUUJjFi,HRGjURJQz1dMvSTJ24hF7gk23TstsyoUfJJyRjxTbD1P,GNJWuzK9N1mR72AqbubEn1xs5V7hPj6qkZCVZDpCh6NJ,Gcs1inFeD13fMhJKo899TxXAokjbS1gpsSaQBUxDuXcQ,FfuoK5PqGKwfwxEGZacvPPJ9HoJ97RHPLy2Ymp8r7V78,87hg6jYTgPvQVTiLDo2ZftxnVw3mecN4saRAq6zCmRfA,Cf4NiHJQWNPk2B3GAgdJaqqjRu1grQC5cJR4VB28atQ2,8X5nWR9zn4Dhp2nmXBC15G8wbS8Z48XACxQ9hJsvLVyD,GT4dCbP9sgY2tJR7PaY6koYfDRHEKJ4QFLAgpRLWRemu,67HfEVv9bm9fzqyXe7KCJDhc51zpyNx77ec18D2P66jx,CeBBF7CcHf3QSY4PbjejjcPLNHrSAdEPsNQXpjqmucQn,BvYyGxzDFTE7bpYT486LxZG6q1tzzVkGvHhcPYtjTR8,GyRLPw6zoWL1ZpUjcxsdb2VHoFS3B95ouLTYiCMxfcvE,7RmZ5g9VYU4dm2pbMNhXer9A2KbUjooaLpK7kmUb1qz5,4orXhp62cxwB32FYEnhWbtoNXjG27DzEjaNTxpZgAEwF,54WqH58h2CzdddsJJJfptVTeq8ZRk4PbSbRuKSbPMfgw,CdGmr87S1q7jf6zGGHZCo3pzBiif3Be6ezQAMDTFUgTK,HAJ6phz1mc9JAD9FQXCccnBzWDzo5Pi4rCnaj8AKjYfK,8EVwLNCpiWYrDZeaVQb56wUCHPGL9GyYprtinTpYUaeV,2Bh9Uzwb7AvousDLqArDFPdwuwWPZtSt9t9hSCqfJJQ4,B8Swv43gGgv7Xs6HQ36HRXKRAc1PgBaNBaUC8xCd324e,KV9Z8xzDSqW4FYwY8Ary1y1VWfnqJesQ7nd3EKtSFXH,3JatxYftDYtZJ2uEPkKKt1zLL6vSCTHA7HcLcFWcsgzM,7P774dxETsj3NPLwNu9uYP4RGXiusz8T4aP8nJq3mGdw,9kaRFWLJgpZZBJvmoCrbx9o5Q2yWoCqRQUSYrpL2uGst,6ytu6gY5MYAMkEWM1a42esRasPLnd7kVRv5ccafvwhDj,BEEUuvcDq317j95LUoknza9jcrUUsFQzJMAkMdJqw5qG,G3WXCb91WCPr8AjFbBwJb2fL3qsTGHiM2jq3aHzRdwfN,8EJ2699iVby4MdKBdSJ5c3oH3qz8yMYti1aMhRGha6jz,FaDREwYUobg1yA37Fa6b6tzu9spWyr435wKx95MrzmxL,9qNHzQWMMuBwL2hJptU72zaa931r7LtEhXG1yf8keMv6,H7BqRFMWbnTtzgH5GXpK7UZ8Ja8f5BYC53trHKwU5CRt,6JTqn9iDjzrFm8DSF3rtEnbgwuZBiiYutxEsse2uq4Cn,PpZEFKPmerqjb72vVKEyEWNfrQXZdy9u57nsyVSEDhj,FcGWMPKd987WNPgaWz8wyj1TtyjLxUmyuBXMcz1A9b5D,TLETvY8J8dBkyFHdsEyEcrztFuQ96dVGWq1e4YCkrqr,BtnTjXbKWfXSywuAZPcweKD3v6xaE5PvcYkhtAfB93UJ,7JSukSyibC45ejog821rCmCFwamzJYbkQjLByqvVqvQk,2qVFCDLgLi5hJSqyKDQJPf1H3Q5Qwuxdwkv41akmWWEd,Hq1GXwteSJt2yrgny1YCT4HsMJs2kHdGqKSV9ciSrJ3V,4F3tYnaV9MbofP8PH2r9LgZTQLmKkqZcFfVmRMBTfYZy,8qonKCRRxBFr3DW9ScFz4rX5ap2ydeKHxmZYNcTBUr6E,GfMYQCDLRiAVZCfTkm5hbkPY3pcV69u8k8rJpa9ZvL8n,8686ZF4sG2q7MAy5NUDHanhLiFosQCTA8deWj1iw7srW,HiqvWuCK841whJoY4A5FTxj3VYSFEEZqv292gV5CqfKP,8Gu9HmVFBDyTWXbZKTFzvGaW8wSzBbvbaUXhRD2B5E3H,9iHeXFygVcNK2pWgVPXDffdPLUjJjeo25SUPS2QNnW3M,GAHz31eXP4RLKsiG74BSbWjQ7TGxzb1fqYi96P6eU91h,2i5LSYNK1jiK3raVvRgx49GVAsbH6iEVoiUuBVtEntua,DAvu8XHvoq8Dibk844La9Khotbmv1p4uTDLw5u7X2owR,yrvNKvaTdVtQA9NmChCgZg44wvZJ4cJVykMSbxaZikx,5MaWGWbLWDy1buJJPspjsdT2ZXKLgs1PobuWrq5S6Cpk,HrsxkwxYWcgStXDZhPVE2NoFkQti8eov4aJxojtz4Mb9,62ZqhTKDGCWPjb4Buqt6oBFwzEvcbFz4mU7FRHa3212J,CRgx929mC4pWiyuDtAQd4RjpjzXqFDqFXr7AG55JxMGC,EPBVPSpEJEEXir8YecTHajkkhEiZoWuBucGDWLbbvEDo,E2tSNQvVKELEwAsSdZ3jjMZZAspZK5rC9UprkVsVKkzP,H6gyQJPQWzLbpqCfwf2jExrmUJ4zaGztfpRFLvEYQYRu,BbKcJKaswiYdaDcgq32HhM16EzSd9vuPJrxJC24QV2PX,3MM7Gsxz7z6mQAsLMuRvztmcvsNKZfS1LHoyWcx747JF,3W5hcHEgbQBrums7ivWSoo5i9yxWniat4Pfqm59omL5K,Hi7d79wEQPNVqxzgRYMaqbnkMK5AWYrpisH8QbLZbwLS,GqxinJCThxnwSfmTBQuT6yyNrm1kWu9TCC4LkZRvr6cJ,532zCzcTkys2CkNJDyHLQxgMztG5GdKr2d5BKqravJyi,2ByzvmYS3g8EMk5XSuLP5Dk9ZLoNjNEN2k2tXUvboJG6,CE53CNZ7QtdSnYwEPUSzJeKr9TmU4eLcdtpLsUrDUAi6,AEJqU9R2zNsadiqNQt7VVgV62mzcg4iHGMhTzRPEUdKz,75kWm5zuSiHJophPrkpj2B2RWXaZjnWZr1Jew25FuExJ,AHNt2NWEKBbfJYmxcV5cxWGprcurVGiqCoN6zTpYFguu,GcKJaCtKcPmhAjK7jvRguXbw4AN2ubovnatK7Rq5t7XB,AvWmG2duLbsosK8n3F83ncGVDx4dWzeacykasnWhbSdy,5aY8PR2uzR4cVhyTqQhnW1wL5n2tU5cpoaPU8tAEAEvM,F6SnUEE5WMV6tCQqvAo4695abUgkB5459g2sxdH2ViQT,7GHj7uDkRVHyntZs5Jc7kfvXmig3Hxm1a61GCQBAciQ7,FxJh1UatWnk3RApW2CFm8EFxLoBoob8VKSKZLopQSkgH,6QQoSp9nXNUj2oa9jRBYCLLVA4hVGL2PyeDhb9EGvX25,Fy3TUsVibSsfU94rzZhPeo3V6ysPA8z39tTb6NVNDaWe,G3p8qTYJwPMdkzuAQ3UFGt2jziT6U6rQNBc28EyxSnk,Ff9cgcdgXv8HNajsYz76MtW42dXhdLWPUn8vnWNbWdM9,BVyRBNUxyApFw6KGmj5ibfk2CsyJqNEra1uoT7q7bYsv,2vfKd8cZm2NCrzf3NKdXCaf5g2FY7QXKJx8EghBU6WLh,GRLSfuKrzJmEBU8T6uhbQxVZwaNwrc3kqPL7GduJeu8b,HBRGmkoT67XGsFuqpfWEwBsXiDv6z5AN78tjhhcSo3Uc,Hs1KoHVjj8SmfTkRRwD8Yymaxvs1ktfriJYtq9SxhU6G,GrymruQDmUgiMC8qSY7SqR1FRh3omJw7XqLZnQXmZE1T,B5sET9Ri1ZuLcFeTkQo35NJdaehSGxxsMenSKVY1wfCQ,BpcfmdDvkpTjQKVkBRDLWLiygjzsVFBNgNMp4jXqtTC5,7XFQGyo2A7EZSSpWeYKYH9rRjBMRsihTzbvQVTdXxk38,HqWChWVJAybxv5voTETcBtAjgve5GzotEE4Szt7tJSU6,5ctWBksii3FKfwe6WJ5ELnnVyW15j4P7yXdZDVAesK71,kbRBhMj1LW3zyPvXqfZqeCBvnrmPrhJrv6zM1NqtYHK,F13it8GN83xM5QGwBKkbuGoQDshaBYTov8ArfNRrG3jM,9meCrxEG7JEwuQNBnyU76XP5p2EC3b9LFXBtXTvZJRUo,2XYkKU7pVknuc2x1HTSQ4P1dy41xw1otGVqGnjbfRr8X,2JUvT6DZbQG6JFbjNRMD3XQCVRymnGjEWFnwXLfoR79a,5c9EPbXV7ea4sp1XkiopEfNQCE1Kk46ojtpL9nXevsD3,EL8a4ziVwHuqnrXJzZRyAgPJre2cjEvW9uBPwzs34j6i,9EpU1SvYcQcbY2cej4AAbZShp99YnVFCUnuj2LmKmmNf,BhwN2bk1JPuxV8MXZrbYxeVSCfdCr2u58eQjZ2gKx2pE,4biGtMvYNyyVqRxymJHFy2YKzELqkSdqBpWPYP7qJ14R,hj7Q4mDdosfxiVCyTn97pL5VV1P3tVL2MjBkLzc4b4B,4u8GHiRJyjYvizfmKHNPBmc9zcR7akSoSGwi49rRvkYb,7YGPgt6ZjxzYJ6MWphZ8gGfrPLspCTc4w1RAQYfyDUSS,E4QFbD4TGDRNjNzt2C4KGKNJh68uxt63Kym9ZCMgPW4H,JDEbqsc9QKpS5UG8rE3t7S26hQ2kWUw7QCQhdjnS2Jfz,2nJjNGQXwWVWeJCFbQBYdCJNfV3uF5AjyKhyec4FnRfS,G12us3jvCgfFXgGv3UaVkvKRtaeuh5NrBhCP4WBUqjgJ,FMckuye3X72od1f77LL7YBTRY3jvxGT5WjoXuYzsMcqJ,82cLPDJm4XqoEaGUeNH9oVjSd9DrhXjEjpNTveLA95QM,7cvGK5o3Gy6DrMPX7C44G2jHVimRNQskzGuWXybSH3dQ,8e4ZhVNs95vL3MipWduP9CxbLPudrbYxQD2yK9Qybamr,3uoitoivWm5YB2Uu3pSDHioyJQVPZtZJjLrSDmvRecDH,6nAhyPyrZA5tSfYpY1VrNo27rwBmkmYPAcW3EQs6Wg7V,APmBtrczeNiiNTrT9vE1SrFAJbaaqHxw9oYKQZzn91mF,vKtkfd4CSAFty7xjiNBfN6eGeNXJhDFHwqdMeC8R6Yh,CGkafPNXZUSqB6ZVzwoF45jcjgnydmriXBPgZ7tnr3i2,GyBhyrJYd1e1rQy9guZvJHttDqVrMKdNzTR6JERsy3xQ,27jXzbCSVgqN3B79jmkNtagSP7Wc4s7bJJjEyEXwn9mF,6hZuAf9M8wpdn8fwev5fyFKGLV999eduXy9FSHDpL3Ee,D83YPy17CfZpY2NEMc7EjumMAYefb5BaUbuhdREmnniE,9ZvnN4X9aCW3ojtGRoUnP5jaCTedoQnzjc2j1qqUw8CD,DbbiM1ohZqjHmG7jWZSjv91cd4s9GQojDgMYBrcFPL7B,koenNSxKewpyqAkJ4HokXXT1AL5Vgz3FUZbGEQsR4eQ,EiBFNXQxcqEzn1CWr2v77E43dnV4M8MMQ64vCFJ2195K,7vh7TPY8Q8JthTsniCkdwH6mZMteYBpkt1qd7BAu5vCi,BJCwVPcGu4MDc6RrfA2MmE5WF1Uy8fyuyAu2MP5YCUNL,27F3iKLn22B9XsSRF4H1c3o7ecyd5CmsiacXQ6aKmzij,45jYs9T6bWnpgXRHmjCjz1itpeKdemb8akMXknCky9jY,6YnqFib2M6TZ9V9PUE3wdEnfhhSyUhMggBVfQmkHzbhg,86yaebVvR3HCQVbFegVHs5hhYdibqkAdnLy2UvZnPkeH,GMeGQNBVRDsf5SFSnSZuTYpVyEN8Szpbj8623LKWXLMq,6aX4XBgWQgGcWzjTsX2gBVDqWm7oSWyb2kSZWnFjEzp8,B1q72NZkFd4ySm2YN3Jkx99K3SLCvXcguRLb3KKsLxZX,6UkGnZgsPCJHd5eU6NmAPcohYiMdwjv358w8ZJJjfPsq,FvJCjqQQm3oGnFJ7FYdzdb8ieu4dhGrb5yEeAgsM2oJo,FY3hdrQHNnhUfGebW8pXRqqJJpBSG1EJUHBib1X4LhTS,5iY7KqES3QH87SQBuABQxBduro6bhJj9eVEw1xCFcuBU,CnJNggHgi5ZfcAVbLKbUNYSrA9Yv5WbQN3GCkksUZxa8,DhLn6MLtRfDMqkxGY6U2ckU4pe8idrF8AGGPUhf6UpQq,E5LaPZGNx35SCws4veNwW8FkzxtHtxMxJjP1BBjA396P,5iwPsiwzxFTKWJNeNxVBBZzNuf8b7mZgg7x43gGukaXD,5zkwxfb5vw4NnaxreBGnoc3RrDufWEPXYToYDnp9QzUp,3SYQrFc29p9Wy9NLdwS6aECK72MjjwRYwuERBXYq8yvg,2yxQCSKLxFc9Ebje2Sn4fqooW6s2E6fsYrxvXxaKiV2L,EdXkcyiFHG36TMRvtDMTomS2gmLRbKTW8wa4ezLcbZyc,33aY9fCmR68o627UWopnQwMYdVsj7BeyBdsKP9miBsBn,Dg1Zpnvk9wFBG47w3MAcpPJ8LxPa6MM3PKtkJdKX9gcm,6LRCKmjgxNYjrEFTu1UCo8B8M7ByLvgZnQRYgfCPg1ag,v5nqytiKZzCSjaP58J5TiFnMoT8Lfesi1GykxHZPLM5,5zEdHmGmeJ3spk9nDZ7FGLFc2d4k8Yqp3r5LbDoSi8am,5T4bPJA6yh15bSK5NcYTuRWHVuxx3TBz5JTEDdF2uV2E,GG4N2oV1jqp9913e2aC97eWezb3GhSiEn8ZREjQsYzVT,7oHgBAcaZhkVUrdM74X1ahmbnj1NSTipECYS8bxvCNTw,8h3rmRWrpuk9Ch8pbwVXV3puGJZ9gZAKfhKwtsj8PJcJ,CBWRVNm8eCYrgqUd5tSerCsaUvtF5Pe8GXshd2xGnjja,EV8CjyAyJrpZMemv1cNNTqSzvwyRoTZWr3S6H6VzzV8y,FCZGXGUqRYnUQLZtZju3QuVRymrMsHZuBSq8QMZbZFac,EShL3nsNgM8FRw6hzdtRnTTYMyWJqyfSqVDZ45ZkDzDT,5GcrwCSLPWQpvrnGDrYWxpT8FQCB38fqNmrjE1m9FYaB,F6fDawc4VSdxjPugZXFNUWAVUgNZf6teamFc8nTeTRDc,4H7kXJ4g2FUCBXJQo4ZvzQWYPRwcRPXFtq4Wq64WsH9n,AAqhCurEt5xs1JMeJcdLdjp8XEjNm6VJxWFXYKoenGsd,3bPyrTMZfFyKSKqa1sqECKXRjP3R4g8QfZUWcRGaiNpg,Gp5ZD6fGH58XyYmdFE4C8XGh3uMeKVGjiBonCXaaifg2,24KAsrMSynzaPpGLRucBc5e8gzTRq8DsCbdMCm5D8HQh,5b3VfWMnrkX7zEiajEmRk3uX1R9daAJbsXy8fG3JZkHk,9McdQdKJ7nGF7a2aztVJ82aUEeyE713wX1p52ZB3eUDw,A1tUgtfuCkvYccnPJ3PD4s5PUiA3YLuf8N9dSV38gh1R,CweahXvUTt5k68anKCYYHcR5VpctCtsmt1nJ85ZvZePr,DD2FucAuGtn2qJA6AcwnmzRqLYWSaJqL8WicBy3R956m,BQQ2WSf5NvkBsLd951D2E1yeYBg1deLN3QJJmo7uxcSf,7vQMP28B4fQtQ2LwtHRFRpKaMGkqTHck7dsWGh9VkGwQ,BecPTDMXBycJzqoBFQ8Af6Bqt1e3bsyYQFUF2dgTBEtY,27h211Q6Eo3UQWnvpdAJ2U6LWiFqmwxBnVtqiX7ML36X,oVKHCQQ6BzJwX9bZhwC8XjTgUUTgrPtjBhpmFswQjgS,8ugFqPnDumqwxHgkvhjECtzHhLZAis17wCVNosoDvjB7,8agY9KZtyn2hDU3jMpKKr8XUeY9zQfreEyjKdYcWEzgH,6WrFDZkWrAHxHpt21VeJyqcEztEHY9n5PnDx8M1HRH7D,9YkvepnoBetnbBJjUFVxQGTW5YquVxCMTH1SVFdYLjuv,o7RvnqbGxqSFZt7xUhZ9K8p4XeZdFuJKVSwoME5sQhG,F6wK15BdXboXcpc843egaUuNwi9QHM5YBpVVY76meHnW,ZikRkvomGtT8dMLPYA2617tM5vspS1bPFdUSXSsZuuV,EZ1m9nx9AY58UedREmYkGV99EpYMBANyyZsysnxocf7M,FULcoktC2dEMu2yChwhKvJvg5v3sZXr1ZRgVprSWkHRX,2HzqhGNeBn8r6zRpAdYACSkqcFgzjTNw62d76iVJKUtX,2GNEiUFhHcZM11tM23ymEYtgss6A76LubCK3rbmvDcNF,EBtXC9xPQ7v5ac8fPPYLEkb3hmfMzsrr2SW7yEqNhKCc,CuoTc7PSAyTssELW4HKjpGNfHooFMAGPCHFs9Gwq3BDB,Bh6LvXiobx3kxDhr4Ds2RhdT4XxnMgjS3gPJDt8DZzAe,5QRKp1tnnnxUUPYskX1wVQTZFLBMFj5GCXu29BsNyzVj,E7v5HagVwYD7noBQT8FKahkS4TKqXLnVxJYEsBKy2JWi,BUuFiw5kh44YjamhxRzt7HUNxy49hHiAzz7WvkpgYAdd,m3dDqm4tHggixn1nhcyfF8sWXKBExNU7Jai4xiTWZ1e,C1179yYoG3DR1bmbEwJgCsg4gKUhd7HwB5hysydfndPy,ACagwR55kus1iJo1nBgAiC9cBX48oG17XJCWqDsH1ZFF,FbPBTVKrRA2EbMqag8DK5UTNfTFnptPodsp9nmUnAzLX,EtfuNhWKRmRwptW71EXFNYU9pn1yigNrUQpQBCPXn6Yu,xSr7qNBX32rH3FHqfRRoovVWWYyGPjPTjw3yJ98L5YQ,Fh6YrXCNSrLtyT3xcw7RwC4ovkRCka9GaFB65zeJzy2j,9RJjbKzojuF8N5DjEqbL9aanvudAt496mm46mXtW78FL,CZJkjn5pzpcZVKi9Lpmg3CqYwUnUPUNqPbgGSTq9AhBV,6jUUm1XPzeLfYzzbFJELsSprpgbhFHmyCx4v7Ux9jPNF,HVs4LxgqXyWEzGT4U9ktTKxYVJpfDF7jAtZkE1eDqi6g,DdPs2pv2UbtFFVtBnoPSJDuVTjWPhj792PB8KW2xtJD3,6sdj8S2atUpWeikBvizftjejRM5erRi86xwAgG4FJNup,A2XngxhMNgkhsqvP36NDpMBVxeuBCbtrLQAvXXUCbqfR,85b4Bw1zBwpM99fJyA8gGJsQwhCJAoKm7muDFXz9C1uL,GG9eEoTb4naNoX77ey3NS1zXmK9jZ7Nw7wbmDuFxPnhf,HPjEV46iCHLBe1HuaB6cbKDeC9awFPqvvr7aAwMVfPx6,DPmF2tntpkxDWwxpRHR6DBQSYrizsDnwvABFEEJpQEst,DyNZ3u7TLVMWMSuLRx68QjA4KrwSrEAY4xzRaEukop5t,9LJTRS1mauN3UnRzrCPMwTN76Y1Fha5KvWbGn6aUsG3R,7Lcjwf29dfraxn5ipgPwmaTUpzWRBxZN5QwSMZCNsG5s,4ZQFZMR3WQMVTrQnEJksJGFN6KobrSBUiWZrn1wPwjz8,GcwhJMbjKESf2fF8ZCEdECzg8zweWUm3w8aTm4HyUjsz,7JxNpuztLnSwEh9yVvkpJFKDqAV66aKiQD7BPAhJcfR7,5G9xJT2gP5aS3t25T77PnNjmevZdiCFGeZQ7x2mHU5Sw,7KqPhYpfxvWEyN9FJEA5gbMgUiie7HvBRK2wWHbRJNVY,4UiVRfc5CZ2r9eVQXo9seQM7RQAfbULyMzzLsXiCApnw,3eAhftSneZrzNugxuYxi77x9gRPpc96EgZg89mfVvmFc,43VYDh6hSdTNGGMw5n25Nq2XSfUCkPFt8ZpSaTjKmFza,3QWpVats1aekTpk4nyC6uN1k3YfbDFw56pePbAifm7av,4DpdYULZajv6zzZ3ZTYzc1SKiqXRTLj2PZe2rSq6QPmi,G8ztWbRzZUFnYjAT7rcsprvGCxBWYWP7ddpZZkFQJ3BP,53u1hRY2gwyJm4pFs6EK5g5hYMooRi5kqWuf4P8sVn3j,EkUNTPfofgAqGxYR1sKE75njHC7BU32rP3CJcAjT5r53,8Tr9SRk4CZnTVGwpk1ueA933ohM3f9SsHqgruyg2D2j7,JBFcNcxQC3w3MzBUKhbQ98rvQioiNMfwWHHxzuzqkh43,BKxt9vBHC9BHGrpAUgDJc83RrqciZj9y9Cm6K6B9hdsm,3k5URBoQ1ukK8Vj3rTqcPezSdkZcBYaANyGbpRyRFcYk,55Rk8cd7bTydp7wQwrmo5rZf7ENcUY2xgqsr1kPTeH71,4Pwoh5zEYDqPFqF2KuUwPrnhGoeCFyvKdoE1qc8wXCPf,HvQ6cKHr7ostiLFh1H4L95CzTRCgtpcqKj6RMb4fHESU,FW3UqoPWRYGUcAFc7F5chEonbqfj42YGjHoGVju8uSNv,63MiSUePi8vLLVJd7w3vH8GWr3spPkptM7tmoDmHuryB,E5v4U736tS8cRTuri6HaaUH26uUjCDcWGEryxQCkTFLr,7ime1am8GKiRFisyud6qkuDkzAXdyNyJZFENgW5HtP89,HggGDF29Vx3bYuBN8fZqECDByuSoqr2L5WajEiW4vxB6,8f2e9XbmXnyLUcDEo6YQbazrg2yn7DPvQiiyKrJUHgF,HiaMbFMpXrTcD3ViU7mFQwc1pKSZrBZgc9UgJbqtvmUD,AkmykpbMVEg9bPyBgaPpPJJCmbvRCXDSjgNhkWimpJAd,3jSXChpWcXnBuM7KXkRPaJEj2FSZMSgfV1diFmXcm2nL,95NaKzqXpRYXbe1jFrUoYgg48dxNyqVoKmJwAKmo7ktU,GtbAaXym1MeddmWK3Qovyzxk31wJGY5VJx5thxtJ8xHd,AXSmdbTye7B5p5JjYtZZXrudAHdMDPmg97nMFcvt9z1R,7CXwVCGSYLnkhpmZeQurQj8W6yUC5tnVv1QhL3a1mugB,Et62aWMxEBAGXrZC5b91Vbd9HCebtPojBsgRhaT9XqAo,BY5UohC2qqCi5Bj4sxUWqKnQeV4uLXzB7yWpimbVJ13e,Bi87tBJ6262LEEDGbDvXPAPsrXbuTU17cEHWujcLxE5,C5WqRPWjz7HYQTP3YWrdLe4sqchC3jjunzVV5jYArTvX,GBKnskcKcCVWzjypx6kdiXpHMB47BaPAYUMUyuoyCGcX,9TCd7F1fcGLVTViA2wHvS79Q7XSjVax5zQPUi4pmqEoU,4LFJA1dh5gy9hdNjz6U8Y9BQ6WrznkJCJTppfQWDBRca,FR5WHzuDFJZ1rYqt5f3ZDttz4R6iy3pGSrX7ab69BjqV,2kpVKGVNdxUDnchxtRN49mCsB8NBadUcBmQtAbh2w13v,5PMv9GctnNJXZyAJAk8Js5NQSALSjJ19rgrT31FeNnNs,HFVCkMs2FrhjT9KPj6iCt4XjVMq7urzeTWfiZxttwTQq,Hf9Ta2nhxXkm5hhwsFfSgxTtgGoDShJrcDUHzwhdwueQ,8AeAN5H9MVhVz9p42Je3aypwkmuvyvVp635AQszMdjLB,FCB9Kd5jJvYXYkcXGvZ6iwVV4VmkgyBsTo3dgRWbGzMp,DFhkd6EAaqfLRsSzWh3vEMLBLwzFH7Cm7f5NVimtGY6c,9cMoWGRqctS4GJjW3Lv8GoHaaW3Cv8fnwoha4x9kCLz3,FiKLqkMSpEULMP6M5iyXDL1jFxq7z5qPNUB6ZZw5EUqk,3qtKA52KA31kqBuMhqvEokzBSg78gTdaihRkDczLS5Ky,EgDaauXSkiyAGLrvtwsm8fq1cFRnssuCuTZHPcy1uNYz,Bnq7i8Bh91LWwbRxZo7L6w3rKyriwHmeXRVcnF7qzgz3,8GQG4rQfgWJ2Gifm9xqvzwFZT9u2H9Q1CN6M6DMUDppP,3B3ayZz5V6immVMysgSWHLJDxMMrmtoVMa8Ui7G4Puod,GFi9sUQyEPNqLGcirtbRCBoVBHu29ap29nTZH3gjph3v,4UbDHefS1z8ZzSe2EjCUqpcE3A1FfBgNKfLfNtbY64iE,4vYTDDX9qN4pcVTvowVZnZ9CWFFA5E1kc2M3HqFNzY8t,3BUAtP5waaLwC1fJbbN6aLJU1id5hHNuPSetye3S7coM,FzoKXHndj5pWZxiUVJwqAJJ73PAvh4PmvwUpXTv2cBrW,F85yvyCQQBc215wRH6yhxkbahjSRYYKmwqi5J2GntSAs,GG3UnBvTQcicERQTQu6Ki1NPWkUj7kSZtcbakYydEko8,926kvaiwa6fH5xC69h6Qo69qbPZH2FSfyKjXH1fCUgBa,6haPm8zh19PgSxQmr6H9ZhgFcQUmEk6qJN1UzhE2NoVg,4dVHHhDhAM858mU3jGbDPc7fLqSqAE56bpGsWeu1bGyL,FwCzBr3xdTscoFVZ3NRq2piu74fWHmeh2mVpkDxVCRbT,2v8dZfMmS48dM63iFyLhThnzUK2JoK3zCTDKsgHgWrsV,Fh34zPozftkW4xRKDasVv9YRjBLBYUR8aagvFse6EUN8,2a6kDsrasHzy5pVvL8vAzsVXagcwAijdNJCaVFAcrj8D,4JUoQdo8v5g6ku6GR7X8y2Q7rs1bcvPFimfof3HJ1uLE,GAznob7brqNP7rqmvQGDtV1gnn6ZuBidQcjkedce74sj,F7HQTYipMMH4Vb9MuFoD3KKUzuP3dr5WbaXeffVnBk61,AsBwtBpz61vQ9mQArXNqNy12C2RJj67ATPpDfbHEU5DV,7MNc7is1fPVJbcftVFu2FepUnZUWiaRVa46PeMHFXboo,DS1AybsSY4SFSKnRhecqw9DYNDBmjwL4GYBGo2P2d7go,2oz6Qshfsn2zorh1J1vReDRXGAbMg1VEkHb7psDPmpFm,g3s5nEoUzh3QFqeedaL54P8BTfPTjKyLrJoad25f9tt,827VC72LEy6Mma1QcAoxmLQ1D19EUdFQcCjoA7hLQfjq,ELcJpnyGXJ9LxmHx4JM2cMWEq12XVhBbK4QQpCDRvt7t,FVsCdGXXVuEXJVW1NxC3nqpQ7rUCwM8qsK5p4Fdgs9Z1,A5hDqMCYfzgz6csJEEaYP4wj5pXyniCvLzdfS6nK6qxK,TCbWctJ4FbKJdSg6Ls5a7B9yV8bL4mqeTo4E7YFXJ1Z,7nKLysRpe28HaT8ayNhG2DRc9fmhxTJKozJdyngp8YSP,CKpXK88BMXpPsoAeHsyUd5AmFg3Wd1twu9UZUoKXuSvk,4H4veTsV7e6GYg4uFPBPCJctM8RpPYQsp36LtEFbXoHt,prM7kx1bwuCK6wvTiJQuSRE7jgMKLjCGVnPt42Qg7LH,585nzE5VpbWHB2jPGo6VfHLwopuMcuN4YgabxMSkUNQz,DLN7z4QK6Cvp22JBtX5wSTLLoeBvKsK8KtnJDAVJc6jQ,H8mL27UU7CARxxadh3uC2XnXktepTEGuBmXxfZAU5GxZ,5s1STxcU6JDvhd9mSBtGaXpPPshAFCbMJD6j3eLtAxvL,2UwQoGGVuzKYjqhr5ZJyniqbBtZaRZ6NfHo4PPt9bopy,3GWZLCV3LML31iJB8zD1KXBwxDc362S1PT4DhTKE1r2J,HEfaSahXmQdE1DWhHpZPAGMwgMzd8b3s51DDa2SMz3xA,D7X6DnBnj3fUeBsw4mocgMBsSAtBqY4TyzicDWjHBqAG,GFZxK12vWrJyiBhJrQhfmqhfdumj7yCzRkvwi4sgtzSs,4SWK6MXRk22unefCtvDcxpJXG7EnAgSTRGrpYG4r9rMr,CvjURaCySwBjMeoz6LXBfr88BsrrUvgpwgMMfsdqXbfz,HqSzqje11zioCc3CaKSNmbYDWMiErYnVyKRPgU51uDGa,7FZe19FTp5x1gRszqsUtPTmt3ZvpH4A3L2vLhL6h66Hc,3X2rsoohbkWmt7C8X5dtaoMweneXq1M8HNTokUCPJWTk,2uZsZada1UEgPoMQkwBUuLX5rEbEKgFWaomxc52rJa2M,A7LzPHt3cTutEn7eAERSm8vr4bStnN5okW4T7YZzs6e6,3puwdNJd6kuTcsLMesNc2tgkxveJKDYENutvfr6yZG1g,JBAdsxkkAkcYYoNEgbgaG28h3YGweeXrNbfX3nJ1WUzP,FBCXSZ9MZiyaPz5bYKaMUR51Wtw9FmDKjtqwfVp8QeJy,B9NjESx7Swbk53B8hf5QWZiDpmqq2onDgLmqA5ofBqTx,E255qjcqFgtH7YrDgjZF46Rg6EmHNuSRERTx9Cs8nceV,E6XyDe5SrmcNUZgn3ymvbbvtCUo5bEvB2sKtVU1JzFSy,D2CfnpQpu1XKYYtmcDQ3GBkan6BoymjemVYHuhv6DiK7,2WuZaQeeoXFVQDRd8yXYAckaEDqMrg1ivcn3Wp2g8Ky1,ByrvAP2fUA6iVd5UBEYnDDTo4kKspTxkaoANQjmwmxnZ,CHa6DRBLkouqWDf6SYCaYXq6Um2CsUyTPNegtCoyyyrG,5Rz8xiYobrzauJEtpdmvaAgBuNzhceb3jE7rjRkuzWJ5,DwKiLuBi8NfLH6jk5zWf1xkC7rBCim4dX21734kND3Te,9L8LKBEJrNBsHgAEaD1yzwu5ayfxqyYrA9snc4FHmEYj,3jFzyYzjbSd35LkkNLc5EWTC4PBJFi2xgebJ2V8Y9Frw,F17LReNoiJbQQdo3Uc969KzpJhLukZWyWWgqTQzKeDRT,Bds9r1tCqHaddj1BG3FfJDJBPRWxf15PxvuGGi9PRiXn,564qXYva7V5jk4P3TCsojDx2XNCFYrx64452Vx82rTqp,5JXHYGPHxV14F6Vyp1NR2ca8cSnauQG6sHj6sMpuGKd4,EFPdBNDVsajdef9DbGqFDri8KFTn78mZpVcWRyPDoutg,CFqc2qDmrV6eJ14xZR3bWk8qKzk9EbLFtz3GSxaBDGVF,2URyMu5V57gdH1Qhb4uKAhuM9SJTCrHFWVQmb9yFnZGi,D4XBCot1ccxc71ktnjJRYAwYr8JspFgEZ75mh4t6mtAR,En3sLrkdDgb9nFkV2XJejicfmJH7iAuZk8TFyZ7nonTL,FWjVV4qnS2DqeKqNGktpw4kCthG7QwQ4JkCvZUMn11Vj,A1Vkw2ergPQBSnAfFYU6PYjciKoQSwfE11cSDiEqWtAH,Gbqf3iMqkpK9sXsGHjoGWNTiCeBgUKG3wT5CEgpkHcRw,4CTr1qYE91FMtWQkenp2mo1hgt8mL5hKekPV3EMPqemq,CfjcWmYiPeihpBDrYMQrpvx53h17JPd5A4DXowKdB5h6,681VQaJKycok2j93zUTkLjYM9Bde8M3yKMeo16iCE2KE,BG1DAPsqQBoc7GcgvpKPzUznQjHAzkBPAMtyHtWdkxqE,3GMnnG3kzX9RvyH8kcAhyXJE6XEdTJ75GnwN29RVPJwZ,3J9cJLeFLB9i36wQD9EMGfCFPsoe6MX1Njkqr63Vn9Lm,39gbKoskqNJZbebFUC82uZQG2Ti3EReEbruHeYsesmdZ,GQGLcMuSX2iGwnbQYWZKzEu8dniJFkPgmxSKEMr8FCTU,4jFQ9fnaG3fN6Z2L1rXYriSLxnVzZkyJH36MLrQxFJV5,Av2R8L1jV9hdjJ4uzUu6sngrGa8kRd7d1dH4depCq69v,5ZRjqHNBk4UZNkQktRCTeaDmAqTKEE7e1tLDnjiZsfVF'.split(',');
+/* the eleven 1/1s (final labels) */
+const ONE={7:'VaultRunner',142:'BullBears',148:'Cosmos',159:'Prism',227:'KosmicMisfits',249:'Blazura',264:'ECHO1',280:'TenseiEXE',325:'Patch',381:'Long Toe Legends',442:'Volt'};
+const A58='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+function b58dec(s){if(typeof s!=='string'||!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(s))return null;let n=[];
+  for(const ch of s){let c=A58.indexOf(ch);for(let i=0;i<n.length;i++){c+=n[i]*58;n[i]=c&255;c>>=8}while(c){n.push(c&255);c>>=8}}
+  for(const ch of s){if(ch==='1')n.push(0);else break}n=n.reverse();return n.length===32?Uint8Array.from(n):null}
+const COLLB=b58dec(COLL);
+const eq=(a,o,b)=>{for(let i=0;i<b.length;i++)if(a[o+i]!==b[i])return false;return true};
+const unb64=s=>{const t=atob(s),u=new Uint8Array(t.length);for(let i=0;i<t.length;i++)u[i]=t.charCodeAt(i);return u};
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const short=a=>a.slice(0,4)+'…'+a.slice(-4);
+const isMobile=/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const nameOf=n=>'#'+n+(ONE[n]?' '+ONE[n]:'');
+const sprite=n=>BOTZ+n+'.webp',thumb=n=>BOTZ+'thumbs/'+n+'.webp';
+
+let onBusy=null;
+async function rpc(method,params){let err;
+  for(let t=0;t<7;t++){const url=WB_RPC[t%WB_RPC.length];let wait=Math.min(6000,700*2**t)+Math.random()*400;
+    try{const ctl=new AbortController(),to=setTimeout(()=>ctl.abort(),15000);
+      const r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params}),signal:ctl.signal});clearTimeout(to);
+      if(r.ok){const j=await r.json();if(j&&j.result)return j.result;err=new Error(j&&j.error&&j.error.message||'rpc')}
+      else{err=new Error('http '+r.status);if(r.status===429){onBusy&&onBusy();const ra=+r.headers.get('Retry-After');if(ra>0)wait=Math.min(8000,ra*1000)}}}
+    catch(e){err=e}
+    await sleep(wait)}
+  throw err}
+async function pool(items,n,fn){const out=new Array(items.length);let i=0;
+  await Promise.all(Array.from({length:Math.min(n,items.length)},async()=>{while(i<items.length){const k=i++;out[k]=await fn(items[k],k)}}));return out}
+/* every ECHO Botz held by addr: [{num,asset}] (strict on-chain checks) */
+const CACHE_MS=600000;
+function cached(addr){try{const c=JSON.parse(sessionStorage.getItem('wbHeld.'+addr)||'null');if(c&&Date.now()-c.t<CACHE_MS)return c.h}catch(e){}return null}
+function remember(addr,h){try{sessionStorage.setItem('wbHeld.'+addr,JSON.stringify({t:Date.now(),h:h.map(({num,asset})=>({num,asset}))}))}catch(e){}}
+async function findHeld(addr,onProgress){const ab=b58dec(addr);if(!ab)throw new Error('addr');
+  const chunks=[];for(let i=0;i<ASSETS.length;i+=10)chunks.push(i);let done=0;const held=[];
+  await pool(chunks,3,async start=>{const keys=ASSETS.slice(start,start+10);
+    const res=await rpc('getMultipleAccounts',[keys,{encoding:'base64',dataSlice:{offset:0,length:66}}]);
+    (res.value||[]).forEach((acc,j)=>{if(!acc||acc.owner!==CORE)return;const d=unb64(acc.data[0]);
+      if(d.length>=66&&d[0]===1&&eq(d,1,ab)&&d[33]===2&&eq(d,34,COLLB))held.push({num:start+j+1,asset:keys[j]})});
+    done++;onProgress&&onProgress(done/chunks.length)});
+  held.sort((a,b)=>a.num-b.num);return held}
+
+/* ---------- the chosen Bot: a cut-out drawn exactly like the default Bots ---------- */
+let cur=null,curImg=null;
+const sec=$('wbSec'),grid=$('wbGrid'),inp=$('wbAddr');
+function img(){return curImg&&curImg.complete&&curImg.naturalWidth?curImg:null}
+function marks(){const on=!!(cur&&img());
+  document.querySelectorAll('#wbGrid .tile').forEach(e=>e.classList.toggle('sel',on&&+e.dataset.num===cur.num));
+  if(on){document.querySelectorAll('#bots .tile').forEach(e=>e.classList.remove('sel'));$('botName').textContent=nameOf(cur.num)}
+  else if(typeof setBot==='function')setBot(botIdx)}
+let want=null;
+function choose(h,silent){const n=h&&h.num;if(!(n>=1&&n<=444)||ASSETS[n-1]!==h.asset)return Promise.resolve(false);
+  want=n;return new Promise(res=>{const im=new Image();im.decoding='async';
+    im.onload=()=>{if(want!==n)return res(false);cur={num:n,asset:h.asset};curImg=im;if(!silent)LS.set('nftBot',cur);marks();res(true)};
+    im.onerror=()=>{if(!silent)msg('That Bot’s picture didn’t load. Try again in a moment.',true);res(false)};im.src=sprite(n)})}
+function clear(){const pending=want!==null;want=null;if(!cur&&!pending)return;cur=null;curImg=null;LS.set('nftBot',null);marks()}
+
+/* ---------- section under the default Bots ---------- */
+const EMPTY='Hold an ECHO Botz? Load it and smash as your own Bot.';
+function msg(t,err){const m=$('wbMsg');m.classList.toggle('err',!!err);m.textContent=t}
+function link(t,fn){const a=document.createElement('a');a.href='#';a.textContent=t;a.onclick=e=>{e.preventDefault();fn()};$('wbMsg').append(a)}
+let busy=false,seq=0,lastAddr=LS.get('nftAddr','')||'',viaWallet=null;
+function showCtl(on){sec.classList.toggle('loaded',!on)}
+async function lookup(addr,quiet){addr=String(addr||'').trim();
+  if(!b58dec(addr)){msg('That doesn’t look like a Solana wallet address. It’s 32 to 44 letters and numbers.',true);return}
+  if(busy)return;busy=true;const my=++seq;grid.innerHTML='';msg('Looking for ECHO Botz in '+short(addr)+'…');
+  let slow=false;onBusy=()=>{slow=true};
+  try{let held=cached(addr);
+    if(!held){held=await findHeld(addr,p=>{if(my===seq)msg('Looking for ECHO Botz in '+short(addr)+'… '+Math.round(p*100)+'%'+(slow?' (the network is busy, still trying)':''))});
+      if(my!==seq)return;remember(addr,held)}
+    if(my!==seq)return;LS.set('nftAddr',addr);lastAddr=addr;
+    /* a saved Bot that this address no longer holds goes back to the default */
+    const c=cur?cur.num:want;if(c&&!held.some(h=>h.num===c))clear();
+    if(!held.length){msg('No ECHO Botz in '+short(addr)+' right now. Only ECHO Botz can be loaded.');showCtl(true);if(viaWallet)link('Disconnect',disconnect);return}
+    msg(held.length+' ECHO Bot'+(held.length>1?'z':'')+' in '+short(addr)+'.');link('Change',change);if(viaWallet)link('Disconnect',disconnect);showCtl(false);
+    held.forEach(h=>{const d=document.createElement('div');d.className='tile';d.dataset.num=h.num;d.setAttribute('role','option');d.tabIndex=0;d.title=nameOf(h.num);
+      d.innerHTML=ONE[h.num]?'<span class="tag">1/1</span>':'';
+      const im=document.createElement('img');im.alt=nameOf(h.num);im.loading='lazy';im.decoding='async';im.onload=()=>im.classList.add('ok');im.src=thumb(h.num);
+      const nm=document.createElement('div');nm.className='nm';nm.textContent='#'+h.num;d.append(im,nm);
+      const pick=()=>choose(h).then(ok=>{if(ok)Snd.blip(600)});
+      d.onclick=pick;d.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick()}};grid.appendChild(d)});marks()}
+  catch(e){if(my===seq){msg('Couldn’t reach the Solana network just now. Please try again in a moment.',true);showCtl(true)}}
+  finally{if(my===seq)busy=false;onBusy=null}}
+function change(){showCtl(true);msg(EMPTY);inp.value='';setTimeout(()=>$('wbConnect').focus(),30)}
+/* wallet providers: the page, or the page around the game frame (same site) */
+function wins(){const w=[window];try{if(parent!==window&&parent.document)w.push(parent)}catch(e){}try{if(top!==window&&top!==parent&&top.document)w.push(top)}catch(e){}return w}
+function provider(){for(const w of wins()){try{
+  if(w.phantom&&w.phantom.solana&&w.phantom.solana.isPhantom)return w.phantom.solana;
+  if(w.solflare&&w.solflare.isSolflare)return w.solflare;
+  if(w.backpack){const b=w.backpack.solana&&w.backpack.solana.connect?w.backpack.solana:w.backpack;if(b&&b.connect)return b}
+  if(w.solana&&w.solana.connect)return w.solana}catch(e){}}return null}
+function pageUrl(){try{return top.location.href}catch(e){}try{return parent.location.href}catch(e){}return location.href}
+function noWallet(){const u=encodeURIComponent(pageUrl()),r=encodeURIComponent(location.origin),m=$('wbMsg');
+  if(isMobile){m.classList.remove('err');m.innerHTML='To connect, open this page in your wallet app:<a href="https://phantom.com/ul/browse/'+u+'?ref='+r+'">Phantom</a><a href="https://solflare.com/ul/v1/browse/'+u+'?ref='+r+'">Solflare</a><a href="https://backpack.app/ul/v1/browse/'+u+'?ref='+r+'">Backpack</a>. Or paste your address.'}
+  else msg('No Solana wallet found in this browser. Install Phantom, Solflare or Backpack, or paste your address.')}
+async function connect(){const p=provider();if(!p){noWallet();return}
+  msg('Approve the connection in your wallet. It only shares your address.');
+  try{const res=await p.connect();const pk=(res&&res.publicKey)||p.publicKey;const addr=pk&&(pk.toBase58?pk.toBase58():String(pk));
+    if(!b58dec(addr)){msg('The wallet didn’t share an address. Please try again.',true);return}
+    viaWallet=p;inp.value=addr;lookup(addr)}
+  catch(e){msg(e&&e.code===4001?'Connection cancelled. You can also paste your address.':'Couldn’t connect to the wallet. You can paste your address instead.',e&&e.code!==4001)}}
+function disconnect(){try{viaWallet&&viaWallet.disconnect&&viaWallet.disconnect()}catch(e){}viaWallet=null;seq++;busy=false;LS.set('nftAddr','');lastAddr='';inp.value='';grid.innerHTML='';clear();showCtl(true);msg('Disconnected. Back to the default Bots.')}
+$('wbConnect').onclick=connect;
+$('wbForm').onsubmit=e=>{e.preventDefault();inp.blur();viaWallet=null;lookup(inp.value)};
+/* keys typed in this section never reach the game (Q/W/E smash, Enter starts, M mutes) */
+sec.addEventListener('keydown',e=>e.stopPropagation());
+/* the default Bot tiles switch back from your own Bot */
+document.querySelectorAll('#bots .tile').forEach(t=>t.addEventListener('click',clear,true));
+/* last choice, then re-check on-chain that the saved address still holds it */
+const saved=LS.get('nftBot',null);
+if(saved&&saved.num)choose(saved,true);
+if(lastAddr&&b58dec(lastAddr)){inp.value=lastAddr;lookup(lastAddr,true)}
+window.WB={img,clear,get bot(){return cur?{...cur,name:nameOf(cur.num)}:null},findHeld,b58dec};
+})();
 </script>
 </body>
 </html>
