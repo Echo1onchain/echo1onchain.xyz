@@ -340,6 +340,8 @@ document.querySelectorAll('.chip').forEach(b => b.addEventListener('click', () =
 /* player: Spotify's official embed, created only on the first play click */
 const dock = document.getElementById('dock'), frame = document.getElementById('dockFrame');
 let ctrl = null, apiLoading = false, pending = null, current = null, endTimer = null, armed = false, autoTimer = null, waitOk = false;
+/* the song being heard: its uri, length, last known position and when that position was seen (0 while paused) */
+let songUri = null, songDur = 0, songPos = 0, songAt = 0, ending = false;
 /* a small ECHO Botz DJ bot with headphones, used only when the browser blocks autoplay next */
 const nbot = document.createElement('span');
 nbot.className = 'nbot'; nbot.setAttribute('aria-hidden', 'true');
@@ -353,7 +355,7 @@ function mark(id) { cards.forEach(c => c.classList.toggle('playing', c.dataset.i
 function openDock() { dock.classList.add('open'); document.body.classList.add('has-dock'); }
 function play(id, auto) {
   current = id; mark(id); openDock();
-  clearTimeout(endTimer); armed = false;
+  clearTimeout(endTimer); armed = false; ending = false; songUri = null; songDur = 0; songPos = 0; songAt = 0;
   clearTimeout(autoTimer); hideNudge(); waitOk = !!auto;
   /* autoplay next blocked (Safari, iPhone): nothing starts within 2.5 s, so show the bot and wait for a tap */
   if (auto) autoTimer = setTimeout(() => { if (waitOk && current === id) showNudge(id); }, 2500);
@@ -369,17 +371,37 @@ function play(id, auto) {
       c.addListener('ready', () => { if (pending) { c.play(); pending = null; } });
       /* autoplay next: an album plays its own songs in order, and the next song starts right as one ends.
          When the last song reaches its end and nothing new starts, the release is done, so play the next card. */
-      c.addListener('playback_started', () => { clearTimeout(endTimer); armed = true; });
+      c.addListener('playback_started', () => { clearTimeout(endTimer); ending = false; armed = true; });
       c.addListener('playback_update', e => {
         const d = e.data || {};
         if (!armed || !d.duration) return;
         if (waitOk && !d.isPaused && d.position > 0 && d.position < d.duration - 400) {
           waitOk = false; clearTimeout(autoTimer); hideNudge(); mark(current);
         }
-        if (!d.isPaused && d.position >= d.duration - 400) {
-          clearTimeout(endTimer);
-          endTimer = setTimeout(() => { armed = false; playNext(); }, 2500);
-        } else clearTimeout(endTimer);
+        /* how far into the song we were, counting time since the last update while it was playing */
+        const est = songAt ? songPos + Date.now() - songAt : songPos;
+        const nearEnd = songDur > 0 && est >= songDur - 3000;
+        const same = d.playingURI === songUri, live = !d.isPaused && !d.isBuffering;
+        const done = () => {
+          songPos = songDur; songAt = 0;
+          if (ending) return;
+          ending = true; clearTimeout(endTimer);
+          /* wait 2.5 s for the album's next song; if none starts, the release is done, so play the next card */
+          endTimer = setTimeout(() => { ending = false; armed = false; playNext(); }, 2500);
+        };
+        if (d.position >= d.duration - 400) { songUri = d.playingURI; songDur = d.duration; done(); return; }
+        if (live && !same) { /* a new song started (the album moved on) */ }
+        else if (nearEnd && (d.isPaused || (same && d.position < 1500))) { done(); return; }
+        if (live) {
+          /* playing: remember where, and keep a backup check in case the end of the song sends no update */
+          clearTimeout(endTimer); ending = false;
+          songUri = d.playingURI; songDur = d.duration; songPos = d.position; songAt = Date.now();
+          endTimer = setTimeout(done, Math.max(0, d.duration - d.position) + 1500);
+        } else {
+          /* paused by the listener or buffering mid song: not an ending */
+          clearTimeout(endTimer); ending = false;
+          songUri = d.playingURI; songDur = d.duration; songPos = d.position; songAt = 0;
+        }
       });
     });
   };
@@ -402,7 +424,7 @@ grid.addEventListener('click', e => {
 });
 document.getElementById('dockX').addEventListener('click', () => {
   if (ctrl) ctrl.pause();
-  clearTimeout(endTimer); armed = false;
+  clearTimeout(endTimer); armed = false; ending = false;
   clearTimeout(autoTimer); waitOk = false; hideNudge();
   dock.classList.remove('open'); document.body.classList.remove('has-dock'); mark(null);
 });
