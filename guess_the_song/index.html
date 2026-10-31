@@ -222,6 +222,7 @@ input:focus{outline:none;border-color:var(--pk);box-shadow:0 0 0 3px rgba(255,47
       <div class="chips" role="group" aria-label="Song source">
         <button class="chip" data-mode="preset" aria-pressed="true">Halloween picks</button>
         <button class="chip" data-mode="echo1">Echo1’s playlist</button>
+        <button class="chip" data-mode="top20">Top 20</button>
       </div>
     </section>
 
@@ -485,6 +486,11 @@ function startPreset(){
   queue = presetQueue(); idx = 0;
   loadCurrent();
 }
+function startTop20(){
+  mode = "top20";
+  queue = shuffle(ECHO1_PL.slice(0, 20)); idx = 0;   // the first 20 songs of Echo1’s playlist
+  loadCurrent();
+}
 function startEcho1(){
   mode = "echo1";
   queue = shuffle(ECHO1_PL); idx = 0;
@@ -704,7 +710,7 @@ bindChips("start", startMode, v=>{ startMode=v; store.set("start",v); });
 bindChips("mode", "preset", v=>{
   $("addBox").classList.toggle("hidden", v!=="preset");
   got=0; miss=0;
-  if (v === "preset") startPreset(); else startEcho1();
+  if (v === "preset") startPreset(); else if (v === "top20") startTop20(); else startEcho1();
 });
 
 $("trAdd").onclick = ()=>{
