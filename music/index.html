@@ -160,6 +160,54 @@ main, footer, .top-links{position:relative; z-index:2}
   color:var(--ink); background:#0B1228; box-shadow:0 0 0 2px rgba(34,228,245,.55), 0 4px 14px rgba(0,0,0,.5)}
 .dock-x svg{width:14px; height:14px}
 body.has-dock footer{padding-bottom:13rem}
+/* player tools next to the Spotify player: shuffle and full screen view */
+.dock{display:flex; gap:10px; align-items:stretch}
+.dock-frame{flex:1; min-width:0}
+.dock-tools{position:relative; display:flex; flex-direction:column; justify-content:center; gap:10px}
+.dt{width:40px; height:40px; border-radius:50%; display:grid; place-items:center; cursor:pointer; padding:0; font:inherit;
+  color:var(--muted); background:rgba(4,6,14,.85); border:1px solid var(--line); transition:color .25s, box-shadow .25s, background .25s, border-color .25s}
+.dt svg{width:18px; height:18px}
+.dt:hover{color:var(--ink); box-shadow:0 0 14px rgba(34,228,245,.35)}
+.dt[aria-pressed="true"]{color:#04060E; background:linear-gradient(135deg,var(--pink),var(--cyan)); border-color:transparent; box-shadow:0 0 16px rgba(255,45,155,.45)}
+/* shuffle has three modes: off, this album, all songs */
+.dt.shuf{position:relative}
+.dt.shuf .i-all{display:none}
+.dt.shuf[data-mode="album"]{color:var(--cyan); background:rgba(34,228,245,.12); border-color:rgba(34,228,245,.75); box-shadow:0 0 14px rgba(34,228,245,.45)}
+.dt.shuf[data-mode="all"] .i-one{display:none}
+.dt.shuf[data-mode="all"] .i-all{display:block}
+.dt-tag{position:absolute; left:50%; bottom:-7px; transform:translateX(-50%); padding:1px 5px; border-radius:6px; font:700 7.5px/1.25 "JetBrains Mono",ui-monospace,monospace;
+  letter-spacing:.08em; color:#04060E; background:var(--cyan); white-space:nowrap; pointer-events:none}
+.dt.shuf[data-mode="off"] .dt-tag{display:none}
+.dt.shuf[data-mode="all"] .dt-tag{background:var(--pink); color:#fff}
+.dt-tip{position:absolute; right:58px; bottom:calc(100% + 8px); padding:.4rem .7rem; border-radius:10px; font-size:.8rem; white-space:nowrap; color:var(--ink);
+  background:rgba(4,6,14,.92); border:1px solid rgba(34,228,245,.45); box-shadow:0 0 16px rgba(178,102,255,.3); opacity:0; transform:translateY(4px); transition:opacity .3s, transform .3s; pointer-events:none}
+.dt-tip.show{opacity:1; transform:none}
+/* full screen view */
+.viz{position:fixed; inset:0; z-index:60; display:none; overflow:hidden; background:#04060E; color:var(--ink)}
+.viz.open{display:block; animation:vizIn .5s ease both}
+@keyframes vizIn{from{opacity:0} to{opacity:1}}
+.viz-bg{position:absolute; inset:-10%; background-size:cover; background-position:center; filter:blur(60px) saturate(1.2); opacity:.22; transition:background-image .6s}
+.viz canvas{position:absolute; inset:0; width:100%; height:100%; display:block}
+.viz-mid{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:2rem 1.25rem 7rem; text-align:center; pointer-events:none}
+.viz-art{width:min(34vh, 300px, 56vw); aspect-ratio:1; border-radius:50%; overflow:hidden; background:#0A1022;
+  box-shadow:0 0 0 1px rgba(34,228,245,.45), 0 0 34px rgba(255,45,155,.3), 0 0 70px rgba(34,228,245,.2), 0 20px 60px rgba(0,0,0,.6)}
+.viz-art img{width:100%; height:100%; object-fit:cover}
+.viz h2{margin:clamp(3.4rem,9vh,4.8rem) 0 0; font-size:clamp(1.4rem,4vw,2.3rem); line-height:1.15; letter-spacing:.01em; text-shadow:-2px 0 rgba(255,45,155,.55),2px 0 rgba(34,228,245,.55)}
+.viz-song{margin:.45rem 0 0; min-height:1.5em; color:var(--ink); opacity:.85; font-size:clamp(1rem,2.4vw,1.2rem)}
+.viz-meta{margin:.35rem 0 0; font-family:"JetBrains Mono",ui-monospace,monospace; font-size:.78rem; letter-spacing:.16em; text-transform:uppercase; color:var(--cyan)}
+.viz-bar{position:absolute; left:50%; bottom:calc(2rem + env(safe-area-inset-bottom,0px)); transform:translateX(-50%); display:flex; gap:14px; align-items:center}
+.vb{width:52px; height:52px; border-radius:50%; display:grid; place-items:center; cursor:pointer; padding:0; color:var(--ink);
+  background:rgba(6,10,24,.8); border:1px solid var(--line); box-shadow:0 0 18px rgba(34,228,245,.2); transition:box-shadow .25s, color .25s}
+.vb:hover{box-shadow:0 0 22px rgba(255,45,155,.45)}
+.vb svg{width:20px; height:20px}
+.vb.main{width:64px; height:64px; color:#04060E; background:linear-gradient(135deg,var(--pink),var(--cyan)); border-color:transparent; box-shadow:0 0 24px rgba(255,45,155,.45)}
+.vb.main svg{width:24px; height:24px}
+.vb .i-pause{display:none}
+.viz.is-playing .vb .i-pause{display:block}
+.viz.is-playing .vb .i-go{display:none}
+.viz-x{position:absolute; top:calc(1.1rem + env(safe-area-inset-top,0px)); right:1.1rem; width:44px; height:44px}
+.viz-x svg{width:16px; height:16px}
+body.viz-on{overflow:hidden}
 
 /* footer: the same as the game pages */
 footer{margin-top:1rem; padding:2.5rem 0 3rem; border-top:1px solid var(--line); color:var(--muted); font-size:.88rem}
@@ -214,6 +262,8 @@ footer{margin-top:1rem; padding:2.5rem 0 3rem; border-top:1px solid var(--line);
   .rel, .rel.in{opacity:1; transform:none; transition:none}
   .cover img{transition:none}
   .dock{transition:none}
+  .viz.open{animation:none} .dt-tip{transition:none}
+  .dt, .vb{transition:none}
   .rel.nudge .play{animation:none; box-shadow:0 6px 20px rgba(0,0,0,.45), 0 0 0 5px rgba(30,215,96,.2), 0 0 30px rgba(30,215,96,.8)}
   .nbot *{animation:none!important}
 }
@@ -258,6 +308,26 @@ footer{margin-top:1rem; padding:2.5rem 0 3rem; border-top:1px solid var(--line);
 <div class="dock" id="dock" aria-live="polite">
   <button class="dock-x" id="dockX" type="button" aria-label="Close player"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   <div class="dock-frame" id="dockFrame"></div>
+  <div class="dock-tools">
+    <button class="dt shuf" id="shufBtn" type="button" data-mode="off" aria-pressed="false" aria-label="Shuffle off" title="Shuffle off"><svg class="i-one" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3h5v5"/><path d="M4 20L21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/></svg><svg class="i-all" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17 2.5h4v4"/><path d="M3 15.5L21 2.5"/><path d="M21 11.5v4h-4"/><path d="M15 11l6 4.5"/><path d="M3 3.5l5 3.5"/><circle cx="6" cy="20.5" r="1.3" fill="currentColor"/><circle cx="12" cy="20.5" r="1.3" fill="currentColor"/><circle cx="18" cy="20.5" r="1.3" fill="currentColor"/></svg><span class="dt-tag" id="shufTag" aria-hidden="true"></span></button>
+    <span class="dt-tip" id="shufTip" role="status"></span>
+    <button class="dt" id="vizBtn" type="button" aria-label="Full screen view" title="Full screen view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3H3v5"/><path d="M16 3h5v5"/><path d="M21 16v5h-5"/><path d="M3 16v5h5"/></svg></button>
+  </div>
+</div>
+
+<div class="viz" id="viz" role="dialog" aria-modal="true" aria-label="Now playing" hidden>
+  <div class="viz-bg" id="vizBg"></div>
+  <canvas id="vizCanvas" aria-hidden="true"></canvas>
+  <div class="viz-mid">
+    <div class="viz-art"><img id="vizImg" src="" alt="" width="400" height="400"></div>
+    <h2 id="vizTitle"></h2>
+    <p class="viz-song" id="vizSong"></p>
+    <p class="viz-meta" id="vizMeta"></p>
+  </div>
+  <div class="viz-bar">
+    <button class="vb main" id="vizPlay" type="button" aria-label="Play or pause"><svg class="i-go" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg><svg class="i-pause" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4.5" width="4.2" height="15" rx="1.2"/><rect x="13.8" y="4.5" width="4.2" height="15" rx="1.2"/></svg></button>
+  </div>
+  <button class="vb viz-x" id="vizX" type="button" aria-label="Close full screen view"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
 </div>
 
 <footer>
@@ -285,6 +355,10 @@ const ICON = {
   apple: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#FA2D55"/><path d="M15.8 5.2v9.3a2.3 2.3 0 1 1-1.4-2.1V8.2l-4.6 1.1v6.6a2.3 2.3 0 1 1-1.4-2.1V7.4z" fill="#fff"/></svg>',
   deezer: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="12" fill="#A238FF"/><g fill="#fff"><rect x="5" y="14.5" width="3" height="3" rx=".6"/><rect x="9" y="12" width="3" height="5.5" rx=".6"/><rect x="13" y="9.5" width="3" height="8" rx=".6"/><rect x="17" y="7" width="2.4" height="10.5" rx=".6"/></g></svg>'
 };
+/* every song, from each release's official Spotify embed page: [track id, name, release index] */
+const TRACKS = [["5LtMU014uRnB3uBUMWYXGp","BullBears Tilt",0],["0vxVyJNJH2SCUxIQGm7DgF","Rasta Baby",1],["3f1eAPRvIL1udvAfdNkXOm","Rasta Baby - Turntable Static Remix",1],["6WMO3GZ18FHtj0yvmKAkWI","BullBears Bob and Wiggle",2],["1Hzm8iXh48Ufx37AvFjY52","BullBears Steppin' In",3],["7cO3F3EO2J4xruaGczw2hs","Mutant Monday",3],["3gWJC8F5YWAhMbdb0HYSi6","BullBears Awaken",3],["7AneAQmWajbM1tOxearaQ9","Degen Hours",3],["0ikZTEszbGDW8rurmJQ2nr","BullBears After Dark...Unsupervised",3],["4n0fAQFOhSXUGC1cWZCcKC","Wizzy Wednesday",3],["1ptPQnfhihCfeh1ibEjs1Q","SolOnChain Sunday",3],["2FmYGLSvz44dHOXX0WYHQa","SolOnChain We Climbin'",3],["2cGF34xJS0VZ0pjx4pFNdt","Facehugger Emergance",3],["5ltpT7WoVPyhkRBzsCpWNj","SolOnChain Year One",3],["6V07Un1sDdlTHwVJZUlMo9","SOC Rises",3],["0hmp79PFTGkMDWp5kXYJMe","BullBears Ascension",3],["1NfaeFxDm4UTunkMrogLrS","Echo and Cherie's After Dark Protocol",3],["38Lvc8akkepM2oByLGeO6o","I Only Buy BullBears",3],["7pGcoWjk8WZyHo0GpWKE12","Take my Heart",4],["1cGDC8uCInkTyyaOGSanuQ","Something Else",4],["0o1fDcraHu8xFT0SsFAdFQ","Beautiful Chemistry",4],["1hitJT4qjDTpcbCsJbxyvR","Galaxy's Heartbeat",4],["3j95U9ZNtxy9p43elRRTEh","My Fire",4],["5I1XzpDwwqgG7RUbESr3Cu","My Fire - Folk Remix",4],["3BXpCCvJp2KSdZu3UIFh4h","Eyelids",5],["4HJB6dUAe6gi3XAVyrFTT3","I Stayed",5],["2GZzkckjElSAgUWn8BsqaM","Lessons",5],["6xTUuskLGsGzko6liyFSjz","Thank you, Mom",5],["6TNztUEjwCoJmxOZzXNNrL","Happy for a Change",5],["4f732ISCU42IPN0M0zOtPq","I Used to Be",5],["5spiA2KfOI1dka9NLspxnV","Unburdened",5],["0qBv3DVau69EcpP58ZP8te","In My Pocket",5],["7JKXSIr8iG723l56pn0CnT","One More Song",5],["75QOopa29hRlXfGcSmHJQH","Push on Through",5],["2OtoyqOy8MpfIdlwlO9cTQ","Shadow Circuit",6],["6S2yxzy1LzbxRLjJuUpdyb","Neon Ghost",6],["1ZeRhzBHHpkxq7gGwkaCFA","Echoes of Tomorrow",6],["3B8tvGSXIcw7IZaA7q8vQc","Ghost in the Machine",6],["5yQXtgFyLXEQ15P6QqrPX0","Electric Dreamer",6],["5zYgjpsgF9zlOjEwV4SC5e","Locked in the Loop",7],["5pHupCqzfL8ZMGtDG2xCQo","Gravity on my Chest",7],["0bS7YKQGnknGnGSnb9kkpW","Black Hole Glow",7],["2gJvQTnBJbY3xmRgUKyLLQ","Shadows in the Flow",7],["1ZhOH9fJhTxU4ab44ogZaB","Static in the Stars",7],["5OUc7CmdBW94F1cKLsxcMS","Supernova in Slow Motion",7],["0r0Mqg4n6Zz3nD5ODaHkFl","Alone Between the Stars",7],["1Mq7RZ2zH4ShYUwsFaxUdr","Silence of Space",7],["2aMlpG4hx1MCMYOcSznyZp","Static in the Stars - Starlight Pulse Remix",7],["7sqTBWlnNrkHjMmybcZDMP","The Lone Cosmonaut - The Event Horizon",7],["4mV9026w8p6A95NchoogA1","Galaxy's Heartbeat",8],["1PNVVwY8hBlhHLxIZHBChm","Turn it up Tonight",9],["5v5wlPtZyAj17p8OtNeHeF","Shadow Circuit",10],["1kACB497o6Tu7lM26vGDgb","Thank you, Mom",11],["0wc8zYeZxCZndduePy4USo","BullBears on the Chain",12],["7rvWOghZkmyvKHqJS1UUO8","BullBear Strong",12],["5sdr8GepeLc7IPj3RKrFd7","Hub in the Sky",12],["3wXDtYTFofuecYncgvWbk6","Cosmic Crusher (Space Green)",12],["0BLVcv9msRb3TISwyTC6p7","Mutant March Madness",12],["6saJOZo9VuXs7j76e1bf5a","Hundred Club (We Built Different)",12],["6pFVLYQ8sku6wWFgb5TBeQ","Stubs in the Wallet",12],["255uwnGa3GEFzJfd1EaAVE","Red Check Rising (BullBear Certified)",12],["04fCJrPxFKYwSs3i7MuDlq","The Cosmic King (Space Red)",12],["3xqf3BTFvt1BBnBDGxybm3","SOC, Make Your Move",12],["5f40PbZCEgO6xAH6P0MOBX","BullBears Mint Party",12],["7ea8HHVQDuvtXKhiCGva4K","Alone Between the Stars",13],["3HpJoVUidQokuShYwCgKnQ","Black Hole Glow",14],["1gJ0aH15ATV0UjimoeIiDd","Bloodline",15],["23StieU4HFybA6xWqVb2hC","Locked in the Loop",16],["5RqTRHLJHBUGQhO1lKwIoc","Low Orbit Lullaby",17],["1emOnyAnIkxSR7YA1cmZEl","Make Your Move",18],["1rvcphY93gbF5HcepgEfNz","Quite Warning",19],["1sL38nKgvX96oycU741cDq","Red-Zone Ghost with the Blackout Sound",20],["30I4KFUWqOWDSRhJECV8pt","Shadows in the Flow",21],["0AwLKdwx4MIBGKcCsGObei","Something Else",22],["3LtMGbX4rYLm8eBuiNj0yw","Static in the Stars - Starlight Pulse Remix",23],["04SSOtBmJItu0GhYMZWqIm","Wild Weekend",24],["3HKmIFulH3hogPuWLGXzRk","Static in the Stars",25]];
+const TRACK_BY = {}; TRACKS.forEach(t => { TRACK_BY[t[0]] = t; });
+const songName = n => n.replace(/\s+[-–—]\s+/g, '  ·  ');
 const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const TYPE = {ALBUM:'Album', EP:'EP', SINGLE:'Single'};
 const grid = document.getElementById('rel-grid');
@@ -353,13 +427,34 @@ function showNudge(id) {
 }
 function mark(id) { cards.forEach(c => c.classList.toggle('playing', c.dataset.id === id)); }
 function openDock() { dock.classList.add('open'); document.body.classList.add('has-dock'); }
+/* start a release the way the shuffle mode asks: in order (the whole release), or one song at a time */
 function play(id, auto) {
-  current = id; mark(id); openDock();
+  if (shufMode === 'album') {
+    /* this release's songs in a random order */
+    queue = TRACKS.filter(t => R_ID(t) === id).sort(() => Math.random() - .5);
+    if (queue.length) { playTrack(queue.shift(), auto); return; }
+  } else if (shufMode === 'all') {
+    /* begin with a song from the card that was picked, then any song */
+    queue = [];
+    if (!auto) {
+      let pool = TRACKS.filter(t => R_ID(t) === id && !playedT.has(t[0]));
+      if (!pool.length) pool = TRACKS.filter(t => R_ID(t) === id);
+      if (pool.length) { playTrack(pool[Math.floor(Math.random() * pool.length)], auto); return; }
+    }
+  }
+  queue = []; curTrack = null;
+  load('spotify:album:' + id, id, auto);
+}
+function playTrack(t, auto) { curTrack = t; playedT.add(t[0]); load('spotify:track:' + t[0], R_ID(t), auto); }
+const R_ID = t => RELEASES[t[2]].id;
+let queue = [], curTrack = null, playedT = new Set(), lastUri = null;
+function load(uri, id, auto) {
+  lastUri = uri;
+  current = id; mark(id); openDock(); vizSet(id);
   clearTimeout(endTimer); armed = false; ending = false; songUri = null; songDur = 0; songPos = 0; songAt = 0;
   clearTimeout(autoTimer); hideNudge(); waitOk = !!auto;
   /* autoplay next blocked (Safari, iPhone): nothing starts within 2.5 s, so show the bot and wait for a tap */
   if (auto) autoTimer = setTimeout(() => { if (waitOk && current === id) showNudge(id); }, 2500);
-  const uri = 'spotify:album:' + id;
   if (ctrl) { ctrl.loadUri(uri); ctrl.play(); return; }
   pending = uri;
   if (apiLoading) return;
@@ -369,6 +464,7 @@ function play(id, auto) {
     API.createController(el, {uri: pending, width: '100%', height: 152}, c => {
       ctrl = c;
       c.addListener('ready', () => { if (pending) { c.play(); pending = null; } });
+      c.addListener('playback_update', e => vizState(e.data || {}));
       /* autoplay next: an album plays its own songs in order, and the next song starts right as one ends.
          When the last song reaches its end and nothing new starts, the release is done, so play the next card. */
       c.addListener('playback_started', () => { clearTimeout(endTimer); ending = false; armed = true; });
@@ -412,17 +508,239 @@ function play(id, auto) {
 }
 function playNext() {
   if (!current || !dock.classList.contains('open')) return;
+  if (shufMode === 'album' && queue.length) { playTrack(queue.shift(), true); return; }
+  if (shufMode === 'all') {
+    /* any song from the releases on show, no repeats until every one has played */
+    const vis = new Set(cards.filter(c => !c.hidden).map(c => c.dataset.id));
+    const nowId = curTrack ? curTrack[0] : null;
+    let pool = TRACKS.filter(t => vis.has(R_ID(t)) && t[0] !== nowId && !playedT.has(t[0]));
+    if (!pool.length) { playedT = new Set(nowId ? [nowId] : []); pool = TRACKS.filter(t => vis.has(R_ID(t)) && t[0] !== nowId); }
+    if (pool.length) playTrack(pool[Math.floor(Math.random() * pool.length)], true);
+    return;
+  }
+  /* off, or album shuffle after its last song: the next card in order */
   const all = cards, at = all.findIndex(c => c.dataset.id === current);
   const next = all.slice(at + 1).find(c => !c.hidden);
   if (next) play(next.dataset.id, true);
 }
 grid.addEventListener('click', e => {
   const n = e.target.closest('.rel.nudge');
-  if (n && !e.target.closest('.lk')) { play(n.dataset.id); return; }
+  if (n && !e.target.closest('.lk')) { if (lastUri && n.dataset.id === current) load(lastUri, current); else play(n.dataset.id); return; }
   const b = e.target.closest('.cover'); if (!b) return;
   play(b.closest('.rel').dataset.id);
 });
+/* shuffle mode: off, this album, or all songs; remembered on this device */
+const SHUF = {off: 'Shuffle off', album: 'Shuffle this album', all: 'Shuffle all songs'}, SHUF_NEXT = {off: 'album', album: 'all', all: 'off'};
+let shufMode = 'off', tipTimer = null;
+const shufBtn = document.getElementById('shufBtn'), shufTag = document.getElementById('shufTag'), shufTip = document.getElementById('shufTip');
+try { const m = localStorage.getItem('echo1MusicShuffle'); if (SHUF[m]) shufMode = m; } catch (e) {}
+function shufShow() {
+  shufBtn.dataset.mode = shufMode; shufBtn.setAttribute('aria-pressed', shufMode !== 'off');
+  shufBtn.setAttribute('aria-label', SHUF[shufMode]); shufBtn.title = SHUF[shufMode];
+  shufTag.textContent = shufMode === 'album' ? 'ALBUM' : shufMode === 'all' ? 'ALL' : '';
+}
+shufShow();
+shufBtn.addEventListener('click', () => {
+  shufMode = SHUF_NEXT[shufMode]; shufShow();
+  /* start fresh from what is playing now */
+  queue = shufMode === 'album' && current ? TRACKS.filter(t => R_ID(t) === current && (!curTrack || t[0] !== curTrack[0]) && !playedT.has(t[0])).sort(() => Math.random() - .5) : [];
+  playedT = new Set(curTrack ? [curTrack[0]] : []);
+  try { localStorage.setItem('echo1MusicShuffle', shufMode); } catch (e) {}
+  shufTip.textContent = SHUF[shufMode]; shufTip.classList.add('show');
+  clearTimeout(tipTimer); tipTimer = setTimeout(() => shufTip.classList.remove('show'), 1800);
+});
+
+/* full screen view: cover, title and a calm neon visual. Spotify shares no audio data, so the motion follows play and pause. */
+const viz = document.getElementById('viz'), vcv = document.getElementById('vizCanvas'), vctx = vcv.getContext('2d');
+const vImg = document.getElementById('vizImg'), vTitle = document.getElementById('vizTitle'), vSong = document.getElementById('vizSong');
+const vMeta = document.getElementById('vizMeta'), vBg = document.getElementById('vizBg'), vPlay = document.getElementById('vizPlay');
+const calm = matchMedia('(prefers-reduced-motion: reduce)');
+let vOpen = false, vFull = false, vRaf = 0, vLast = 0, vPh = 0, vE = 0, vGoal = 0, vUri = '', vW = 0, vH = 0, vDpr = 1;
+const songNames = {};
+/* background scenes: one constant sets how long each lasts; they cross fade slowly */
+const VIZ_SCENE_SECONDS = 300, VIZ_FADE_SECONDS = 5;
+let vScene = 0, vFrom = -1, vFade = 1, vSceneT = 0, vPx = 0, vPy = 0, vMx = 0, vMy = 0;
+const C3 = [[34,228,245],[178,102,255],[255,45,155]];
+const rgba = (c, a) => 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + a.toFixed(3) + ')';
+const ease = x => x * x * (3 - 2 * x);
+function wave(g, W, fy) { /* one smooth curve across the screen */
+  g.beginPath();
+  for (let i = 0; i <= 72; i++) { const x = -80 + (W + 160) * i / 72, y = fy(x); i ? g.lineTo(x, y) : g.moveTo(x, y); }
+}
+const SCENES = [
+  /* 1: silk ribbons, bundles of fine lines that twist as they flow */
+  (g, t, W, H, px, py) => {
+    for (let r = 0; r < 4; r++) {
+      const d = .35 + r * .22, c = C3[r % 3], base = H * (.2 + .2 * r) + py * d, amp = H * (.07 + .025 * (r % 2));
+      const sp = 1 + r * .18, ox = px * d;
+      const fy = (x, o) => base + amp * Math.sin((x - ox) * .0035 + t * .22 * sp + r * 1.9) + amp * .55 * Math.sin((x - ox) * .0019 - t * .15 + r)
+        + o * (1.1 + .9 * Math.sin((x - ox) * .005 + t * .27 + r * 2.3));
+      g.lineWidth = 26; g.strokeStyle = rgba(c, .028); wave(g, W, x => fy(x, 0)); g.stroke();
+      g.lineWidth = 1;
+      for (let l = 0; l < 16; l++) {
+        const o = (l - 7.5) * 4.2; g.strokeStyle = rgba(c, .05 + .1 * (1 - Math.abs(l - 7.5) / 7.5));
+        wave(g, W, x => fy(x, o)); g.stroke();
+      }
+    }
+  },
+  /* 2: aurora, slow curtains of light that roll and fade downward */
+  (g, t, W, H, px, py) => {
+    for (let k = 0; k < 4; k++) {
+      const d = .3 + k * .2, c = C3[(k + 1) % 3], top = H * (.14 + .17 * k) + py * d, amp = H * .06, ox = px * d;
+      const fy = x => top + amp * Math.sin((x - ox) * .0028 + t * .2 + k * 1.3) + amp * .7 * Math.sin((x - ox) * .0061 - t * .13 + k * 2.1);
+      const gr = g.createLinearGradient(0, top - amp * 2, 0, top + H * .32);
+      gr.addColorStop(0, rgba(c, 0)); gr.addColorStop(.22, rgba(c, .1)); gr.addColorStop(1, rgba(c, 0));
+      wave(g, W, fy); g.lineTo(W + 80, top + H * .34); g.lineTo(-80, top + H * .34); g.closePath(); g.fillStyle = gr; g.fill();
+      g.lineWidth = 10; g.strokeStyle = rgba(c, .05); wave(g, W, fy); g.stroke();
+      g.lineWidth = 1.4; g.strokeStyle = rgba(c, .3); wave(g, W, fy); g.stroke();
+    }
+  },
+  /* 3: drifting strings, long curved threads that sway and cross */
+  (g, t, W, H, px, py) => {
+    g.lineWidth = 1.2;
+    for (let s = 0; s < 18; s++) {
+      const d = .25 + (s % 4) * .2, c = C3[s % 3], ph = s * 1.37, ox = px * d, oy = py * d;
+      const y0 = H * (.1 + .8 * ((s * .618) % 1)) + H * .12 * Math.sin(t * .11 + ph);
+      const y1 = H * (.1 + .8 * ((s * .382 + .3) % 1)) + H * .12 * Math.cos(t * .09 + ph);
+      const c1y = H * (.5 + .55 * Math.sin(t * .17 + ph)), c2y = H * (.5 + .55 * Math.cos(t * .13 + ph * 1.3));
+      g.beginPath(); g.moveTo(-60 + ox, y0 + oy);
+      g.bezierCurveTo(W * .33 + ox + 80 * Math.sin(t * .2 + s), c1y + oy, W * .66 + ox + 80 * Math.cos(t * .16 + s), c2y + oy, W + 60 + ox, y1 + oy);
+      g.lineWidth = 7; g.strokeStyle = rgba(c, .035); g.stroke();
+      g.lineWidth = 1.1; g.strokeStyle = rgba(c, .2); g.stroke();
+    }
+  },
+  /* 4: orbiting curves, soft loops that breathe and turn around the cover */
+  (g, t, W, H, px, py, cx, cy, R) => {
+    for (let k = 0; k < 7; k++) {
+      const d = .2 + k * .12, c = C3[k % 3], rr = R + 70 + k * Math.min(W, H) * .07, rot = t * .05 * (k % 2 ? 1 : -1) + k;
+      const sq = .62 + .12 * Math.sin(t * .1 + k), ox = cx + px * d, oy = cy + py * d;
+      g.beginPath();
+      for (let i = 0; i <= 160; i++) {
+        const a = i / 160 * Math.PI * 2, m = 1 + .07 * Math.sin(3 * a + t * .3 + k) + .045 * Math.sin(5 * a - t * .22 + k * 2);
+        const x = Math.cos(a) * rr * m, y = Math.sin(a) * rr * m * sq;
+        const X = ox + x * Math.cos(rot) - y * Math.sin(rot), Y = oy + x * Math.sin(rot) + y * Math.cos(rot);
+        i ? g.lineTo(X, Y) : g.moveTo(X, Y);
+      }
+      g.lineWidth = 9; g.strokeStyle = rgba(c, .03); g.stroke();
+      g.lineWidth = 1.3; g.strokeStyle = rgba(c, .2); g.stroke();
+    }
+  }
+];
+addEventListener('pointermove', e => { if (vOpen) { vMx = e.clientX / innerWidth - .5; vMy = e.clientY / innerHeight - .5; } }, {passive: true});
+function vizSet(id) {
+  const r = RELEASES.find(x => x.id === id); if (!r) return;
+  vImg.src = r.cover; vBg.style.backgroundImage = 'url("' + r.cover + '")';
+  vTitle.textContent = r.title; vSong.textContent = curTrack && R_ID(curTrack) === id ? songName(curTrack[1]) : ''; vUri = '';
+  const d = r.date.split('-');
+  vMeta.textContent = TYPE[r.type] + '  ·  ' + MON[+d[1] - 1] + ' ' + d[0] + (r.tracks > 1 ? '  ·  ' + r.tracks + ' songs' : '');
+  if (!vRaf) vizDraw(0);
+}
+function vizState(d) {
+  vGoal = d.isPaused ? 0 : 1;
+  viz.classList.toggle('is-playing', !d.isPaused);
+  if (d.playingURI && d.playingURI !== vUri && /^spotify:track:[A-Za-z0-9]{22}$/.test(d.playingURI)) {
+    vUri = d.playingURI;
+    const show = n => { if (vUri === d.playingURI) vSong.textContent = songName(n); };
+    const k = TRACK_BY[vUri.split(':')[2]];
+    if (k) show(k[1]);
+    else if (songNames[vUri] != null) show(songNames[vUri]);
+    else fetch('https://open.spotify.com/oembed?url=https://open.spotify.com/track/' + vUri.split(':')[2])
+      .then(r => r.ok ? r.json() : null).then(j => { if (j && j.title) { songNames[d.playingURI] = j.title; show(j.title); } }).catch(() => {});
+  }
+  if (vOpen && !vRaf && !document.hidden) vRaf = requestAnimationFrame(vizLoop);
+}
+function vizSize() {
+  vDpr = Math.min(window.devicePixelRatio || 1, 2); vW = innerWidth; vH = innerHeight;
+  vcv.width = Math.round(vW * vDpr); vcv.height = Math.round(vH * vDpr);
+}
+function vizDraw(dt) {
+  if (!vOpen) return;
+  const g = vctx, art = vImg.parentNode.getBoundingClientRect();
+  if (calm.matches) { vE = .55; } else {
+    vE += (vGoal - vE) * Math.min(1, dt * 1.2); vPh += dt * vE;
+    /* scenes move on only while the music plays */
+    vSceneT += dt * vGoal;
+    if (vSceneT >= VIZ_SCENE_SECONDS) { vSceneT = 0; vFrom = vScene; vScene = (vScene + 1) % SCENES.length; vFade = 0; }
+    if (vFade < 1) vFade = Math.min(1, vFade + dt / VIZ_FADE_SECONDS);
+    /* gentle parallax: a slow drift plus a little follow of the pointer, both eased */
+    const k = Math.min(1, dt * 1.5);
+    vPx += (Math.sin(vPh * .07) * 26 - vMx * 40 - vPx) * k; vPy += (Math.cos(vPh * .05) * 16 - vMy * 26 - vPy) * k;
+  }
+  const e = vE, t = vPh, cx = art.left + art.width / 2, cy = art.top + art.height / 2, R = art.width * .5 + 14;
+  g.setTransform(vDpr, 0, 0, vDpr, 0, 0); g.clearRect(0, 0, vW, vH);
+  const bg = g.createRadialGradient(cx, cy, R * .6, cx, cy, Math.max(vW, vH) * .75);
+  bg.addColorStop(0, 'rgba(34,228,245,.07)'); bg.addColorStop(.5, 'rgba(178,102,255,.035)'); bg.addColorStop(1, 'rgba(4,6,14,0)');
+  g.fillStyle = bg; g.fillRect(0, 0, vW, vH);
+  g.globalCompositeOperation = 'lighter'; g.lineCap = 'round'; g.lineJoin = 'round';
+  /* the flowing background scene, cross fading into the next one */
+  const st = t + 40, f = ease(vFade);
+  if (vFrom >= 0 && f < 1) { g.globalAlpha = 1 - f; SCENES[vFrom](g, st, vW, vH, vPx, vPy, cx, cy, R); }
+  g.globalAlpha = f; SCENES[vScene](g, st, vW, vH, vPx, vPy, cx, cy, R); g.globalAlpha = 1;
+  if (f >= 1) vFrom = -1;
+  /* slow orbit rings */
+  for (let k = 0; k < 3; k++) {
+    const rr = R + 46 + k * 52, rot = t * (.12 - k * .05);
+    g.strokeStyle = ['rgba(34,228,245,', 'rgba(178,102,255,', 'rgba(255,45,155,'][k] + (.1 + .1 * e) + ')';
+    g.lineWidth = 1.2;
+    for (let a = 0; a < 4; a++) { g.beginPath(); g.arc(cx, cy, rr, rot + a * Math.PI / 2, rot + a * Math.PI / 2 + Math.PI / 3.2); g.stroke(); }
+  }
+  /* soft bars around the cover */
+  const N = 120, cols = [[34,228,245],[178,102,255],[255,45,155],[34,228,245]];
+  for (let i = 0; i < N; i++) {
+    const a = i / N * Math.PI * 2 - Math.PI / 2, u = i / N * 3, c0 = cols[Math.floor(u)], c1 = cols[Math.floor(u) + 1], f = u % 1;
+    const col = c0.map((v, j) => Math.round(v + (c1[j] - v) * f)).join(',');
+    const w = .5 + .5 * (Math.sin(i * .37 + t * 1.3) * .5 + Math.sin(i * .11 - t * .8) * .35 + Math.sin(i * .73 + t * 2.1) * .15);
+    const len = 4 + e * (8 + 30 * w);
+    const x0 = cx + Math.cos(a) * R, y0 = cy + Math.sin(a) * R, x1 = cx + Math.cos(a) * (R + len), y1 = cy + Math.sin(a) * (R + len);
+    g.strokeStyle = 'rgba(' + col + ',.16)'; g.lineWidth = 7; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+    g.strokeStyle = 'rgba(' + col + ',' + (.45 + .35 * e) + ')'; g.lineWidth = 2.2; g.beginPath(); g.moveTo(x0, y0); g.lineTo(x1, y1); g.stroke();
+  }
+  /* drifting particles */
+  for (let i = 0; i < 70; i++) {
+    const seed = i * 12.9898, a = (seed % 6.283) + t * .03 * ((i % 2) ? 1 : -1);
+    const life = ((t * .06 + (i * .618) % 1) % 1), rr = R + 70 + life * Math.max(vW, vH) * .55;
+    const al = Math.sin(life * Math.PI) * (.18 + .3 * e);
+    g.fillStyle = 'rgba(' + cols[i % 3].join(',') + ',' + al.toFixed(3) + ')';
+    g.beginPath(); g.arc(cx + Math.cos(a) * rr, cy + Math.sin(a) * rr, 1.2 + (i % 3) * .6, 0, Math.PI * 2); g.fill();
+  }
+  g.globalCompositeOperation = 'source-over';
+}
+function vizLoop(now) {
+  const dt = vLast ? Math.min(.05, (now - vLast) / 1000) : 0; vLast = now;
+  vizDraw(dt); vRaf = 0;
+  /* keep going while open and moving; rest once paused and still, or when motion is reduced */
+  if (vOpen && !document.hidden && !calm.matches && (vGoal > 0 || vE > .002 || vFade < 1)) vRaf = requestAnimationFrame(vizLoop);
+  else vLast = 0;
+}
+function vizKick() { if (vOpen && !vRaf && !document.hidden) { vLast = 0; vRaf = requestAnimationFrame(vizLoop); } }
+function vizOpen() {
+  if (!current || vOpen) return;
+  vOpen = true; viz.hidden = false; viz.classList.add('open'); document.body.classList.add('viz-on');
+  vizSet(current); vizSize();
+  const el = document.documentElement;
+  if (el.requestFullscreen && !document.fullscreenElement) el.requestFullscreen().then(() => { vFull = true; }).catch(() => {});
+  else if (el.webkitRequestFullscreen && !document.webkitFullscreenElement) { try { el.webkitRequestFullscreen(); vFull = true; } catch (e) {} }
+  vPlay.hidden = !ctrl; vPlay.focus({preventScroll: true});
+  vizKick(); vizDraw(0);
+}
+function vizClose() {
+  if (!vOpen) return;
+  vOpen = false; cancelAnimationFrame(vRaf); vRaf = 0; vLast = 0;
+  viz.classList.remove('open'); viz.hidden = true; document.body.classList.remove('viz-on');
+  if (vFull) { vFull = false; if (document.fullscreenElement && document.exitFullscreen) document.exitFullscreen().catch(() => {}); else if (document.webkitFullscreenElement && document.webkitExitFullscreen) document.webkitExitFullscreen(); }
+  document.getElementById('vizBtn').focus({preventScroll: true});
+}
+document.getElementById('vizBtn').addEventListener('click', vizOpen);
+document.getElementById('vizX').addEventListener('click', vizClose);
+vPlay.addEventListener('click', () => { if (ctrl) ctrl.togglePlay(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && vOpen) vizClose(); });
+['fullscreenchange', 'webkitfullscreenchange'].forEach(n => document.addEventListener(n, () => {
+  if (vFull && !(document.fullscreenElement || document.webkitFullscreenElement)) { vFull = false; vizClose(); }
+}));
+addEventListener('resize', () => { if (vOpen) { vizSize(); vizDraw(0); } });
+document.addEventListener('visibilitychange', () => { if (document.hidden) { cancelAnimationFrame(vRaf); vRaf = 0; vLast = 0; } else vizKick(); });
 document.getElementById('dockX').addEventListener('click', () => {
+  vizClose();
   if (ctrl) ctrl.pause();
   clearTimeout(endTimer); armed = false; ending = false;
   clearTimeout(autoTimer); waitOk = false; hideNudge();
