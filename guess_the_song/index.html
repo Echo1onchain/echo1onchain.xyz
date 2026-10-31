@@ -186,6 +186,7 @@ input:focus{outline:none;border-color:var(--pk);box-shadow:0 0 0 3px rgba(255,47
     <div class="row">
       <button class="btn primary" id="playBtn" disabled>Play clip</button>
       <button class="btn ghost" id="againBtn" disabled>Play again</button>
+      <button class="btn ghost" id="partBtn" disabled>Play another part</button>
       <button class="btn ghost" id="revealBtn" disabled>Reveal song</button>
     </div>
 
@@ -220,12 +221,7 @@ input:focus{outline:none;border-color:var(--pk);box-shadow:0 0 0 3px rgba(255,47
       <h3>Songs</h3>
       <div class="chips" role="group" aria-label="Song source">
         <button class="chip" data-mode="preset" aria-pressed="true">Halloween picks</button>
-        <button class="chip" data-mode="playlist">My playlist</button>
-      </div>
-      <div id="playlistBox" class="hidden" style="margin-top:12px">
-        <input id="plLink" placeholder="Paste a Spotify playlist link">
-        <button class="btn primary" id="plLoad" style="width:100%">Load playlist</button>
-        <p class="small" id="plMsg">In Spotify, open the playlist, click ••• then Share, then Copy link to playlist.</p>
+        <button class="chip" data-mode="echo1">Echo1’s playlist</button>
       </div>
     </section>
 
@@ -289,6 +285,167 @@ const PRESETS = [
   {id:"2zYzyRzz6pRmhPzyfMEC8s", a:"AC/DC", y:"1979", al:"Highway to Hell", f:"Its album was the last AC/DC album with singer Bon Scott."}
 ];
 
+/* Echo1’s Halloween playlist, baked in from Spotify playlist 2bWtVAl9VX45x9gAUPiVOF (t = title, a = artist) */
+const ECHO1_PL = [
+  {"id": "0xxZY5C9xxij3D1HkzbnfC", "t": "Monster Mash", "a": "Bobby \"Boris\" Pickett, The Crypt-Kickers"},
+  {"id": "3S2R0EVwBSAVMd5UMgKTL0", "t": "Thriller", "a": "Michael Jackson"},
+  {"id": "709ZIqPHyFOpx2QdjmeWAM", "t": "Dracula", "a": "Tame Impala"},
+  {"id": "6A4Jc8npNo79BOgsrPptLA", "t": "Somebody's Watching Me (Single Version)", "a": "Rockwell"},
+  {"id": "1sUdq3kWa9dJXHu3eYOUll", "t": "Spooky, Scary Skeletons (Undead Tombstone Remix)", "a": "Andrew Gold"},
+  {"id": "7FD5ZtQ7MAUE7XEbEe0p73", "t": "Harry Potter (Trap Remix)", "a": "Trap Remix Guys, Trap Remix Guy"},
+  {"id": "3NFs3XUduzBfvc5Bx1gmzh", "t": "The Dead Dance", "a": "Lady Gaga"},
+  {"id": "3m0y8qLoznUYi73SUBP8GI", "t": "Ghostbusters", "a": "Ray Parker Jr."},
+  {"id": "01YROQCnF1AQm7SCWJmD2o", "t": "This Is Halloween", "a": "The Citizens of Halloween"},
+  {"id": "00loo0BtWpUKzj4tgu7XRz", "t": "Ghost Ceremony", "a": "Lucie Cravero, HoKø"},
+  {"id": "6TZTu1F0gnp8mtzvYZao41", "t": "The Addams Family", "a": "Andrew Gold"},
+  {"id": "0gs6G0qcP6yXVBntg8PC3L", "t": "Goosebumps Original Theme Song", "a": "Jack Lenz"},
+  {"id": "6Z36wt7oo6xm2uGN00PnTq", "t": "Halloween Theme", "a": "John Carpenter, Cody Carpenter, Daniel Davies"},
+  {"id": "4jFl904O3cx2wNMMIXAwlw", "t": "Smooth Criminal (Immortal Version)", "a": "Michael Jackson"},
+  {"id": "2vErG8gBJ4FhQ7SZfVsCWQ", "t": "Lurch", "a": "GaetDown, 7&Nine"},
+  {"id": "0VjIjW4GlUZAMYd2vXMi3b", "t": "Blinding Lights", "a": "The Weeknd"},
+  {"id": "54ipXppHLA8U4yqpOFTUhr", "t": "Bones", "a": "Imagine Dragons"},
+  {"id": "58rkX6LVUSoEykg2Gqs0tm", "t": "Grave Wanderer", "a": "No Spirit"},
+  {"id": "11BKm0j4eYoCPPpCONAVwA", "t": "Bloody Mary", "a": "Lady Gaga"},
+  {"id": "0DdYEWziPqBCMFniUUEF0G", "t": "Five Nights at Freddy's", "a": "The Newton Brothers"},
+  {"id": "18DaSMSqc40nV8cDhdLemj", "t": "My Girlfriend Is a Witch", "a": "October Country"},
+  {"id": "5Op5Ku3dWbdOvcRE0Ze8n3", "t": "Halloweentown Theme", "a": "Retrospectre"},
+  {"id": "2SrGtpbPh7czhWKGmXk8Aw", "t": "Thriller (Steve Aoki Midnight Hour Remix)", "a": "Michael Jackson, Steve Aoki"},
+  {"id": "5ZbwPEUqw1hK6rp0ppD8lR", "t": "Five Nights at Freddy's", "a": "The Living Tombstone"},
+  {"id": "7jl8ppzIsxCb08nWb2ce7Z", "t": "Ghost Redemption", "a": "Lucie Cravero, HoKø"},
+  {"id": "5BlniAGau8QSOxEEnFgc6v", "t": "Ghostbusters (808 Remix)", "a": "Remix Kingz, The Big 80s Guys, 808 Flipz"},
+  {"id": "3dd9uXh41vmFLO3UvqLJL6", "t": "Wednesday Main Titles", "a": "Danny Elfman"},
+  {"id": "6ewN9MaFbi78oDLT9wYDgn", "t": "Ghost Town", "a": "The Specials"},
+  {"id": "2PxU5FuCu5ZPg6G8U3obJG", "t": "Wrong Door", "a": "BƱBBLE"},
+  {"id": "2Fxmhks0bxGSBdJ92vM42m", "t": "bad guy", "a": "Billie Eilish"},
+  {"id": "5h5reMGNpL19vdn5wMkbNn", "t": "Halloween", "a": "Misfits"},
+  {"id": "6wzf2mvcfnU6x4J0Wl7kUq", "t": "Skeleton Man", "a": "Capital Cities"},
+  {"id": "1CPZ5BxNNd0n0nF4Orb9JS", "t": "Golden", "a": "HUNTR/X, EJAE, AUDREY NUNA, REI AMI, KPop Demon Hunters Cast"},
+  {"id": "2hvwDCtHWqhWZ5D048H821", "t": "Unfriendly Ghost", "a": "CMJ"},
+  {"id": "1Qrg8KqiBpW07V7PNxwwwL", "t": "Kill Bill", "a": "SZA"},
+  {"id": "6IPwKM3fUUzlElbvKw2sKl", "t": "we fell in love in october", "a": "girl in red"},
+  {"id": "7tnv6GKUMMALuPGzAfL6x0", "t": "Halloween Road", "a": "xander., Phlocalyst, Akīn"},
+  {"id": "5r5Lj2MkgwQJz6TaBdL865", "t": "Spiderhead", "a": "Cage The Elephant"},
+  {"id": "2VOomzT6VavJOGBeySqaMc", "t": "Disturbia", "a": "Rihanna"},
+  {"id": "0B6CyJFQvcY6XKI292bD0C", "t": "The Crow", "a": "Living Room"},
+  {"id": "0e4sdWtitL9zXCaPk31ypA", "t": "Ghost Town", "a": "Cloudchord"},
+  {"id": "3JTMWdhcJPiegDSe7SvZS3", "t": "Cannibal", "a": "Kesha"},
+  {"id": "7fRvtXvJMpGfTLdF0M09a1", "t": "Talking In Your Sleep (2023 Remaster)", "a": "The Romantics"},
+  {"id": "70LcF31zb1H0PyJoS1Sx1r", "t": "Creep", "a": "Radiohead"},
+  {"id": "51v5CRuSUkWvdvw4OmVYlb", "t": "Somedays", "a": "Tess Parks"},
+  {"id": "3G0K04wbqNl5Mte6yAAoCd", "t": "Ghost Frenzy", "a": "l'eupe, colours in the dark"},
+  {"id": "2dCmGcEOQrMQhMMS8Vj7Ca", "t": "Super Freak", "a": "Rick James"},
+  {"id": "0EVpvyZGqG79TxSqox1cuB", "t": "Halloween Theme", "a": "Board-Man, l'eupe"},
+  {"id": "0COqiPhxzoWICwFCS4eZcp", "t": "Bring Me To Life", "a": "Evanescence"},
+  {"id": "0OFknyqxmSQ42SoKxWVTok", "t": "Un Poco Loco", "a": "Anthony Gonzalez, Gael Garcia Bernal"},
+  {"id": "0Zj3Ihs4nn3G3xZ2LKLEbP", "t": "Sally's Song", "a": "Catherine O'Hara"},
+  {"id": "4T4E3vTU0J7ue97n9bQgye", "t": "Necrotic Whisps", "a": "l'eupe"},
+  {"id": "3k79jB4aGmMDUQzEwa46Rz", "t": "vampire", "a": "Olivia Rodrigo"},
+  {"id": "6pzdtqFNXSTW8lexr3ciOn", "t": "Dracula's Curse", "a": "Jam'addict"},
+  {"id": "2LBqCSwhJGcFQeTHMVGwy3", "t": "Die For You", "a": "The Weeknd"},
+  {"id": "4henDrHY5i4oObYdTLYcU1", "t": "Ritual Of Bones", "a": "Dosi, D0d."},
+  {"id": "2zYzyRzz6pRmhPzyfMEC8s", "t": "Highway to Hell", "a": "AC/DC"},
+  {"id": "6gQy5XIpHbKk2twnACp1nA", "t": "Seavolution (From Hotel Transylvania 3)", "a": "Tiësto"},
+  {"id": "3lIxtCaROdRDuTnNBDm3n2", "t": "She's My Collar (feat. Kali Uchis)", "a": "Gorillaz, Kali Uchis"},
+  {"id": "5sdjP6WpDav6FZUE20efFs", "t": "Forgot About Dre (Album Version, Edited)", "a": "Dr. Dre, Eminem"},
+  {"id": "10zvdrESuXdTmm02pAZxvA", "t": "Haunted Train", "a": "Lucie Cravero, HoKø"},
+  {"id": "6i0V12jOa3mr6uu4WYhUBr", "t": "Heathens", "a": "Twenty One Pilots"},
+  {"id": "7lKkBTKh2Q0hLUr5UgT2Ig", "t": "Day-O (from \"Beetlejuice Beetlejuice\")", "a": "Alfie Davis, The Sylvia Young Theatre School Choir"},
+  {"id": "5DSi7heBC8eTIFROBvttnp", "t": "Season Of The Witch", "a": "Lana Del Rey"},
+  {"id": "5ChkMS8OtdzJeqyybCc9R5", "t": "Billie Jean", "a": "Michael Jackson"},
+  {"id": "5QTxFnGygVM4jFQiBovmRo", "t": "(Don't Fear) The Reaper", "a": "Blue Öyster Cult"},
+  {"id": "5773KSWFzg9kCc8yazjbSt", "t": "Deceptacon", "a": "Le Tigre"},
+  {"id": "2uqQXl3CWniLE0Uhfb7izu", "t": "Scream", "a": "Misfits"},
+  {"id": "7Hs5pDEngLUVzY8Ghme4xF", "t": "a dark night", "a": "midnight martini"},
+  {"id": "5UA3nqKGwumxL2iijzBEua", "t": "Jack Skeletron", "a": "Simber, Erwin Do"},
+  {"id": "4VCexsNDyC2j8ZrY34RwV0", "t": "Jack's Lament", "a": "Danny Elfman"},
+  {"id": "3EEd6ldsPat620GVYMEhOP", "t": "Goo Goo Muck", "a": "The Cramps"},
+  {"id": "32lhM6E0F3ZML7GsDK91jU", "t": "strange", "a": "midnight martini"},
+  {"id": "63BcfK6YAzJYeISaTPr6IO", "t": "Big Poppa (2007 Remaster)", "a": "The Notorious B.I.G."},
+  {"id": "6VvjxWVcTR3Vx5EzdWLIvB", "t": "Haunted Halloween", "a": "Shierro"},
+  {"id": "1gOVlit7zHwuKv8HVta06I", "t": "It's Been So Long", "a": "The Living Tombstone"},
+  {"id": "4YAyqZLAOgixQ43Ivggmdv", "t": "The Hearse Song (The Worms Crawl In)", "a": "Halloween Scream Team"},
+  {"id": "2h47SG8bNphmicAll4H9RV", "t": "Dead Man's Party", "a": "Oingo Boingo"},
+  {"id": "1UGa7FRgtQGyBQIVz26Nrz", "t": "The Simpsons Treehouse of Horror (Halloween Special Theme)", "a": "Retrospectre"},
+  {"id": "6IbnUaczZBT34DhaD6S18F", "t": "Bubblegum Bitch", "a": "MARINA"},
+  {"id": "3Mg2OV6ZmVFfWSklyivgl5", "t": "Prologue (A Nightmare on Elm Street)", "a": "Charles Bernstein"},
+  {"id": "7FOS31xq9jv4cXWtp6Jnzw", "t": "The World Es Mi Familia", "a": "Anthony Gonzalez, Antonio Sol"},
+  {"id": "4nmne9J3YCEdhvjTzwiAgu", "t": "Black Magic Woman", "a": "Santana"},
+  {"id": "4qO03RMQm88DdpTJcxlglY", "t": "Call Me", "a": "Blondie"},
+  {"id": "4kkeuVl6gF3RMqE4Nn5W3E", "t": "E.T.", "a": "Katy Perry"},
+  {"id": "7gEXhefIdmnzJh1cqbxRUq", "t": "Spooked", "a": "Cloudchord"},
+  {"id": "0HUTL8i4y4MiGCPId7M7wb", "t": "Freaks", "a": "Surf Curse"},
+  {"id": "4cS2HQ6jK80vqdY9ofpztx", "t": "She Wolf", "a": "Shakira"},
+  {"id": "0GSznY83c8vYbDK4ApHbDJ", "t": "puppets", "a": "lost echoes"},
+  {"id": "7CIERzyqIwLVKGp00YbHRO", "t": "Pain", "a": "PinkPantheress"},
+  {"id": "6tBKHHzxVINin74v5rBwYM", "t": "Hollywood Haunt", "a": "CMJ, l'eupe"},
+  {"id": "2R8t1qlB2wMiWwho1u3eYq", "t": "Surfin' Spooks", "a": "The Ghastly Ones"},
+  {"id": "22VdIZQfgXJea34mQxlt81", "t": "Can't Feel My Face", "a": "The Weeknd"},
+  {"id": "25SJaCCPiosugnlY53VhRG", "t": "Freaking Out the Neighborhood", "a": "Mac DeMarco"},
+  {"id": "6t2eahsJlvvWWA49EETGMm", "t": "Pumpkin Afterhours", "a": "Casiio, Sling Dilly"},
+  {"id": "3jjsRKEsF42ccXf8kWR3nu", "t": "Washing Machine Heart", "a": "Mitski"},
+  {"id": "2iFmfykzckQwjuszcLnGk6", "t": "Behind The Door", "a": "Dosi"},
+  {"id": "1o3wIqcsENRXjyFKrpJKeV", "t": "Wicked Spells", "a": "Mondo Loops"},
+  {"id": "1vvBUZseJ7fwYPX1NedOLd", "t": "Cha Cha", "a": "Freddie Dredd"},
+  {"id": "2WfaOiMkCvy7F5fcp2zZ8L", "t": "Take on Me", "a": "a-ha"},
+  {"id": "2T43UrvAg60ubJVo5KQ3t7", "t": "Come and Get Your Love (Rerecorded)", "a": "Redbone"},
+  {"id": "1YoYWPdDeueBMj5nGuGC5C", "t": "Chasing Souls", "a": "Dosi"},
+  {"id": "7cdnq45E9aP2XDStHg5vd7", "t": "Cherry Bomb", "a": "The Runaways"},
+  {"id": "6IRdLKIyS4p7XNiP8r6rsx", "t": "all the good girls go to hell", "a": "Billie Eilish"},
+  {"id": "4rTeOSYqwXNz5qPR2DUTFZ", "t": "Everybody (Backstreet's Back) (Radio Edit)", "a": "Backstreet Boys"},
+  {"id": "64ByydKWf67CJfIoPc8uLJ", "t": "Main Titles (From \"Beetlejuice\" Soundtrack)", "a": "Danny Elfman"},
+  {"id": "5L5N8YOsBxdzR9h9sudBgG", "t": "Dead Girl Walking", "a": "Barrett Wilbert Weed, Ryan McCartan"},
+  {"id": "5s0INzzwpnYkS9wqcXr74j", "t": "Ghost Carnival", "a": "Monocloud"},
+  {"id": "28zObxfYNIGCialPXX1vio", "t": "Clown Dream (From \"Pee Wee's Big Adventure\")", "a": "Danny Elfman"},
+  {"id": "4GRFzKI7jTZ3kbMfouc7bn", "t": "Backstabber", "a": "Kesha"},
+  {"id": "4fHDlIntTsRGSyTg5UYZYC", "t": "Banana Boat (Day-O)", "a": "Harry Belafonte"},
+  {"id": "2m17BTWlZq0wtS9cpJsCfM", "t": "Kill Of The Night", "a": "Gin Wigmore"},
+  {"id": "0ymyq9Kc3rhGKAVIL5f0yB", "t": "Ghost Castle", "a": "Mujo"},
+  {"id": "1dzQoRqT5ucxXVaAhTcT0J", "t": "Just Dance", "a": "Lady Gaga, Colby O'Donis"},
+  {"id": "2dHHgzDwk4BJdRwy9uXhTO", "t": "Creepin' (with The Weeknd & 21 Savage)", "a": "Metro Boomin, The Weeknd, 21 Savage"},
+  {"id": "1i6N76fftMZhijOzFQ5ZtL", "t": "Psycho Killer (2005 Remaster)", "a": "Talking Heads"},
+  {"id": "3fCDsINH3hWp4Vzg5FRY6x", "t": "Ghost House", "a": "Prithvi, eva gomi tenshi"},
+  {"id": "3nqQXoyQOWXiESFLlDF1hG", "t": "Unholy (feat. Kim Petras)", "a": "Sam Smith, Kim Petras"},
+  {"id": "7qUJQSNX9QNf46CC6FgH66", "t": "Sucker for Pain (with Wiz Khalifa, Imagine Dragons, Logic & Ty Dolla $ign feat. X Ambassadors)", "a": "Lil Wayne, Wiz Khalifa, Imagine Dragons, X Ambassadors, Logic, Ty Dolla $ign"},
+  {"id": "695Utzz96aYnVrzTSEimQO", "t": "Halloweentown Theme", "a": "l'eupe"},
+  {"id": "1VJwtWR6z7SpZRwipI12be", "t": "Candy", "a": "Doja Cat"},
+  {"id": "4KF1ukxV2n6wwAr16FrRo3", "t": "The House On Lantern Lane", "a": "bedroom lofi"},
+  {"id": "57gZ32CaVNemqTRpMRu631", "t": "Moongeist", "a": "Dani Catalá, Fool Parsley, Odd Panda"},
+  {"id": "6oZBdWYajK4DcB26yeyQ8O", "t": "Echoes of October", "a": "lst drm"},
+  {"id": "6hleUCx3E4gB2urwRvx1QT", "t": "Time of the Season (Mono Version)", "a": "The Zombies"},
+  {"id": "6dy23IgPvA9UKwirjbLSBv", "t": "Jack's Obsession", "a": "The Nightmare Before Christmas Cast, Danny Elfman"},
+  {"id": "6I9VzXrHxO9rA9A5euc8Ak", "t": "Toxic", "a": "Britney Spears"},
+  {"id": "1hDJle2wNRkWZdFbBvzlag", "t": "Killer Clown Waltz", "a": "l'eupe"},
+  {"id": "3pCgIUkmRHKydu9HE03QKY", "t": "Remember Me (Dúo)", "a": "Miguel, Natalia Lafourcade"},
+  {"id": "4eJS716M529XRPdIfQyVTg", "t": "Dusty Coffin", "a": "Jason Masoud"},
+  {"id": "23V08GxMeaZNSf8Gy6KF6t", "t": "Spooky, Scary Skeletons", "a": "Andrew Gold"},
+  {"id": "06iUp1XbbaOvAmzrrZeT32", "t": "Kidnap The Sandy Claws", "a": "Danny Elfman, Paul Reubens, Catherine O'Hara"},
+  {"id": "0WfKDYeUAoLA3vdvLKKWMW", "t": "Poker Face", "a": "Lady Gaga"},
+  {"id": "7asnovTkmiN8mf09WeSW2A", "t": "Don't Fear The Reaper", "a": "Bella Poarch"},
+  {"id": "44OBcuzq2b5JYhB9hxLQBH", "t": "Graveyard", "a": "B-Side"},
+  {"id": "7a5X1rz0891fakVVcgtefI", "t": "Killer Clown Waltz", "a": "Halloween FX Productions"},
+  {"id": "1LtIEVEpXP3EyS2aosgcKe", "t": "Locked Coven", "a": "LUQĘT"},
+  {"id": "6zKiqxNP1QWZKV2N9wD13W", "t": "Haunted Bedroom", "a": "Relaxstation"},
+  {"id": "4SSnFejRGlZikf02HLewEF", "t": "bury a friend", "a": "Billie Eilish"},
+  {"id": "7MXVkk9YMctZqd1Srtv4MB", "t": "Starboy", "a": "The Weeknd, Daft Punk"},
+  {"id": "11lw4bWbmxWIETHitBU0Gc", "t": "Blood on the Dance Floor", "a": "Michael Jackson"},
+  {"id": "15R9qknEPbbRSHsAUISmgG", "t": "House Of The Lost Souls", "a": "Krynoze, Kichiro, Guidolain beats"},
+  {"id": "3gJjs1eGbrtg8I1EIgGh5T", "t": "Thriller", "a": "Board-Man"},
+  {"id": "1cADF591pBSBtALsW3NhWy", "t": "Cabin In The Woods", "a": "Intoku, woof"},
+  {"id": "75yekEIW8pCO6E6KXqLBTL", "t": "Sinister Stomp", "a": "Bobby \"Boris\" Pickett, The Crypt-Kickers"},
+  {"id": "3vg5aoDmpRyoMsUMv1ovVa", "t": "Nightmare on Bond Street", "a": "CMJ"},
+  {"id": "4i1AKNDcEwIacp6dx8AHtW", "t": "Monster Party", "a": "Lu Cravero"},
+  {"id": "1EtQggQlZVITyO4svRBw47", "t": "Spooky Swing", "a": "lechiffrebeats, Buttersweet"},
+  {"id": "0JzY0H2yyNWTEn5igQimL4", "t": "Mr. Sandman", "a": "Pat Ballard, Chordetts"},
+  {"id": "5U43AFyp6GyXm58h4uVt2L", "t": "I Put a Spell on You (In the Style of Hocus Pocus)", "a": "PattyCake"},
+  {"id": "3WQdIzI9F4Nxu7PLLL5GgN", "t": "bats under the bridge", "a": "ornaut, Oeth, Herbalism"},
+  {"id": "2qeESyQyH7MRHCBotCQsNq", "t": "Hungry Like the Wolf", "a": "Duran Duran"},
+  {"id": "29ofRHKExEHCYziNKV9OdW", "t": "Something Stirs", "a": "CMJ"},
+  {"id": "5lCqi1duvzahzMzW7RfLDI", "t": "Rhinestone Eyes", "a": "Gorillaz"},
+  {"id": "2bCQHF9gdG5BNDVuEIEnNk", "t": "Smooth Criminal (2012 Remaster)", "a": "Michael Jackson"},
+  {"id": "0wQy2OO7jKjm0OOmA7gv3f", "t": "Thriller (2003 Edit)", "a": "Michael Jackson"},
+  {"id": "5yvVYFDUpbnjcnRBgjwTzM", "t": "Dracula (with JENNIE)", "a": "Tame Impala, JENNIE"}
+];
+
 const $ = id => document.getElementById(id);
 const store = {
   get(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}},
@@ -301,10 +458,9 @@ let sfxOn = store.get("sfxOn", null), sfxLast = null, sfxCtx = null, sfxBus = nu
 let queue = [], idx = 0, got = 0, miss = 0;
 let state = {uri:null, paused:true, pos:0, dur:0};
 let clip = null;        // {timerStarted, endAt, seeked}
-let advancing = false, lastUri = null, judged = false, watchdog = null, tick = null;
+let judged = false, watchdog = null, tick = null, lastStart = null;
 
 function trackIdFrom(s){ const m = String(s).match(/track[/:]([A-Za-z0-9]{22})/); return m && m[1]; }
-function playlistIdFrom(s){ const m = String(s).match(/playlist[/:]([A-Za-z0-9]{22})/); return m && m[1]; }
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]} return a; }
 function presetQueue(){ return [PRESETS[0]].concat(shuffle(PRESETS.slice(1).concat(custom))); }
 function setRing(f){ $("ring").setAttribute("stroke-dashoffset",(326.73*(1-f)).toFixed(2)); }
@@ -315,13 +471,12 @@ function resetRound(){
   $("dial").classList.remove("done"); $("count").textContent = clipLen; setRing(1);
   $("curtain").className = "curtain"; $("hint").textContent = "";
   $("reveal").classList.add("hidden"); $("verdict").classList.add("hidden");
-  $("playBtn").disabled = !ctrl; $("againBtn").disabled = true; $("revealBtn").disabled = true;
+  $("playBtn").disabled = !ctrl; $("againBtn").disabled = true; $("partBtn").disabled = true; $("revealBtn").disabled = true;
   status("");
 }
 
 function updateRound(){
-  if (mode === "preset") $("round").textContent = idx < queue.length ? `Song ${idx+1} of ${queue.length}` : "That’s every song. Nice haunting!";
-  else $("round").textContent = `Playlist song ${idx+1}`;
+  $("round").textContent = idx < queue.length ? `Song ${idx+1} of ${queue.length}` : "That’s every song. Nice haunting!";
   $("sGot").textContent = got; $("sMiss").textContent = miss;
 }
 
@@ -330,13 +485,17 @@ function startPreset(){
   queue = presetQueue(); idx = 0;
   loadCurrent();
 }
+function startEcho1(){
+  mode = "echo1";
+  queue = shuffle(ECHO1_PL); idx = 0;
+  loadCurrent();
+}
 function loadCurrent(){
   resetRound(); updateRound();
-  if (mode === "preset"){
-    if (idx >= queue.length){ $("playBtn").disabled = true; return; }
-    lastUri = null; state.uri = null;
-    ctrl && ctrl.loadUri("spotify:track:" + queue[idx].id);
-  }
+  lastStart = null;
+  if (idx >= queue.length){ $("playBtn").disabled = true; return; }
+  state.uri = null;
+  ctrl && ctrl.loadUri("spotify:track:" + queue[idx].id);
 }
 
 // ---- playing a clip ----
@@ -357,12 +516,12 @@ function playClip(){
 
 function onUpdate(d){
   state = {uri:d.playingURI, paused:d.isPaused, pos:d.position, dur:d.duration, buffering:d.isBuffering};
-  if (advancing) return;
   if (!clip || clip.timerStarted || d.isPaused || d.isBuffering) return;
   if (startMode === "random" && !clip.seeked && d.duration > (clipLen+8)*1000){
     clip.seeked = true;
     const maxStart = d.duration/1000 - clipLen - 4;
-    ctrl.seek(Math.floor(5 + Math.random()*Math.max(1,maxStart-5)));
+    clip.start = Math.floor(5 + Math.random()*Math.max(1,maxStart-5));
+    ctrl.seek(clip.start);
     return;
   }
   beginTimer();
@@ -371,6 +530,8 @@ function onUpdate(d){
 function beginTimer(){
   clearTimeout(watchdog);
   $("curtain").classList.remove("peek"); $("hint").textContent = "";
+  if (clip.start == null) clip.start = (state.pos||0)/1000;
+  lastStart = clip.start;
   clip.timerStarted = true; clip.endAt = Date.now() + clipLen*1000;
   status("Listen closely…");
   tick = setInterval(()=>{
@@ -381,7 +542,7 @@ function beginTimer(){
       $("dial").classList.add("done");
       status("Time’s up! What song is it?", true);
       beep();
-      $("againBtn").disabled = false; $("revealBtn").disabled = false;
+      $("againBtn").disabled = false; $("partBtn").disabled = false; $("revealBtn").disabled = false;
     }
   }, 100);
 }
@@ -392,9 +553,43 @@ function playAgain(){
   resetRound();
   clip = {timerStarted:false, seeked:true};
   $("playBtn").disabled = true;
-  if (!keepSeek && startMode === "begin") ctrl.seek(0);
-  else if (state.pos) ctrl.seek(Math.max(0, state.pos/1000 - clipLen));
-  ctrl.resume();
+  if (lastStart != null) clip.start = lastStart;                       // replay the exact part just heard
+  else if (!keepSeek && startMode === "begin") clip.start = 0;
+  else clip.start = state.pos ? Math.max(0, state.pos/1000 - clipLen) : 0;
+  clip.start = playFrom(clip.start);
+}
+
+// Spotify's seek only takes whole seconds and ignores 0, so the very start uses play(), which restarts the song
+function playFrom(sec){
+  sec = Math.floor(sec);
+  if (sec < 1){ ctrl.play(); return 0; }
+  if (state.dur && state.pos >= state.dur - 1000){   // the song already ran to its end: restart it, then jump
+    ctrl.play(); setTimeout(()=>ctrl.seek(sec), 400);
+    return sec;
+  }
+  ctrl.seek(sec); ctrl.resume();
+  return sec;
+}
+
+// pick a new spot in the same song, at least one clip length away from the last start when the song allows it
+function pickAnotherStart(durSec, len, last){
+  const maxStart = Math.floor(durSec - len - 1.5);   // keep start + clip length inside the song (or the 30s preview), with a little slack
+  if (!(maxStart > 0)) return 0;                     // too short for a different spot
+  last = Math.round(last || 0);
+  const picks = [];                                  // whole seconds, since Spotify seeks in whole seconds
+  for (let t = 0; t <= maxStart; t++) if (Math.abs(t - last) >= len) picks.push(t);
+  if (picks.length) return picks[Math.floor(Math.random()*picks.length)];
+  return (last >= maxStart - last) ? 0 : maxStart;   // no spot far enough: go as far from the last start as the song allows
+}
+function playAnotherPart(){
+  if (!ctrl) return;
+  const durSec = (state.dur||0)/1000;
+  const start = pickAnotherStart(durSec, clipLen, lastStart);
+  resetRound();
+  clip = {timerStarted:false, seeked:true, start};
+  $("playBtn").disabled = true;
+  status("Finding another part…");
+  clip.start = playFrom(start);
 }
 
 // ---- time's up sounds (Echo1's recordings, listed in SFX at the top) ----
@@ -437,9 +632,9 @@ function unlockSfx(){ try{ loadSfx(); }catch(e){} }
 async function reveal(){
   ctrl && ctrl.pause();
   $("curtain").className = "curtain gone";
-  const uri = state.uri || (mode==="preset" && queue[idx] ? "spotify:track:"+queue[idx].id : null);
+  const uri = queue[idx] ? "spotify:track:"+queue[idx].id : state.uri;
   const id = uri && trackIdFrom(uri);
-  const info = mode === "preset" ? queue[idx] : null;
+  const info = queue[idx] || null;
   $("rTitle").textContent = "…"; $("rMeta").textContent = ""; $("rFact").textContent = "";
   $("rArt").removeAttribute("src");
   $("reveal").classList.remove("hidden"); $("verdict").classList.remove("hidden");
@@ -450,13 +645,14 @@ async function reveal(){
   } else {
     $("rMeta").textContent = "The artist is shown in the Spotify player below.";
   }
-  if (!id){ $("rTitle").textContent = "See the player below"; return; }
+  if (info && info.t) $("rTitle").textContent = info.t;   // Echo1’s playlist songs carry their own title
+  if (!id){ if (!(info && info.t)) $("rTitle").textContent = "See the player below"; return; }
   try{
     const r = await fetch("https://open.spotify.com/oembed?url=https://open.spotify.com/track/" + id);
     const j = await r.json();
-    $("rTitle").textContent = j.title || "See the player below";
+    if (!(info && info.t)) $("rTitle").textContent = j.title || "See the player below";
     if (j.thumbnail_url) $("rArt").src = j.thumbnail_url;
-  }catch(e){ $("rTitle").textContent = "See the player below"; }
+  }catch(e){ if (!(info && info.t)) $("rTitle").textContent = "See the player below"; }
 }
 
 function judge(ok){
@@ -467,34 +663,7 @@ function judge(ok){
 
 function nextSong(){
   idx++;
-  if (mode === "preset"){ loadCurrent(); return; }
-  // playlist: jump to the end of this song so Spotify moves on to the next one
-  resetRound(); updateRound();
-  $("playBtn").disabled = true;
-  status("Getting the next song…");
-  advancing = true; lastUri = state.uri;
-  if (state.dur) ctrl.seek(Math.max(0, state.dur/1000 - 0.4));
-  ctrl.resume();
-  setTimeout(()=>{ if (advancing){ advancing = false; ctrl.pause(); status("That might be the end of the playlist."); } }, 8000);
-}
-
-function onStarted(uri){
-  if (advancing && uri !== lastUri){
-    advancing = false; ctrl.pause();
-    state.uri = uri;
-    setTimeout(()=>{ ctrl.seek(0); resetRound(); }, 250);
-  }
-}
-
-// ---- playlist ----
-function loadPlaylist(){
-  const id = playlistIdFrom($("plLink").value);
-  if (!id){ $("plMsg").innerHTML = '<span class="err">That doesn’t look like a playlist link. It should contain “/playlist/”.</span>'; return; }
-  store.set("playlist", $("plLink").value.trim());
-  mode = "playlist"; idx = 0; got = 0; miss = 0; state = {uri:null};
-  ctrl.loadUri("spotify:playlist:" + id);
-  resetRound(); updateRound();
-  $("plMsg").textContent = "Playlist loaded. Press Play clip to start. Songs play in playlist order, so shuffle the playlist in Spotify first if you like.";
+  loadCurrent();
 }
 
 // ---- settings ----
@@ -533,13 +702,11 @@ bindChips("start", startMode, v=>{ startMode=v; store.set("start",v); });
   paint();
 })();
 bindChips("mode", "preset", v=>{
-  $("playlistBox").classList.toggle("hidden", v!=="playlist");
-  $("addBox").classList.toggle("hidden", v==="playlist");
-  if (v === "preset"){ got=0; miss=0; startPreset(); }
+  $("addBox").classList.toggle("hidden", v!=="preset");
+  got=0; miss=0;
+  if (v === "preset") startPreset(); else startEcho1();
 });
 
-$("plLink").value = store.get("playlist","");
-$("plLoad").onclick = loadPlaylist;
 $("trAdd").onclick = ()=>{
   const id = trackIdFrom($("trLink").value);
   if (!id){ $("trMsg").innerHTML = '<span class="err">Paste a song link. It should contain “/track/”.</span>'; return; }
@@ -550,6 +717,7 @@ $("trAdd").onclick = ()=>{
 };
 $("playBtn").onclick = playClip;
 $("againBtn").onclick = playAgain;
+$("partBtn").onclick = playAnotherPart;
 $("revealBtn").onclick = reveal;
 $("gotBtn").onclick = ()=>judge(true);
 $("missBtn").onclick = ()=>judge(false);
@@ -561,7 +729,6 @@ window.onSpotifyIframeApiReady = API => {
   API.createController($("embed"), {width:"100%", height:152, uri:"spotify:track:"+queue[0].id}, c=>{
     ctrl = c;
     c.addListener("playback_update", e=>onUpdate(e.data));
-    c.addListener("playback_started", e=>onStarted(e.data.playingURI));
     c.addListener("ready", ()=>{ resetRound(); updateRound(); });
     resetRound(); updateRound();
   });
