@@ -1321,9 +1321,9 @@ function endGame(){G.dead=true;REC.finish();state='over';Snd.stop();pageMusic(fa
   if(G.score>best){best=G.score;LS.set('best',best)}
   $('sS').textContent=G.score.toLocaleString();$('sP').textContent=G.smashed;$('sC').textContent=G.bestCombo;$('sB').textContent=best.toLocaleString();$('nb').classList.toggle('hidden',!nb);$('overT').textContent=nb?'NEW HIGH SCORE!':'FEAST IS OVER';
   const owned=new Set(LS.get('medals',[]));const md=$('medals');md.innerHTML='';
-  for(const m of MEDALS){const on=m.ok(G.st);const isNew=on&&!owned.has(m.id);if(on)owned.add(m.id);const d=document.createElement('div');d.className='medal'+(on?' on':'');d.dataset.id=m.id;d.innerHTML=(isNew?'<span class="new">NEW</span>':'')+'<div class="mi">'+m.i+'</div><div class="mn">'+m.n+'</div><div class="md">'+m.d+'</div>';md.appendChild(d)}
+  const newM=[];for(const m of MEDALS){const on=m.ok(G.st);const isNew=on&&!owned.has(m.id);if(isNew)newM.push(m.id);if(on)owned.add(m.id);const d=document.createElement('div');d.className='medal'+(on?' on':'');d.dataset.id=m.id;d.innerHTML=(isNew?'<span class="new">NEW</span>':'')+'<div class="mi">'+m.i+'</div><div class="mn">'+m.n+'</div><div class="md">'+m.d+'</div>';md.appendChild(d)}
   LS.set('medals',[...owned]);psGameOver();
-  try{psPrepareShare({score:G.score,level:G.level,smashed:G.smashed,bestCombo:G.bestCombo,perfects:G.st.perfects,handle:cleanHandle(),newBest:nb,medals:MEDALS.filter(m=>m.ok(G.st))})}catch(e){}setTimeout(()=>{if(state==='over')show('over')},800)}
+  try{psPrepareShare({score:G.score,level:G.level,smashed:G.smashed,bestCombo:G.bestCombo,perfects:G.st.perfects,handle:cleanHandle(),newBest:nb,medals:MEDALS.filter(m=>m.ok(G.st)),newMedals:newM})}catch(e){}setTimeout(()=>{if(state==='over')show('over')},800)}
 function pauseGame(){if(state!=='play')return;state='pause';REC.pauseStart();Snd.stop();show('paused')}
 function resumeGame(){if(state!=='pause')return;state='play';REC.pauseEnd();show(null);Snd.resumeAt(G.time);last=performance.now()}
 function toTitle(){state='title';Snd.stop();pageMusic(false);newGame();layout();$('pause').classList.add('hidden');show('title');updBest()}
@@ -1448,13 +1448,54 @@ function psShareText(r){
   return '🤖 SMASH REPORT: '+s+' points, level '+lv+', '+r.smashed+' '+HWK.list+' smashed.\n\nThe Thanksgiving table never stood a chance. Your move 👇\n'+PS_URL+'\n\n@EchoBotzSOL';
 }
 function psRect(x,X,Y,w,h,rad){x.beginPath();x.moveTo(X+rad,Y);x.arcTo(X+w,Y,X+w,Y+h,rad);x.arcTo(X+w,Y+h,X,Y+h,rad);x.arcTo(X,Y+h,X,Y,rad);x.arcTo(X,Y,X+w,Y,rad);x.closePath()}
-function psDrawCard(r,logo){
+/* the medal symbols (⚡ ♛ ✦ ✹ ◆ ✓ ❦ ★) drawn as shapes, so the card looks the same on every device */
+function psMedalIcon(x,id,cx,cy,R,col){const s=R/17;x.save();x.translate(cx,cy);x.scale(s,s);x.fillStyle=col;x.strokeStyle=col;x.lineJoin='round';x.lineCap='round';x.beginPath();
+  const star=(n,ro,ri,rot)=>{for(let k=0;k<n*2;k++){const a=rot+k*Math.PI/n,rr=k%2?ri:ro;k?x.lineTo(Math.cos(a)*rr,Math.sin(a)*rr):x.moveTo(Math.cos(a)*rr,Math.sin(a)*rr)}x.closePath();x.fill()};
+  if(id==='super'){x.moveTo(3,-11.5);x.lineTo(-7.5,1.8);x.lineTo(-0.8,1.8);x.lineTo(-3,11.5);x.lineTo(7.5,-2.2);x.lineTo(0.8,-2.2);x.closePath();x.fill()}
+  else if(id==='boss'){x.moveTo(-9,6);x.lineTo(-10,-4);x.lineTo(-5,0);x.lineTo(0,-7);x.lineTo(5,0);x.lineTo(10,-4);x.lineTo(9,6);x.closePath();x.fill();
+    x.fillRect(-9,7.5,18,2.6);[[-10,-5.5],[0,-8.5],[10,-5.5]].forEach(p=>{x.beginPath();x.arc(p[0],p[1],1.9,0,Math.PI*2);x.fill()})}
+  else if(id==='fever'){x.moveTo(0,-10.5);x.quadraticCurveTo(1.3,-1.3,10.5,0);x.quadraticCurveTo(1.3,1.3,0,10.5);x.quadraticCurveTo(-1.3,1.3,-10.5,0);x.quadraticCurveTo(-1.3,-1.3,0,-10.5);x.fill()}
+  else if(id==='bomb'){star(12,10.5,5.4,-Math.PI/2)}
+  else if(id==='gold'){x.moveTo(0,-10);x.lineTo(8,0);x.lineTo(0,10);x.lineTo(-8,0);x.closePath();x.fill()}
+  else if(id==='perfect'){x.lineWidth=3.4;x.moveTo(-7,0.5);x.lineTo(-2.2,5.5);x.lineTo(7.5,-6);x.stroke()}
+  else if(id==='ghost'){x.moveTo(-1,8);x.bezierCurveTo(-9,3,-10.5,-3,-7.5,-6.5);x.bezierCurveTo(-5,-9.5,-1.5,-8,-1,-5);x.bezierCurveTo(-0.5,-8,3,-9.5,5.5,-6.5);x.bezierCurveTo(8.5,-3,7,3,-1,8);x.fill();
+    x.beginPath();x.lineWidth=1.8;x.moveTo(-1,8);x.bezierCurveTo(1,11,6,11,7.5,8);x.bezierCurveTo(8.5,6,6.5,4.5,5,6);x.stroke()}
+  else if(id==='score')star(5,10.5,4.4,-Math.PI/2);
+  x.restore()}
+/* the neon line art Turkey Bot from the Pumpkin Smasher page pop-up (same SVG), rasterized for the score card */
+const PS_TB_SVG="<svg class=\"tbp-svg\" viewBox=\"-70 -86 140 100\" overflow=\"visible\" aria-hidden=\"true\" focusable=\"false\"><defs><linearGradient id=\"tbpG\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#11203A\"/><stop offset=\"1\" stop-color=\"#040812\"/></linearGradient><linearGradient id=\"tbpF\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#2B1708\"/><stop offset=\"1\" stop-color=\"#0B0603\"/></linearGradient><linearGradient id=\"tbpH\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#1A1A26\"/><stop offset=\"1\" stop-color=\"#05050A\"/></linearGradient><filter id=\"tbpGl\" x=\"-100%\" y=\"-100%\" width=\"300%\" height=\"300%\"><feGaussianBlur stdDeviation=\"1.8\" result=\"b\"/><feMerge><feMergeNode in=\"b\"/><feMergeNode in=\"b\"/><feMergeNode in=\"SourceGraphic\"/></feMerge></filter><filter id=\"tbpSh\" x=\"-40%\" y=\"-40%\" width=\"180%\" height=\"180%\"><feDropShadow dx=\"0\" dy=\"0\" stdDeviation=\"2.4\" flood-color=\"#22E4F5\" flood-opacity=\".42\"/></filter><filter id=\"tbpFs\" x=\"-40%\" y=\"-40%\" width=\"180%\" height=\"180%\"><feDropShadow dx=\"0\" dy=\"0\" stdDeviation=\"2.2\" flood-color=\"#FF8A1E\" flood-opacity=\".5\"/></filter></defs><g filter=\"url(#tbpSh)\"><g class=\"tbp-head\"><g class=\"tbp-fan\" filter=\"url(#tbpFs)\"><g transform=\"rotate(-72 0 -22)\"><path d=\"M0 -24C-10 -36 -10 -63 0 -72C10 -63 10 -36 0 -24Z\" fill=\"url(#tbpF)\" stroke=\"#FF3B3B\" stroke-opacity=\".92\" stroke-width=\"1.4\" stroke-linejoin=\"round\"/><path d=\"M0 -32V-64\" stroke=\"#FF3B3B\" stroke-opacity=\".45\" stroke-width=\"1\" stroke-linecap=\"round\"/><circle cx=\"0\" cy=\"-64\" r=\"2.3\" fill=\"#FF3B3B\" filter=\"url(#tbpGl)\"/></g><g transform=\"rotate(-48 0 -22)\"><path d=\"M0 -24C-10 -36 -10 -63 0 -72C10 -63 10 -36 0 -24Z\" fill=\"url(#tbpF)\" stroke=\"#FF8A1E\" stroke-opacity=\".92\" stroke-width=\"1.4\" stroke-linejoin=\"round\"/><path d=\"M0 -32V-64\" stroke=\"#FF8A1E\" stroke-opacity=\".45\" stroke-width=\"1\" stroke-linecap=\"round\"/><circle cx=\"0\" cy=\"-64\" r=\"2.3\" fill=\"#FF8A1E\" filter=\"url(#tbpGl)\"/></g><g transform=\"rotate(-24 0 -22)\"><path d=\"M0 -24C-10 -36 -10 -63 0 -72C10 -63 10 -36 0 -24Z\" fill=\"url(#tbpF)\" stroke=\"#FFC93C\" stroke-opacity=\".92\" stroke-width=\"1.4\" stroke-linejoin=\"round\"/><path d=\"M0 -32V-64\" stroke=\"#FFC93C\" stroke-opacity=\".45\" stroke-width=\"1\" stroke-linecap=\"round\"/><circle cx=\"0\" cy=\"-64\" r=\"2.3\" fill=\"#FFC93C\" filter=\"url(#tbpGl)\"/></g><g transform=\"rotate(0 0 -22)\"><path d=\"M0 -24C-10 -36 -10 -63 0 -72C10 -63 10 -36 0 -24Z\" fill=\"url(#tbpF)\" stroke=\"#FF8A1E\" stroke-opacity=\".92\" stroke-width=\"1.4\" stroke-linejoin=\"round\"/><path d=\"M0 -32V-64\" stroke=\"#FF8A1E\" stroke-opacity=\".45\" stroke-width=\"1\" stroke-linecap=\"round\"/><circle cx=\"0\" cy=\"-64\" r=\"2.3\" fill=\"#FF8A1E\" filter=\"url(#tbpGl)\"/></g><g transform=\"rotate(24 0 -22)\"><path d=\"M0 -24C-10 -36 -10 -63 0 -72C10 -63 10 -36 0 -24Z\" fill=\"url(#tbpF)\" stroke=\"#FFC93C\" stroke-opacity=\".92\" stroke-width=\"1.4\" stroke-linejoin=\"round\"/><path d=\"M0 -32V-64\" stroke=\"#FFC93C\" stroke-opacity=\".45\" stroke-width=\"1\" stroke-linecap=\"round\"/><circle cx=\"0\" cy=\"-64\" r=\"2.3\" fill=\"#FFC93C\" filter=\"url(#tbpGl)\"/></g><g transform=\"rotate(48 0 -22)\"><path d=\"M0 -24C-10 -36 -10 -63 0 -72C10 -63 10 -36 0 -24Z\" fill=\"url(#tbpF)\" stroke=\"#FF8A1E\" stroke-opacity=\".92\" stroke-width=\"1.4\" stroke-linejoin=\"round\"/><path d=\"M0 -32V-64\" stroke=\"#FF8A1E\" stroke-opacity=\".45\" stroke-width=\"1\" stroke-linecap=\"round\"/><circle cx=\"0\" cy=\"-64\" r=\"2.3\" fill=\"#FF8A1E\" filter=\"url(#tbpGl)\"/></g><g transform=\"rotate(72 0 -22)\"><path d=\"M0 -24C-10 -36 -10 -63 0 -72C10 -63 10 -36 0 -24Z\" fill=\"url(#tbpF)\" stroke=\"#FF3B3B\" stroke-opacity=\".92\" stroke-width=\"1.4\" stroke-linejoin=\"round\"/><path d=\"M0 -32V-64\" stroke=\"#FF3B3B\" stroke-opacity=\".45\" stroke-width=\"1\" stroke-linecap=\"round\"/><circle cx=\"0\" cy=\"-64\" r=\"2.3\" fill=\"#FF3B3B\" filter=\"url(#tbpGl)\"/></g></g><path d=\"M-14 1.3V-8A6 6 0 0 1 -8 -14H8A6 6 0 0 1 14 -8V1.3\" fill=\"url(#tbpG)\" stroke=\"#22E4F5\" stroke-opacity=\".78\" stroke-width=\"1.3\"/><g class=\"tbp-bob\"><path d=\"M-38 -18C-41 -54 41 -54 38 -18\" fill=\"none\" stroke=\"#22E4F5\" stroke-opacity=\".78\" stroke-width=\"5.2\" stroke-linecap=\"round\"/><path d=\"M-38 -18C-41 -54 41 -54 38 -18\" fill=\"none\" stroke=\"#11203A\" stroke-width=\"2.6\" stroke-linecap=\"round\"/><rect x=\"-36\" y=\"-36\" width=\"72\" height=\"34\" rx=\"17\" fill=\"url(#tbpG)\" stroke=\"#22E4F5\" stroke-opacity=\".78\" stroke-width=\"1.3\"/><rect x=\"-32.5\" y=\"-32.5\" width=\"65\" height=\"27\" rx=\"13.5\" fill=\"none\" stroke=\"#22E4F5\" stroke-opacity=\".14\"/><rect x=\"-43\" y=\"-29\" width=\"9\" height=\"21\" rx=\"4\" fill=\"url(#tbpG)\" stroke=\"#22E4F5\" stroke-opacity=\".78\" stroke-width=\"1.3\"/><rect x=\"34\" y=\"-29\" width=\"9\" height=\"21\" rx=\"4\" fill=\"url(#tbpG)\" stroke=\"#22E4F5\" stroke-opacity=\".78\" stroke-width=\"1.3\"/><circle cx=\"-38.5\" cy=\"-18.5\" r=\"2.2\" fill=\"#FF2D9B\" filter=\"url(#tbpGl)\"/><circle cx=\"38.5\" cy=\"-18.5\" r=\"2.2\" fill=\"#FF2D9B\" filter=\"url(#tbpGl)\"/><g class=\"tbp-eyes\"><g class=\"tbp-blk\"><g class=\"tbp-eye l\"><circle cx=\"-14\" cy=\"-21\" r=\"6.2\" fill=\"#22E4F5\" filter=\"url(#tbpGl)\"/><circle cx=\"-16\" cy=\"-23.1\" r=\"1.75\" fill=\"#fff\" opacity=\".75\"/></g><g class=\"tbp-eye r\"><circle cx=\"14\" cy=\"-21\" r=\"6.2\" fill=\"#22E4F5\" filter=\"url(#tbpGl)\"/><circle cx=\"12\" cy=\"-23.1\" r=\"1.75\" fill=\"#fff\" opacity=\".75\"/></g></g></g><path class=\"tbp-brow l\" d=\"M-21 -30.5L-8 -28.5\" stroke=\"#22E4F5\" stroke-width=\"1.6\" stroke-linecap=\"round\"/><path class=\"tbp-brow r\" d=\"M8 -28.5L21 -30.5\" stroke=\"#22E4F5\" stroke-width=\"1.6\" stroke-linecap=\"round\"/><path d=\"M-4.6 -12.2H4.6L0 -5.6Z\" fill=\"#FFC93C\" stroke=\"#FFE7A3\" stroke-width=\".8\" stroke-linejoin=\"round\" filter=\"url(#tbpGl)\"/><path class=\"tbp-wat\" d=\"M2.2 -8.6C6.4 -6.8 6.6 -1.2 3.4 .4C.8 -.6 .6 -5.2 2.2 -8.6Z\" fill=\"#FF3B5C\" stroke=\"#FF8FA3\" stroke-width=\".6\" filter=\"url(#tbpGl)\"/><g class=\"tbp-hat\" transform=\"translate(9 -36.5) rotate(9)\"><rect x=\"-19\" y=\"-4.5\" width=\"38\" height=\"5.5\" rx=\"2.75\" fill=\"url(#tbpH)\" stroke=\"#FFC93C\" stroke-opacity=\".85\" stroke-width=\"1.2\"/><path d=\"M-12.5 -4.5L-10.5 -24H10.5L12.5 -4.5Z\" fill=\"url(#tbpH)\" stroke=\"#FFC93C\" stroke-opacity=\".85\" stroke-width=\"1.2\" stroke-linejoin=\"round\"/><path d=\"M-12 -9.5H12\" stroke=\"#FF8A1E\" stroke-opacity=\".9\" stroke-width=\"3.6\"/><rect x=\"-4\" y=\"-13.6\" width=\"8\" height=\"8.2\" rx=\"1.2\" fill=\"none\" stroke=\"#FFE27A\" stroke-width=\"1.6\" filter=\"url(#tbpGl)\"/></g></g></g><g class=\"tbp-hand l\"><rect x=\"-63\" y=\"-12\" width=\"26\" height=\"14\" rx=\"7\" fill=\"url(#tbpG)\" stroke=\"#22E4F5\" stroke-opacity=\".78\" stroke-width=\"1.3\"/><rect x=\"-60.5\" y=\"-5\" width=\"7\" height=\"13\" rx=\"3.5\" fill=\"url(#tbpG)\" stroke=\"#22E4F5\" stroke-opacity=\".78\" stroke-width=\"1.3\"/><rect x=\"-53.5\" y=\"-5\" width=\"7\" height=\"13\" rx=\"3.5\" fill=\"url(#tbpG)\" stroke=\"#22E4F5\" stroke-opacity=\".78\" stroke-width=\"1.3\"/><rect x=\"-46.5\" y=\"-5\" width=\"7\" height=\"13\" rx=\"3.5\" fill=\"url(#tbpG)\" stroke=\"#22E4F5\" stroke-opacity=\".78\" stroke-width=\"1.3\"/><path d=\"M-59 2h4M-52 2h4M-45 2h4\" stroke=\"#22E4F5\" stroke-opacity=\".4\" stroke-linecap=\"round\"/></g><g class=\"tbp-hand r\"><rect x=\"35\" y=\"-12\" width=\"26\" height=\"14\" rx=\"7\" fill=\"url(#tbpG)\" stroke=\"#22E4F5\" stroke-opacity=\".78\" stroke-width=\"1.3\"/><rect x=\"37.5\" y=\"-5\" width=\"7\" height=\"13\" rx=\"3.5\" fill=\"url(#tbpG)\" stroke=\"#22E4F5\" stroke-opacity=\".78\" stroke-width=\"1.3\"/><rect x=\"44.5\" y=\"-5\" width=\"7\" height=\"13\" rx=\"3.5\" fill=\"url(#tbpG)\" stroke=\"#22E4F5\" stroke-opacity=\".78\" stroke-width=\"1.3\"/><rect x=\"51.5\" y=\"-5\" width=\"7\" height=\"13\" rx=\"3.5\" fill=\"url(#tbpG)\" stroke=\"#22E4F5\" stroke-opacity=\".78\" stroke-width=\"1.3\"/><path d=\"M39 2h4M46 2h4M53 2h4\" stroke=\"#22E4F5\" stroke-opacity=\".4\" stroke-linecap=\"round\"/></g></g></svg>";
+let psTbP=null;
+function psCardTurkey(){
+  if(psTbP)return psTbP;
+  const base=PS_TB_SVG.replace('<svg class="tbp-svg" viewBox="-70 -86 140 100"','<svg class="tbp-svg" xmlns="http://www.w3.org/2000/svg" viewBox="-80 -100 160 120" width="960" height="720"');
+  const mk=css=>new Promise(done=>{const im=new Image();im.onload=()=>done(im);im.onerror=()=>done(null);
+    im.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(base.replace('<defs>','<style>'+css+'</style><defs>'))});
+  psTbP=Promise.all([mk('.tbp-brow{opacity:0}.tbp-hand{display:none}'),mk('.tbp-svg *{visibility:hidden}.tbp-hand.l,.tbp-hand.l *{visibility:visible}'),mk('.tbp-svg *{visibility:hidden}.tbp-hand.r,.tbp-hand.r *{visibility:visible}')])
+    .then(a=>a[0]&&a[1]&&a[2]?{body:a[0],hl:a[1],hr:a[2]}:null).catch(()=>null);
+  psTbP.then(v=>{if(!v)psTbP=null});
+  return psTbP;
+}
+/* Turkey Bot peeking diagonally out from behind the card's rounded top right corner, eyes on the viewer, fingers curled over the frame */
+function psDrawTurkey(x,tb,PX,PY,PW,PH){
+  const E=PX+PW-1.5,P={"x": 1146, "y": 94, "rot": -36, "s": 0.92, "tx": 1102, "ry": 118, "hs": 0.95, "ov": 5};
+  // the head: tilted in, its far side tucked behind the frame (clipped to the inside of the frame; the frame stroke is drawn over it)
+  x.save();psRect(x,PX+1.5,PY+1.5,PW-3,PH-3,25);x.clip();
+  x.shadowColor='rgba(255,154,31,.42)';x.shadowBlur=24;
+  x.translate(P.x,P.y);x.rotate(P.rot*Math.PI/180);x.scale(P.s,P.s);x.translate(0,4);x.drawImage(tb.body,-80,-100,160,120);
+  x.restore();
+  // the hands go on after the frame stroke: knuckles on the frame line, fingers curled over its front, on the inside of the card
+  return ()=>{x.save();x.shadowColor='rgba(255,79,163,.4)';x.shadowBlur=14;
+    [[tb.hr,48,P.tx,PY+1.5,0],[tb.hl,-50,E,P.ry,90]].forEach(([im,ox,hx,hy,a])=>{x.save();x.translate(hx,hy);x.rotate(a*Math.PI/180);x.scale(P.hs,P.hs);x.translate(-ox,4+P.ov);x.drawImage(im,-80,-100,160,120);x.restore()});
+    x.restore()};
+}
+function psDrawCard(r,logo,tb){
   const c=document.createElement('canvas');c.width=1200;c.height=630;
   const x=c.getContext('2d'),F=FF,M='"JetBrains Mono", ui-monospace, monospace';
   const INK='#FFF6E8',MUTED='#D9C2A3',OR='#FF9A1F',GD='#FFC93C',PK='#FF2D9B',PU='#D23A3A';
   const spaced=(txt,X,Y,tr,align)=>{let w=0;for(const ch of txt)w+=x.measureText(ch).width+tr;w-=tr;
     let tx=align==='center'?X-w/2:align==='right'?X-w:X;x.textAlign='left';for(const ch of txt){x.fillText(ch,tx,Y);tx+=x.measureText(ch).width+tr}return w};
   const glowText=(fn,col,blur)=>{x.save();x.shadowColor=col;x.shadowBlur=blur;fn();x.restore()};
+  const spacedW=(txt,tr)=>{let w=0;for(const ch of txt)w+=x.measureText(ch).width+tr;return w-tr};
   x.textBaseline='alphabetic';
   // backdrop: warm dark, orange grid, orange and deep red bloom (Thanksgiving edition)
   x.fillStyle='#0B0605';x.fillRect(0,0,1200,630);
@@ -1469,7 +1510,9 @@ function psDrawCard(r,logo){
   x.save();psRect(x,PX,PY,PW,PH,26);x.fillStyle='#160C0B';x.shadowColor='rgba(255,154,31,.22)';x.shadowBlur=34;x.fill();x.restore();
   x.save();psRect(x,PX,PY,PW,PH,26);x.clip();x.fillStyle='rgba(242,246,255,.018)';for(let j=PY;j<PY+PH;j+=4)x.fillRect(PX,j,PW,1);x.restore();
   const edge=x.createLinearGradient(PX,PY,PX+PW,PY+PH);edge.addColorStop(0,'rgba(255,154,31,.9)');edge.addColorStop(.5,'rgba(255,45,155,.8)');edge.addColorStop(1,'rgba(210,58,58,.9)');
+  let tbHands=null;if(tb){try{tbHands=psDrawTurkey(x,tb,PX,PY,PW,PH)}catch(e){}}
   psRect(x,PX+1.5,PY+1.5,PW-3,PH-3,25);x.lineWidth=3;x.strokeStyle=edge;x.stroke();
+  if(tbHands)tbHands();
   // header: the game's ECHO Botz lockup, then the title with a pie on the left and a pumpkin on the right
   if(logo){const w=430,h=w*logo.naturalHeight/logo.naturalWidth;x.drawImage(logo,(1200-w)/2,50,w,h)}
   else{x.font='600 22px '+M;x.fillStyle=PK;spaced('ECHO BOTZ',600,92,9,'center')}
@@ -1478,8 +1521,15 @@ function psDrawCard(r,logo){
   const tg=x.createLinearGradient(0,128,0,186);tg.addColorStop(0,'#ffe07a');tg.addColorStop(.3,GD);tg.addColorStop(.7,'#ff7a1a');tg.addColorStop(1,'#e0452a');
   x.fillStyle=tg;glowText(()=>spaced(title,600,184,2,'center'),'rgba(255,122,26,.55)',18);
   const old=g;try{g=x;const lx=600-ttw/2-62,rx2=600+ttw/2+58;if(HWN>=3)drawPie(lx,166,84,66,HWN>=4?0.2:0.05);else drawGourd(lx,160,62,64,0.1);if(HWN>=4)drawBossTk(rx2,160,84,70,4,false,0);else pumpkinShape(rx2,160,74,58,'norm',2,false,1)}catch(e){}g=old;
+  // THANKSGIVING EDITION: the title screen's gold kicker, set under the title between two fading gold rules
+  x.font='700 15px '+F;const ed='THANKSGIVING EDITION',ew=spacedW(ed,5.2),EY=210;
+  const eg=x.createLinearGradient(600-ew/2,0,600+ew/2,0);eg.addColorStop(0,'#ffb347');eg.addColorStop(.5,'#ffe07a');eg.addColorStop(1,'#ffb347');
+  x.fillStyle=eg;glowText(()=>spaced(ed,600,EY,5.2,'center'),'rgba(255,201,60,.45)',10);
+  [-1,1].forEach(sd=>{const a=600+sd*(ew/2+24),b=600+sd*(ew/2+124),lg=x.createLinearGradient(a,0,b,0);lg.addColorStop(0,'rgba(255,201,60,.75)');lg.addColorStop(1,'rgba(255,201,60,0)');
+    x.fillStyle=lg;x.fillRect(Math.min(a,b),EY-6,100,1);
+    x.save();x.translate(600+sd*(ew/2+15),EY-5.5);x.rotate(Math.PI/4);x.fillStyle=GD;x.shadowColor='rgba(255,201,60,.6)';x.shadowBlur=6;x.fillRect(-2.5,-2.5,5,5);x.restore()});
   const dv=x.createLinearGradient(110,0,1090,0);dv.addColorStop(0,'rgba(255,154,31,0)');dv.addColorStop(.5,'rgba(255,154,31,.45)');dv.addColorStop(1,'rgba(255,154,31,0)');
-  x.fillStyle=dv;x.fillRect(110,216,980,1);
+  x.fillStyle=dv;x.fillRect(110,226,980,1);
   // score, with the player's handle and pills on the right
   const CX=96,CW=1008;
   x.font='600 14px '+M;x.fillStyle=MUTED;spaced('SCORE',CX,262,4);
@@ -1497,19 +1547,30 @@ function psDrawCard(r,logo){
   pill('LEVEL '+r.level,pr,py,null,OR,OR);
   // stat tiles
   const tiles=[[String(r.level),'LEVEL'],[String(r.smashed),'SMASHED'],[String(r.bestCombo),'BEST COMBO'],[String(r.perfects),'PERFECT HITS']];
-  const TW=(CW-48)/4,TY=370,TH=104;
+  const TW=(CW-48)/4,TY=364,TH=90;
   tiles.forEach((t,i)=>{const X=CX+i*(TW+16);
     psRect(x,X,TY,TW,TH,12);x.fillStyle='rgba(2,4,12,.7)';x.fill();x.lineWidth=1;x.strokeStyle='rgba(255,154,31,.35)';x.stroke();
-    x.font='600 12px '+M;x.fillStyle=MUTED;spaced(t[1],X+20,TY+32,3);
+    x.font='600 12px '+M;x.fillStyle=MUTED;spaced(t[1],X+20,TY+30,3);
     let s=40;do{x.font='800 '+s+'px '+F}while(x.measureText(t[0]).width>TW-40&&--s>14);
-    x.fillStyle=INK;x.textAlign='left';glowText(()=>x.fillText(t[0],X+20,TY+82),'rgba(255,154,31,.5)',10)});
-  // medals earned this run, the same ones the game over screen lights up
-  const MY=496;x.font='600 12px '+M;x.fillStyle=MUTED;spaced('MEDALS',CX,MY+22,3);
-  let mx=CX+92;x.font='700 16px '+F;
-  if(!r.medals.length){x.fillStyle='rgba(217,194,163,.75)';x.textAlign='left';x.fillText('None this run. Run it back!',mx,MY+23)}
-  r.medals.forEach(m=>{x.font='700 16px '+F;const w=x.measureText(m.i+'  '+m.n).width+28;if(mx+w>CX+CW)return;
-    psRect(x,mx,MY,w,34,17);x.fillStyle='rgba(255,201,60,.08)';x.fill();x.lineWidth=1.5;x.strokeStyle='rgba(255,201,60,.6)';x.stroke();
-    x.fillStyle=GD;x.textAlign='left';x.fillText(m.i,mx+14,MY+23);x.fillStyle=INK;x.fillText(m.n,mx+14+x.measureText(m.i+'  ').width,MY+23);mx+=w+10});
+    x.fillStyle=INK;x.textAlign='left';glowText(()=>x.fillText(t[0],X+20,TY+74),'rgba(255,154,31,.5)',10)});
+  // medals: the same eight gold medals as the game over screen, earned ones lit, locked ones dim
+  const got=new Set(r.medals.map(m=>m.id)),fresh=new Set(r.newMedals||[]);
+  const MG=10,MW=(CW-MG*7)/8,MY=466,MH=70,CR=17;
+  MEDALS.forEach((m,i)=>{const X=CX+i*(MW+MG),on=got.has(m.id),cx=X+MW/2,cy=MY+25;
+    x.save();if(!on)x.globalAlpha=.38;
+    psRect(x,X,MY,MW,MH,12);x.fillStyle=on?'rgba(255,201,60,.06)':'rgba(255,255,255,.03)';x.fill();x.lineWidth=1;x.strokeStyle=on?'rgba(255,201,60,.5)':'rgba(255,255,255,.08)';x.stroke();
+    // coin: same radial gold as the game's .mi, with its dark rim and soft glow
+    x.save();x.beginPath();x.arc(cx,cy,CR+2,0,Math.PI*2);x.fillStyle='rgba(0,0,0,.25)';if(on){x.shadowColor='rgba(255,201,60,.35)';x.shadowBlur=12}x.fill();x.restore();
+    const cg=x.createRadialGradient(cx-CR*.3,cy-CR*.4,0,cx,cy,CR*1.25);
+    if(on){cg.addColorStop(0,'#fff3b8');cg.addColorStop(.45,GD);cg.addColorStop(1,'#b77a10')}else{cg.addColorStop(0,'#f1f1f1');cg.addColorStop(.45,'#bdbdbd');cg.addColorStop(1,'#6f6f6f')}
+    x.beginPath();x.arc(cx,cy,CR,0,Math.PI*2);x.fillStyle=cg;x.fill();
+    psMedalIcon(x,m.id,cx,cy,CR,on?'#1a1200':'#1c1c1c');
+    let z=12.5;do{x.font='800 '+z+'px '+F}while(x.measureText(m.n).width>MW-10&&(z-=.5)>9);
+    x.fillStyle=on?INK:MUTED;x.textAlign='center';x.fillText(m.n,cx,MY+MH-11);x.textAlign='left';
+    x.restore();
+    if(on&&fresh.has(m.id)){x.font='900 9px '+F;const tw=spacedW('NEW',1.2)+10,tx=X+MW-tw+4,ty=MY-6;
+      psRect(x,tx,ty,tw,14,5);x.fillStyle=PK;x.fill();x.fillStyle='#fff';spaced('NEW',tx+5,ty+10.5,1.2)}
+  });
   // footer
   x.fillStyle='rgba(255,154,31,.16)';x.fillRect(CX,550,CW,1);
   x.font='600 21px '+F;const sw=x.measureText(PS_SITE).width;
@@ -1570,8 +1631,9 @@ const psBlob=c=>new Promise((res,rej)=>{try{c.toBlob(b=>b?res(b):rej(new Error('
 async function psMakeCard(r){
   try{await document.fonts.ready}catch(e){}
   const hdr=await psCardHeader();
-  try{return await psBlob(psDrawCard(r,hdr))}
-  catch(e){return await psBlob(psDrawCard(r,null))}
+  const tb=await psCardTurkey();
+  try{return await psBlob(psDrawCard(r,hdr,tb))}
+  catch(e){try{return await psBlob(psDrawCard(r,hdr))}catch(e2){return await psBlob(psDrawCard(r,null))}}
 }
 let psLast=null;
 const psUseShareSheet=()=>window.matchMedia('(pointer: coarse)').matches&&!!navigator.canShare;
