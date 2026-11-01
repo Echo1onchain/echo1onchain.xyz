@@ -2186,7 +2186,7 @@ function s(){if(!q)q=requestAnimationFrame(u)}addEventListener('scroll',s,{passi
   function gameVol(){try{var m=JSON.parse(localStorage.getItem('pumpkinSmasher.muted')||'false'),v=localStorage.getItem('pumpkinSmasher.vol');v=v===null?60:+JSON.parse(v);return m||!(v>0)?0:Math.min(100,v)}catch(e){return 60}}
   function pageMuted(){var b=document.getElementById('soundBtn');return !!b&&b.classList.contains('off')}
   function canSound(){return heard&&!playing()&&!pageMuted()&&gameVol()>0}
-  function gobble(){if(!canSound())return;try{var i=Math.floor(Math.random()*3),a=new Audio(TK[i]);a.volume=Math.min(1,.5*TKN[i]*gameVol()/100);var p=a.play();if(p&&p.catch)p.catch(function(){})}catch(e){}}
+  function gobble(){if(!canSound())return;try{var i=Math.floor(Math.random()*3),a=new Audio(TK[i]);a.volume=Math.min(1,.25*TKN[i]*gameVol()/100);var p=a.play();if(p&&p.catch)p.catch(function(){})}catch(e){}}
   function gest(){heard=true}
   ['pointerdown','keydown','touchstart'].forEach(function(t){document.addEventListener(t,gest,{passive:true,capture:true})});
   if(frame) frame.addEventListener('load',function(){try{var w=frame.contentWindow;['pointerdown','keydown','touchstart'].forEach(function(t){w.addEventListener(t,gest,{passive:true,capture:true})})}catch(e){}});
