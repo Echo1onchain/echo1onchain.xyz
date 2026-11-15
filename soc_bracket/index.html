@@ -962,6 +962,15 @@ body.og #brandLogo{height:76px!important;width:auto!important;margin-bottom:14px
  linear-gradient(180deg,rgba(4,3,9,.55) 0%,rgba(4,3,9,.68) 28%,rgba(4,3,9,.75) 60%,rgba(4,3,9,.84) 100%)}
 #bgfx{display:none!important}
 html,body{background:#05040a}
+/* ===== prizes box: bigger type, gold neon outline, calm 7s breath (opacity/transform only) ===== */
+#world .prizes,body.brand #world .prizes{border:2px solid #fed700;border-radius:10px;background:rgba(6,8,14,.92);box-shadow:0 0 0 1px rgba(254,215,0,.16),0 0 14px rgba(254,215,0,.38),inset 0 0 20px rgba(254,215,0,.07);--hc:#fff6c2;--hl:18px}
+#world .prizes::after{content:"";position:absolute;inset:-2px;border-radius:12px;pointer-events:none;box-shadow:0 0 16px 2px rgba(254,215,0,.55),0 0 40px rgba(254,215,0,.22);opacity:.35;transform:scale(1);will-change:opacity,transform;animation:prGlow 7s var(--bz,cubic-bezier(.37,0,.63,1)) var(--ph,0s) infinite}
+@keyframes prGlow{0%,100%{opacity:.35;transform:scale(1)}50%{opacity:.9;transform:scale(1.012)}}
+@media (prefers-reduced-motion:reduce){#world .prizes::after{animation:none;opacity:.6}}
+#world .prizes .hd,body.brand #world .prizes .hd{font-size:19px;letter-spacing:.4em;color:#fed700;text-shadow:0 0 2px rgba(255,246,194,.8),0 0 12px rgba(254,215,0,.75)}
+#world .prizes .lb,body.brand #world .prizes .lb{font-size:16px;letter-spacing:.14em}
+#world .prizes .lb.first,body.brand #world .prizes .lb.first{color:#fed700;text-shadow:0 0 10px rgba(254,215,0,.6)}
+#world .prizes .tx{font-size:23px;font-weight:700}
 </style>
 </head>
 <body>
@@ -1586,16 +1595,16 @@ function wrapText(g, text, max){
 function prizeLayout(x, y, w){
   const list = (T.prizes || []).filter(p => p.label.trim() || p.text.trim());
   if (!list.length) return null;
-  const th = THEMES[T.theme], inner = w - 28, rows = []; let cy = y + 46;
+  const th = THEMES[T.theme], inner = w - 28, rows = []; let cy = y + 62;
   list.forEach((p, k) => {
-    MEAS.font = `${th.fw} 12px "${th.font}", sans-serif`;
+    MEAS.font = `${th.fw} 16px "${th.font}", sans-serif`;
     const lab = p.label.trim() ? wrapText(MEAS, p.label.trim().toUpperCase(), inner) : [];
-    MEAS.font = '600 15px Inter, sans-serif';
+    MEAS.font = '700 23px Inter, sans-serif';
     const txt = p.text.trim() ? wrapText(MEAS, p.text.trim(), inner) : [];
     const lines = [];
-    lab.forEach(t => { lines.push({ t, y: cy + 8, k: 'lb' }); cy += 16; });
-    txt.forEach(t => { lines.push({ t, y: cy + 11, k: 'tx' }); cy += 21; });
-    rows.push({ first: p === T.prizes[0], lines }); cy += 12;
+    lab.forEach(t => { lines.push({ t, y: cy + 11, k: 'lb' }); cy += 22; });
+    txt.forEach(t => { lines.push({ t, y: cy + 15, k: 'tx' }); cy += 31; });
+    rows.push({ first: p === T.prizes[0], lines }); cy += 14;
   });
   return { x, y, w, h: cy - y + 2, rows };
 }
@@ -1749,8 +1758,8 @@ function renderBracket(){
     const P = L.prize, box = document.createElement('div'); box.className = 'prizes';
     Object.assign(box.style, { left: P.x + 'px', top: P.y + 'px', width: P.w + 'px', height: P.h + 'px' });
     const ln = (t, y, cls, lh) => { const d = document.createElement('div'); d.className = 'ln ' + cls; d.textContent = t; d.style.top = (y - P.y - lh / 2) + 'px'; d.style.lineHeight = lh + 'px'; box.appendChild(d); };
-    ln('PRIZES', P.y + 24, 'hd', 20);
-    for (const row of P.rows) for (const l of row.lines) ln(l.t, l.y, l.k + (row.first && l.k === 'lb' ? ' first' : ''), l.k === 'lb' ? 16 : 21);
+    ln('PRIZES', P.y + 30, 'hd', 24);
+    for (const row of P.rows) for (const l of row.lines) ln(l.t, l.y, l.k + (row.first && l.k === 'lb' ? ' first' : ''), l.k === 'lb' ? 22 : 30);
     frag.appendChild(box);
   }
   w.appendChild(frag); fitLabels(w);
@@ -2323,12 +2332,12 @@ async function buildPNG(){
   }
   if (L.prize){
     const P = L.prize;
-    g.save(); rr(g, P.x, P.y, P.w, P.h, 14); g.fillStyle = rgba(th.card, .9); g.shadowColor = th.champ; g.shadowBlur = 20; g.fill(); g.restore();
-    g.save(); rr(g, P.x, P.y, P.w, P.h, 14); g.strokeStyle = rgba(th.champ, .6); g.lineWidth = 2; g.stroke(); g.restore();
-    g.save(); g.font = `${th.fw} 15px ${hf}`; g.fillStyle = th.champ; g.shadowColor = th.champ; g.shadowBlur = 12; g.fillText(spaced('Prizes', '\u2009'), P.x + P.w / 2, P.y + 24); g.restore();
+    g.save(); rr(g, P.x, P.y, P.w, P.h, 10); g.fillStyle = 'rgba(6,8,14,.92)'; g.shadowColor = '#fed700'; g.shadowBlur = 22; g.fill(); g.restore();
+    g.save(); rr(g, P.x, P.y, P.w, P.h, 10); g.strokeStyle = '#fed700'; g.lineWidth = 2; g.shadowColor = '#fed700'; g.shadowBlur = 12; g.stroke(); g.restore();
+    g.save(); g.font = `${th.fw} 19px ${hf}`; g.fillStyle = '#fed700'; g.shadowColor = '#fed700'; g.shadowBlur = 12; g.fillText(spaced('Prizes', '\u2009'), P.x + P.w / 2, P.y + 30); g.restore();
     for (const row of P.rows) for (const l of row.lines){
-      if (l.k === 'lb'){ g.font = `${th.fw} 12px ${hf}`; g.fillStyle = row.first ? th.champ : th.glow; }
-      else { g.font = '600 15px Inter, sans-serif'; g.fillStyle = th.text; }
+      if (l.k === 'lb'){ g.font = `${th.fw} 16px ${hf}`; g.fillStyle = row.first ? '#fed700' : th.glow; }
+      else { g.font = '700 23px Inter, sans-serif'; g.fillStyle = th.text; }
       g.fillText(ellipsize(g, l.t, P.w - 20), P.x + P.w / 2, l.y + 1);
     }
   }
