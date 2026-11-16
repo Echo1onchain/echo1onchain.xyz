@@ -1040,6 +1040,23 @@ html,body{background:#05040a}
 #lbVote .lvIn{white-space:nowrap}
 /* ===== popup vote bar v8: X logo after 'ON' with a normal word gap ===== */
 #lbVote .lvX{margin-left:.28em}
+/* ===== countdown under the SolOnChain logo (gold, calm 7s breath on the glow only) ===== */
+#world .cdown{position:absolute;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;z-index:3;white-space:nowrap}
+#world .cdown .cdGlow{position:absolute;left:50%;top:58%;width:130%;height:150%;transform:translate(-50%,-50%) scale(.94);border-radius:50%;background:radial-gradient(closest-side,rgba(254,215,0,.22),rgba(254,180,0,.08) 55%,transparent);opacity:.45;will-change:opacity,transform;animation:cdBreath 7s cubic-bezier(.37,0,.63,1) infinite;z-index:-1}
+#world .cdown .cdL{font:800 20px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.42em;padding-left:.42em;text-transform:uppercase;color:rgba(255,236,170,.88);text-shadow:0 0 10px rgba(254,215,0,.45)}
+#world .cdown .cdN{display:flex;align-items:flex-start;gap:10px}
+#world .cdown .cdN b{display:flex;flex-direction:column;align-items:center;gap:6px;font-weight:inherit}
+#world .cdown .cdN em{font:800 66px/1 "JetBrains Mono",ui-monospace,monospace;font-style:normal;letter-spacing:.02em;font-variant-numeric:tabular-nums;
+ background:linear-gradient(180deg,#fff8d6 0%,#ffe27a 45%,#ffc62e 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+ filter:drop-shadow(0 0 2px rgba(255,246,194,.7)) drop-shadow(0 0 14px rgba(254,215,0,.45))}
+#world .cdown .cdN small{font:700 14px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.34em;padding-left:.34em;text-transform:uppercase;color:rgba(255,236,170,.7)}
+#world .cdown .cdN > i{font:800 56px/66px "JetBrains Mono",ui-monospace,monospace;font-style:normal;color:#fed700;opacity:.75;text-shadow:0 0 12px rgba(254,215,0,.6)}
+#world .cdown .cdBar{display:block;width:78%;height:2px;margin-top:2px;border-radius:2px;background:linear-gradient(90deg,transparent,rgba(138,44,255,.8) 18%,#fed700 50%,rgba(138,44,255,.8) 82%,transparent);box-shadow:0 0 10px rgba(254,215,0,.45)}
+@keyframes cdBreath{0%,100%{opacity:.45;transform:translate(-50%,-50%) scale(.94)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.02)}}
+@media (prefers-reduced-motion:reduce){#world .cdown .cdGlow{animation:none;opacity:.7}}
+/* ===== popup vote bar v9: 'VOTE ON [X] @BullBearsX' ===== */
+#lbVote .lvIn i.lvOn{margin-left:0;margin-right:0}
+#lbVote .lvX{margin-left:.28em;margin-right:.28em}
 </style>
 </head>
 <body>
@@ -1077,7 +1094,7 @@ html,body{background:#05040a}
   <div id="foot"><span class="e1">Designed by ECHO1</span><span class="sepd">·</span><span class="gd">Site by Galactic Designs</span><span class="sepd">·</span><a class="mus" href="https://echo1onchain.xyz/music/" target="_blank" rel="noopener">Music by Echo1</a><span class="fx"><a class="xchip" href="https://x.com/solonchainx" target="_blank" rel="noopener" aria-label="SolOnChain on X"><svg class="xi" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span>@solonchainx</span></a><a class="xchip" href="https://x.com/BullBearsX" target="_blank" rel="noopener" aria-label="BullBears on X"><svg class="xi" viewBox="0 0 24 24" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span>@BullBearsX</span></a></span></div>
 </div>
 <div id="msg"></div>
-<div id="lb" hidden role="dialog" aria-modal="true" aria-label="Picture"><div class="lbc"><button type="button" id="lbX" aria-label="Close">&times;</button><button type="button" class="lbNav" id="lbPrev" aria-label="Previous picture">&#8249;</button><figure class="lbf"><div class="lbPic"><a id="lbVote" href="https://x.com/BullBearsX" target="_blank" rel="noopener" title="BullBears on X" aria-label="Vote @BullBearsX on X"><svg class="vRing" aria-hidden="true" focusable="false"><rect class="vBase"/><rect class="vTail" pathLength="100"/><rect class="vHead" pathLength="100"/></svg><span class="lvIn"><i>Vote</i><b><span class="lvAt">@</span>BullBearsX</b><i class="lvOn">on</i><svg class="lvX" viewBox="1.254 2.25 21.492 19.5" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></span></a><div class="lbFrame"><img id="lbImg" alt=""></div></div><figcaption><div id="lbName"></div><div class="lbMeta"><span id="lbSeed"></span><span id="lbStat"></span></div><div id="lbInfo"></div></figcaption></figure><button type="button" class="lbNav" id="lbNext" aria-label="Next picture">&#8250;</button></div></div>
+<div id="lb" hidden role="dialog" aria-modal="true" aria-label="Picture"><div class="lbc"><button type="button" id="lbX" aria-label="Close">&times;</button><button type="button" class="lbNav" id="lbPrev" aria-label="Previous picture">&#8249;</button><figure class="lbf"><div class="lbPic"><a id="lbVote" href="https://x.com/BullBearsX" target="_blank" rel="noopener" title="BullBears on X" aria-label="Vote on X @BullBearsX"><svg class="vRing" aria-hidden="true" focusable="false"><rect class="vBase"/><rect class="vTail" pathLength="100"/><rect class="vHead" pathLength="100"/></svg><span class="lvIn"><i>Vote</i><i class="lvOn">on</i><svg class="lvX" viewBox="1.254 2.25 21.492 19.5" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><b><span class="lvAt">@</span>BullBearsX</b></span></a><div class="lbFrame"><img id="lbImg" alt=""></div></div><figcaption><div id="lbName"></div><div class="lbMeta"><span id="lbSeed"></span><span id="lbStat"></span></div><div id="lbInfo"></div></figcaption></figure><button type="button" class="lbNav" id="lbNext" aria-label="Next picture">&#8250;</button></div></div>
 <div id="reveal"><canvas id="confetti"></canvas><div class="rvBeam"></div><div class="rvBig" id="rvBig">Champion</div><div class="rv">
   <a class="rvLogoLink" href="https://x.com/solonchainx" target="_blank" rel="noopener" aria-label="SolOnChain on X" draggable="false"><img class="rvLogo" id="rvLogo" alt="SolOnChain" draggable="false"></a>
   <div class="rvT" id="rvTitle"></div>
@@ -1801,6 +1818,15 @@ function renderBracket(){
     bl.innerHTML = `<div class="bSun" style="left:${sx.toFixed(1)}px;top:0;width:${G.sw}px;height:${G.sh}px"><div class="bGlow"></div><svg class="sRays" viewBox="0 0 148 134" preserveAspectRatio="none" aria-hidden="true"><path fill="${SOC_VEC.gold}" d="${SOC_VEC.rays}"/></svg><svg class="sBody" viewBox="0 0 148 134" preserveAspectRatio="none" aria-hidden="true"><path fill="${SOC_VEC.gold}" fill-rule="evenodd" d="${SOC_VEC.body}"/></svg><div class="bShine"></div></div>`
       + `<img class="bUnder" alt="" draggable="false" src="${SOC_PART.under}" style="left:${((G.w - uw) / 2).toFixed(1)}px;top:${(wy + 64 * G.k).toFixed(1)}px;width:${uw.toFixed(1)}px;height:${uh.toFixed(1)}px">`
       + `<svg class="bWord" role="img" aria-label="SolOnChain" viewBox="0 0 396 74" preserveAspectRatio="none" style="left:0;top:${wy}px;width:${G.w}px;height:${(74 * G.k).toFixed(1)}px"><path fill="${SOC_VEC.gold}" fill-rule="evenodd" d="${SOC_VEC.word}"/></svg>`; frag.appendChild(bl); }
+  if (neon && L.logo){ // countdown under the logo (only when there is clear room above the champion frame)
+    const G = L.logo, top = G.y + G.h + 36;
+    if (L.champ.y - 96 - top >= 120){
+      const cd = document.createElement('div'); cd.className = 'cdown'; cd.setAttribute('role', 'timer'); cd.setAttribute('aria-label', 'Countdown');
+      cd.style.left = (G.x + G.w / 2) + 'px'; cd.style.top = top + 'px';
+      cd.innerHTML = '<i class="cdGlow" aria-hidden="true"></i><span class="cdL">Starts in</span><span class="cdN"></span><i class="cdBar" aria-hidden="true"></i>';
+      frag.appendChild(cd); cdTick(true);
+    }
+  }
   const cur = curRound();
   for (const lb of L.labels){ const d = document.createElement('div'); d.className = 'rlabel ' + (lb.r === cur ? 'on' : 'off'); d.style.left = lb.x + 'px'; d.style.top = lb.y + 'px'; d.style.width = lb.w + 'px'; d.textContent = lb.t; frag.appendChild(d); }
   const vs = document.createElement('div'); vs.className = 'vs'; vs.style.left = L.vsPos.x + 'px'; vs.style.top = L.slots[R - 1][0].cy + 'px'; vs.textContent = 'VS'; frag.appendChild(vs);
@@ -1843,6 +1869,17 @@ function renderBracket(){
 }
 /* v14: seats are labelled by position (Battle Royale groups: BullBear 1-4; every later matchup: BullBear 1 top / 2 bottom).
    The real names stay in the data, the editor list, tooltips and the enlarge popup. */
+/* countdown to Tue Nov 17 2026 08:00 America/New_York (EST, UTC-5) = 13:00 UTC; same moment in every viewer's timezone */
+const CD_END = Date.UTC(2026, 10, 17, 13, 0, 0);
+function cdTick(force){
+  const n = document.querySelector('#world .cdown .cdN'); if (!n) return;
+  let s = Math.max(0, Math.floor((CD_END - Date.now()) / 1000));
+  const d = Math.floor(s / 86400); s %= 86400; const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60, p = v => String(v).padStart(2, '0');
+  const segs = (d ? [[p(d), d === 1 ? 'Day' : 'Days']] : []).concat([[p(h), 'Hrs'], [p(m), 'Min'], [p(sec), 'Sec']]);
+  const key = segs.map(x => x[0]).join(':'); if (!force && n.dataset.k === key) return; n.dataset.k = key;
+  n.innerHTML = segs.map(([v, u]) => `<b><em>${v}</em><small>${u}</small></b>`).join('<i>:</i>');
+}
+(function cdLoop(){ cdTick(); setTimeout(cdLoop, 1000 - Date.now() % 1000 + 15); })();
 function seatLabel(r, i){
   const R = T.rounds.length - 1;
   if (r === R){ const id = T.rounds[R][0], k = id === null ? -1 : T.rounds[R - 1].indexOf(id); return 'BullBear ' + (k < 0 ? 1 : k % 2 + 1); }
