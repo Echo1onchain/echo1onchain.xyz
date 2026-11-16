@@ -1057,6 +1057,12 @@ html,body{background:#05040a}
 /* ===== popup vote bar v9: 'VOTE ON [X] @BullBearsX' ===== */
 #lbVote .lvIn i.lvOn{margin-left:0;margin-right:0}
 #lbVote .lvX{margin-left:.28em;margin-right:.28em}
+/* ===== schedule dates over the round labels (small gold, no animation) ===== */
+#world .rdate{position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px;text-align:center;pointer-events:none;z-index:2}
+#world .rdate .dw{font:700 14px/1.1 "Plus Jakarta Sans",Inter,sans-serif;letter-spacing:.04em;color:rgba(255,236,170,.85);text-shadow:0 1px 2px rgba(0,0,0,.85);white-space:nowrap}
+#world .rdate .dd{font:800 21px/1.05 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.02em;color:#fed700;text-shadow:0 1px 2px rgba(0,0,0,.85),0 0 10px rgba(254,215,0,.35);white-space:nowrap}
+#world .rdate .dd::after{content:"";display:block;width:40px;height:1px;margin:5px auto 1px;background:linear-gradient(90deg,transparent,rgba(254,215,0,.75),transparent)}
+#world .rdate .dn{font:700 13px/1.25 "Plus Jakarta Sans",Inter,sans-serif;letter-spacing:.01em;color:rgba(255,242,205,.9);text-shadow:0 1px 2px rgba(0,0,0,.85);white-space:nowrap}
 </style>
 </head>
 <body>
@@ -1415,6 +1421,10 @@ const par = (r, i) => Math.floor(i / gsz(r));                     // slot in rou
 const kidsOf = (r, m) => { const g = gsz(r), a = []; for (let k = m * g; k < m * g + g; k++) a.push(k); return a; }; // slots of round r feeding slot m of round r+1
 const rlenOf = (N, r) => isG4() ? (r === 0 ? N : N >> (r + 1)) : N >> r;
 const nRounds = N => Math.log2(N) - (isG4() ? 1 : 0);
+/* schedule dates over the round labels (his wording) */
+const SCHED = { 'Battle Royale L': ['Tuesday 11/17'], 'Battle Royale R': ['Thursday 11/19'],
+  'Sweet 16': ['Tuesday 11/24'], 'Elite 8': ['Thursday 11/26'], 'Final 4': ['Tuesday 12/1'], 'Championship': ['Thursday 12/3'] };
+const schedOn = (N, G4) => G4 && N === 64 && !!(THEMES[T.theme] && THEMES[T.theme].brand);
 const rnameOf = (N, r) => isG4() && r === 0 ? 'Battle Royale' : roundName(rlenOf(N, r));
 const GROUP_L = 'ABCDEFGHIJKLMNOP';
 function flash(t){ const m = $('msg'); m.textContent = t; m.classList.add('show'); clearTimeout(flash.t); flash.t = setTimeout(() => m.classList.remove('show'), 3200); }
@@ -1586,7 +1596,7 @@ function layout(N){
   const h = W + Math.round(W * .26) + 6;
   const fp = 4, fl = 15, C = G4 ? Math.round(W * 1.12) : 0, C0 = G4 ? 2 * C : W; // group frame padding / label band; 2x2 cell size; first column width
   const sg = 6, mg = G4 ? 2 * fp + fl + Math.round(W * .32) : Math.round(W * .38) + 6, cg = Math.round(W * .5) + 24, pad = 40;
-  let top = 70;
+  const SCH = schedOn(N, G4); let top = 70 + (SCH ? 48 : 0); // room for the schedule dates
   const Wf = Math.round(W * 1.5), hf = Wf + Math.round(Wf * .2) + 8, vs = Math.max(64, Math.round(W * .95));
   const Wc = Math.max(190, Math.round(W * 2.8)), hc = Wc + Math.round(Wc * .17) + 12;
   const slots = []; for (let r = 0; r <= R; r++) slots.push(new Array(rlenOf(N, r)));
@@ -1622,10 +1632,10 @@ function layout(N){
       const big = Math.floor(Math.min(560, free, (yBot - yTop - 10) / .786)); // .786*lw + 10 = sun + gap + wordmark + underline glow
       if (big >= 320){ lw = big; ly = yTop; }
     }
-    if (!lw) lw = Math.min(cW, 300);
+    if (!lw) lw = Math.min(cW, SCH ? 280 : 300); // a touch smaller under the Championship Round header
     const k = lw / 396, sw = Math.round(lw * .5), sh = Math.round(sw * 134 / 148), gap = Math.round(lw / 50);
     const lh = sh + gap + Math.round(74 * k); // stacked: sun on top, wordmark below (underline glow hangs below it)
-    if (!ly){ ly = Math.min(top - 52, champ.y - 96 - 50 - lh);
+    if (!ly){ ly = SCH ? top + 16 : Math.min(top - 52, champ.y - 96 - 50 - lh); // schedule on: logo sits below the Championship Round header
       if (ly < 8){ const d = 8 - ly; for (const col of slots) for (const s of col){ s.y += d; s.cy += d; } top += d; ly = 8; } }
     logo = { x: cx - lw / 2, y: ly, w: lw, h: lh, k, sw, sh, gap };
   }
@@ -1652,7 +1662,15 @@ function layout(N){
     labels.push({ x: rx(r) + cw / 2, y: top - 24, t: rnameOf(N, r), w: lw0, r });
   }
   const f0 = slots[R - 1][0];
+  if (SCH) labels.push({ x: cS + cW / 2, y: top - 24, t: 'Championship Round', w: 240, r: R - 1 });
   labels.push({ x: cS + cW / 2, y: f0.y - 18, t: 'Final', w: cW, r: R - 1 });
+  const dates = [];
+  if (SCH){
+    for (const lb of labels){ if (typeof lb.r !== 'number' || lb.r > R - 2) continue;
+      const left = lb.x < cS + cW / 2, key = lb.t === 'Battle Royale' ? 'Battle Royale ' + (left ? 'L' : 'R') : lb.t;
+      if (SCHED[key]) dates.push({ x: lb.x, y: top - 56, w: lb.w, lines: SCHED[key] }); }
+    dates.push({ x: cS + cW / 2, y: top - 56, w: 240, lines: SCHED['Championship'], center: 1 });
+  }
   if (third) labels.push({ x: third.label.x, y: third.label.y, t: '3rd Place Match', w: cW, r: 'third' });
   const edges = [];
   for (let r = 0; r <= R - 2; r++){
@@ -1671,7 +1689,7 @@ function layout(N){
     edges.push({ r: R - 1, i, pts: [[fx, f.y], [fx, ym], [cx, ym], [cx, yb]] });
   }
   edges.forEach(e => { e.len = Math.ceil(e.pts.reduce((s, p, k) => k ? s + Math.abs(p[0] - e.pts[k - 1][0]) + Math.abs(p[1] - e.pts[k - 1][1]) : 0, 0)); e.d = 'M' + e.pts.map(p => p.map(v => Math.round(v * 10) / 10).join(',')).join('L'); });
-  return { N, R, W, slots, champ, edges, labels, width, height, prize, third, logo, groups, vsPos: { x: cS + Wf + vs / 2 } };
+  return { N, R, W, slots, champ, edges, labels, dates, width, height, prize, third, logo, groups, vsPos: { x: cS + Wf + vs / 2 } };
 }
 const MEAS = document.createElement('canvas').getContext('2d');
 function wrapText(g, text, max){
@@ -1819,7 +1837,7 @@ function renderBracket(){
       + `<img class="bUnder" alt="" draggable="false" src="${SOC_PART.under}" style="left:${((G.w - uw) / 2).toFixed(1)}px;top:${(wy + 64 * G.k).toFixed(1)}px;width:${uw.toFixed(1)}px;height:${uh.toFixed(1)}px">`
       + `<svg class="bWord" role="img" aria-label="SolOnChain" viewBox="0 0 396 74" preserveAspectRatio="none" style="left:0;top:${wy}px;width:${G.w}px;height:${(74 * G.k).toFixed(1)}px"><path fill="${SOC_VEC.gold}" fill-rule="evenodd" d="${SOC_VEC.word}"/></svg>`; frag.appendChild(bl); }
   if (neon && L.logo){ // countdown under the logo (only when there is clear room above the champion frame)
-    const G = L.logo, top = G.y + G.h + 36;
+    const G = L.logo, top = G.y + G.h + (L.dates && L.dates.length ? 30 : 36);
     if (L.champ.y - 96 - top >= 120){
       const cd = document.createElement('div'); cd.className = 'cdown'; cd.setAttribute('role', 'timer'); cd.setAttribute('aria-label', 'Countdown');
       cd.style.left = (G.x + G.w / 2) + 'px'; cd.style.top = top + 'px';
@@ -1827,6 +1845,11 @@ function renderBracket(){
       frag.appendChild(cd); cdTick(true);
     }
   }
+  for (const dt of (L.dates || [])){ const d = document.createElement('div'); d.className = 'rdate' + (dt.center ? ' ctr' : '');
+    d.style.left = dt.x + 'px'; d.style.top = dt.y + 'px'; d.style.width = dt.w + 'px';
+    const [day, ...rest] = dt.lines, sp = day.indexOf(' '); const w = document.createElement('span'); w.className = 'dw'; w.textContent = day.slice(0, sp) + ' '; const a = document.createElement('span'); a.className = 'dd'; a.textContent = day.slice(sp + 1); d.append(w, a);
+    for (const t of rest){ const s = document.createElement('span'); s.className = 'dn'; s.textContent = t; d.appendChild(s); }
+    frag.appendChild(d); }
   const cur = curRound();
   for (const lb of L.labels){ const d = document.createElement('div'); d.className = 'rlabel ' + (lb.r === cur ? 'on' : 'off'); d.style.left = lb.x + 'px'; d.style.top = lb.y + 'px'; d.style.width = lb.w + 'px'; d.textContent = lb.t; frag.appendChild(d); }
   const vs = document.createElement('div'); vs.className = 'vs'; vs.style.left = L.vsPos.x + 'px'; vs.style.top = L.slots[R - 1][0].cy + 'px'; vs.textContent = 'VS'; frag.appendChild(vs);
