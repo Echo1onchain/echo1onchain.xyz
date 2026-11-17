@@ -579,7 +579,7 @@ body.brand.og .sponRow #brandLogo{height:76px!important;transform:none}
 .gframe .glab{position:absolute;left:0;right:0;top:2px;text-align:center;font:700 8.5px/12px "JetBrains Mono",ui-monospace,monospace;letter-spacing:.26em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
 body.brand .gframe{border-color:rgba(var(--np2,90,97,248),.75);background:linear-gradient(180deg,rgba(var(--np),.10),rgba(var(--np),.03));box-shadow:0 0 0 1px rgba(var(--np),.25),0 0 14px rgba(var(--np),.45),inset 0 0 18px rgba(var(--np),.18);--hc:rgb(var(--npl,200,160,255));--hl:14px}
 body.brand .gframe .glab{color:rgba(var(--npl,200,160,255),.95);text-shadow:0 0 8px rgba(var(--np),.9)}
-body.brand .gframe.live{border-color:rgba(var(--nw),.8);box-shadow:0 0 0 1px rgba(var(--nwl),.3),0 0 16px rgba(var(--nw),.55),0 0 38px rgba(var(--nw),.2),inset 0 0 20px rgba(var(--nw),.14);--hc:rgb(var(--nwl));animation:gLive 2.8s ease-in-out infinite}
+body.brand .gframe.live{border-color:rgba(var(--nw),.8);box-shadow:0 0 0 1px rgba(var(--nwl),.3),0 0 16px rgba(var(--nw),.55),0 0 38px rgba(var(--nw),.2),inset 0 0 20px rgba(var(--nw),.14);--hc:rgb(var(--nwl));animation:gLive 7s cubic-bezier(.37,0,.63,1) infinite}
 body.brand .gframe.live .glab{color:rgb(var(--nwl));text-shadow:0 0 8px rgb(var(--nw))}
 body.brand .gframe.done{border-color:rgba(var(--np),.45);box-shadow:0 0 10px rgba(var(--np),.25),inset 0 0 14px rgba(var(--np),.1)}
 #fmt{width:auto;max-width:132px}#bar select#theme{max-width:112px}#bar select#places{max-width:104px}
@@ -1720,6 +1720,42 @@ function focalRect(L){
   const yb = (L.third ? L.third.slots[0].y + L.third.slots[0].h : f0.y + f0.h) + 30;
   return { x: x0, y: y0, w: x1 - x0, h: yb - y0 };
 }
+/* ---------- time-based lighting (schedule on). ET is EST (UTC-5) on every date, so 8:00 AM ET = 13:00 UTC ----------
+   Battle Royale: Group A Tue 11/17 8 AM, B 9 AM ... H 3 PM; Group I Thu 11/19 8 AM ... P 3 PM.
+   Sweet 16 Tue 11/24, Elite 8 Thu 11/26, Final 4 Tue 12/1: match 1 at 8 AM ET, each next match 1 hour later.
+   Championship Round Thu 12/3: Final 8 AM ET, 3rd place game 9 AM ET. Every match is active for 24 hours. */
+const SCH_H = 3600e3, SCH_DAY = 864e5, schD = (mo, da) => Date.UTC(2026, mo, da, 13);
+function matchStart(r, m){
+  const R = T.rounds.length - 1;
+  if (r === 'third') return schD(11, 3) + SCH_H;
+  if (r === R - 1) return schD(11, 3);
+  if (r === 0) return m < 8 ? schD(10, 17) + m * SCH_H : schD(10, 19) + (m - 8) * SCH_H;
+  const day = { 1: schD(10, 24), 2: schD(10, 26), 3: schD(11, 1) }[r];
+  return day == null ? null : day + m * SCH_H;
+}
+const schedLive = () => !!(T && T.rounds && T.rounds.length) && schedOn(T.rounds[0].length, isG4());
+function mActive(r, m){ // schedule off: always "in play" (old behaviour)
+  if (!schedLive()) return true;
+  const s = matchStart(r, m), n = Date.now(); return s != null && n >= s && n < s + SCH_DAY;
+}
+function labelOn(lb, cur, L){
+  if (!schedLive()) return lb.r === cur;
+  const R = T.rounds.length - 1;
+  if (lb.r === 'third') return mActive('third', 0);
+  if (lb.r === R - 1) return mActive(R - 1, 0) || (lb.t === 'Championship Round' && mActive('third', 0)); // header covers Final + 3rd place
+  if (typeof lb.r !== 'number') return false;
+  const n = T.rounds[lb.r + 1].length, left = lb.x < L.champ.x + L.champ.w / 2; // matches: left half first, then right half
+  for (let m = left ? 0 : n / 2; m < (left ? n / 2 : n); m++) if (mActive(lb.r, m)) return true;
+  return false;
+}
+let SCH_SIG = '';
+function schedSig(){
+  if (!schedLive()) return '';
+  const R = T.rounds.length - 1, a = [];
+  for (let r = 0; r < R; r++) for (let m = 0; m < T.rounds[r + 1].length; m++) if (mActive(r, m)) a.push(r + '.' + m);
+  if (mActive('third', 0)) a.push('t'); return a.join(',') || '-';
+}
+setInterval(() => { const s = schedSig(); if (s !== SCH_SIG && geo){ SCH_SIG = s; renderBracket(); } }, 30000);
 function slotState(r, i){
   const R = T.rounds.length - 1, id = T.rounds[r][i];
   if (id === null || r >= R) return '';
@@ -1764,6 +1800,7 @@ function trailMarkup(L){
   const R = T.rounds.length - 1;
   for (const e of L.edges){
     const id = T.rounds[e.r][e.i];
+    if (!mActive(e.r, par(e.r, e.i))) continue; // schedule: only matches in play right now
     if (id === null || T.rounds[e.r + 1][par(e.r, e.i)] !== null) continue; // empty, already decided (won/lost)
     if (e.grp && kidsOf(0, par(0, e.i)).find(k => T.rounds[0][k] !== null) !== e.i) continue; // one light per group
     if (e.r === R - 1 && T.rounds[R][0] !== null) continue;
@@ -1851,7 +1888,7 @@ function renderBracket(){
     for (const t of rest){ const s = document.createElement('span'); s.className = 'dn'; s.textContent = t; d.appendChild(s); }
     frag.appendChild(d); }
   const cur = curRound();
-  for (const lb of L.labels){ const d = document.createElement('div'); d.className = 'rlabel ' + (lb.r === cur ? 'on' : 'off'); d.style.left = lb.x + 'px'; d.style.top = lb.y + 'px'; d.style.width = lb.w + 'px'; d.textContent = lb.t; frag.appendChild(d); }
+  for (const lb of L.labels){ const d = document.createElement('div'); d.className = 'rlabel ' + (labelOn(lb, cur, L) ? 'on' : 'off'); d.style.left = lb.x + 'px'; d.style.top = lb.y + 'px'; d.style.width = lb.w + 'px'; d.textContent = lb.t; frag.appendChild(d); }
   const vs = document.createElement('div'); vs.className = 'vs'; vs.style.left = L.vsPos.x + 'px'; vs.style.top = L.slots[R - 1][0].cy + 'px'; vs.textContent = 'VS'; frag.appendChild(vs);
   const c = L.champ;
   const halo = document.createElement('div'); halo.className = 'halo'; const hs = c.w * 2.1;
@@ -1862,7 +1899,7 @@ function renderBracket(){
     + [[-14,62,0],[24,4,1.75],[76,8,3.5],[112,60,5.25]].map(([x,y,d]) => `<i class="spk" style="left:${x}%;top:${y}px;--sk:${d}s"></i>`).join(''); frag.appendChild(ct);
   const D = deadMap();
   for (const G of L.groups){ // v13: group of 4 in one neon frame; lit while it is being voted on, calm once decided
-    const fr = document.createElement('div'), won = T.rounds[1] && T.rounds[1][G.g], live = !won && kidsOf(0, G.g).filter(k => !D[0][k]).length >= 2;
+    const fr = document.createElement('div'), won = T.rounds[1] && T.rounds[1][G.g], live = !won && mActive(0, G.g) && kidsOf(0, G.g).filter(k => !D[0][k]).length >= 2;
     fr.className = 'gframe hudc' + (won != null ? ' done' : live ? ' live' : ' idle') + (G.side === 'R' ? ' rt' : '');
     Object.assign(fr.style, { left: G.x + 'px', top: G.y + 'px', width: G.w + 'px', height: G.h + 'px' });
     const lb = document.createElement('span'); lb.className = 'glab'; lb.textContent = G.t; fr.appendChild(lb); frag.appendChild(fr);
@@ -1889,6 +1926,7 @@ function renderBracket(){
   trailStart();
   applyView(); // re-clamp to the (possibly new) bracket bounds
   hudUpdate();
+  SCH_SIG = schedSig();
 }
 /* v14: seats are labelled by position (Battle Royale groups: BullBear 1-4; every later matchup: BullBear 1 top / 2 bottom).
    The real names stay in the data, the editor list, tooltips and the enlarge popup. */
