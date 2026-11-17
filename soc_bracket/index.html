@@ -3282,16 +3282,16 @@ async function loadPublished(){
 <div id="okplayer" class="okp" data-open="0">
   <audio id="okaudio-a" preload="metadata" playsinline></audio>
   <audio id="okaudio-b" preload="metadata" playsinline></audio>
-  <button type="button" class="okp-fab" id="okp-open" aria-expanded="false" aria-controls="okp-panel" aria-label="Open music player, Going for the Gold by Echo1">
+  <button type="button" class="okp-fab" id="okp-open" aria-expanded="false" aria-controls="okp-panel" aria-label="Open music player, In This Round by Echo1">
     <span class="okp-fab-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
-    <span class="okp-fab-txt"><b id="okp-fab-title">Going for the Gold</b><span id="okp-fab-sub">Echo1 · tap to play</span></span>
+    <span class="okp-fab-txt"><b id="okp-fab-title">In This Round</b><span id="okp-fab-sub">Echo1 · tap to play</span></span>
     <span class="okp-eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
   </button>
   <div class="okp-panel" id="okp-panel" role="region" aria-label="Music player">
     <div class="okp-top">
       <div class="okp-badge" id="okp-badge" aria-hidden="true">1 / 2</div>
       <div class="okp-meta">
-        <p class="okp-title" id="okp-title">Going for the Gold</p>
+        <p class="okp-title" id="okp-title">In This Round</p>
         <a class="okp-artist" href="https://echo1onchain.xyz/music/" target="_blank" rel="noopener">Music by Echo1</a>
       </div>
       <button type="button" class="okp-close" id="okp-close" aria-label="Collapse music player">
@@ -3331,6 +3331,7 @@ async function loadPublished(){
   var root=document.getElementById('okplayer');
   if(!root) return;
   var TRACKS=[
+    {src:'music/soc_in_this_round.mp3', title:'In This Round', artist:'Echo1', durHint:167},
     {src:'music/soc_going_for_the_gold.mp3', title:'Going for the Gold', artist:'Echo1', durHint:136},
     {src:'music/soc_we_climbin.mp3', title:"SOC We Climbin'", artist:'Echo1', durHint:152}
   ];
