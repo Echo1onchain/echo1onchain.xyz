@@ -1070,6 +1070,9 @@ html,body{background:#05040a}
 #world .cdown .cdBar{display:block;width:78%;height:2px;margin-top:2px;border-radius:2px;background:linear-gradient(90deg,transparent,rgba(138,44,255,.8) 18%,#fed700 50%,rgba(138,44,255,.8) 82%,transparent);box-shadow:0 0 10px rgba(254,215,0,.45)}
 @keyframes cdBreath{0%,100%{opacity:.45;transform:translate(-50%,-50%) scale(.94)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.02)}}
 @media (prefers-reduced-motion:reduce){#world .cdown .cdGlow{animation:none;opacity:.7}}
+/* countdown done: LET'S RUMBLE in the same gold digit style (the 7s breathing glow behind it stays) */
+#world .cdown.done .cdL{display:none}
+#world .cdown .cdN em.cdRum{font-size:50px;letter-spacing:.06em;padding-left:.06em;line-height:1.1}
 /* ===== popup vote bar v9: 'VOTE ON [X] @BullBearsX' ===== */
 #lbVote .lvIn i.lvOn{margin-left:0;margin-right:0}
 #lbVote .lvX{margin-left:.28em;margin-right:.28em}
@@ -1658,7 +1661,7 @@ function layout(N){
   const groups = [];
   if (G4) for (let g = 0; g < N / 4; g++){ // one neon frame around each group of 4
     const a = slots[0][4 * g];
-    groups.push({ g, x: a.x - fp, y: a.y - fp - fl, w: 2 * C + 2 * fp, h: 2 * C + 2 * fp + fl, cy: a.y + C, side: a.side, t: 'Group ' + GROUP_L[g] });
+    groups.push({ g, x: a.x - fp, y: a.y - fp - fl, w: 2 * C + 2 * fp, h: 2 * C + 2 * fp + fl, cy: a.y + C, side: a.side, t: 'Match ' + (g + 1) }); // shown as Match 1-16 (internal key stays GROUP_L[g] = A-P)
   }
   const all = slots.flat().concat(groups);
   const width = (R >= 2 ? rx(0) + C0 : cS + cW) + pad;
@@ -1953,6 +1956,8 @@ const CD_END = Date.UTC(2026, 10, 17, 13, 0, 0);
 function cdTick(force){
   const n = document.querySelector('#world .cdown .cdN'); if (!n) return;
   let s = Math.max(0, Math.floor((CD_END - Date.now()) / 1000));
+  if (!s){ if (force || n.dataset.k !== 'R'){ n.dataset.k = 'R'; const cd = n.parentElement; cd.classList.add('done'); cd.setAttribute('role', 'status'); cd.setAttribute('aria-label', "Let's rumble");
+    n.innerHTML = '<b><em class="cdRum">LET\u2019S RUMBLE</em></b>'; } return; } // countdown reached zero
   const d = Math.floor(s / 86400); s %= 86400; const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60, p = v => String(v).padStart(2, '0');
   const segs = (d ? [[p(d), d === 1 ? 'Day' : 'Days']] : []).concat([[p(h), 'Hrs'], [p(m), 'Min'], [p(sec), 'Sec']]);
   const key = segs.map(x => x[0]).join(':'); if (!force && n.dataset.k === key) return; n.dataset.k = key;
@@ -2661,7 +2666,7 @@ function lbStatus(id){
   if (r < 0) return ['Not in the bracket yet', ''];
   if (P[1] === id) return ['Runner-up', 'adv'];
   if (P[2] != null && P[2] === id) return ['3rd place', 'adv'];
-  const nxt = r < R ? T.rounds[r + 1][par(r, i)] : null, rn = rnameOf(N, r) + (isG4() && r === 0 ? ' · Group ' + GROUP_L[Math.floor(i / 4)] : '');
+  const nxt = r < R ? T.rounds[r + 1][par(r, i)] : null, rn = rnameOf(N, r) + (isG4() && r === 0 ? ' · Match ' + (Math.floor(i / 4) + 1) : '');
   if (nxt !== null && nxt !== id) return ['Eliminated in ' + rn, 'out'];
   return r === 0 ? ['Alive \u00b7 ' + rn, 'live'] : ['Advanced to ' + rn, 'adv'];
 }
@@ -2700,7 +2705,7 @@ function bbInfo(e){ // v15: BullBear card under the picture (kind, rarity, trait
 /* per-group X vote posts (Battle Royale): the popup's VOTE button on a bear in a listed group opens a reply to that group's
    X post, prefilled "BullBear #<seat>" (seat 1-4 = the "BullBear N" label on its card). Add later groups here by letter;
    optional per-bracket override: T.votePosts = { B: '<post id>' }. Unlisted groups keep the @BullBearsX link. */
-const VOTE_POSTS = { A: '2122676125986136398' }, VOTE_DEF = 'https://x.com/BullBearsX';
+const VOTE_POSTS = { A: '2122676125986136398', B: '2122691230102643154', C: '2122706335703912630' }, VOTE_DEF = 'https://x.com/BullBearsX';
 function voteHref(e){
   const a = document.getElementById('lbVote'); if (!a) return;
   const k = e && isG4() ? T.rounds[0].indexOf(e.id) : -1, gl = k < 0 ? '' : String.fromCharCode(65 + Math.floor(k / 4));
