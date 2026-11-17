@@ -588,6 +588,21 @@ body.brand .gframe.done{border-color:rgba(var(--np),.45);box-shadow:0 0 10px rgb
 /* live-match effects (schedule on): traveling gold outline, LIVE pill, gold glow under the match's connectors */
 #world > svg.lvRing{position:absolute;overflow:visible;pointer-events:none;z-index:3}
 body.brand .gframe.live .glab{z-index:4} /* the traveling light passes behind the group header */
+/* per-match timers (schedule on) */
+.mTimer{position:absolute;z-index:4;display:inline-flex;align-items:center;gap:.5em;height:14px;padding:0 8px;border-radius:8px;white-space:nowrap;pointer-events:none;
+ font:800 8px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.16em;font-variant-numeric:tabular-nums;text-transform:uppercase;
+ color:#f4d35e;border:1px solid rgba(254,215,0,.8);background:linear-gradient(180deg,rgba(34,24,0,.97),rgba(12,8,0,.97));box-shadow:0 0 6px rgba(254,215,0,.25)}
+.mTimer b{font-weight:800;letter-spacing:.06em;color:#fff4b8;text-shadow:0 0 6px rgba(254,215,0,.55)}
+.mTimer.live{animation:mtBreath 7s cubic-bezier(.37,0,.63,1) infinite;animation-delay:var(--ph,0s)}
+@keyframes mtBreath{0%,100%{box-shadow:0 0 5px rgba(254,215,0,.2)}50%{box-shadow:0 0 12px rgba(254,215,0,.5)}}
+.mTimer.up{color:rgba(225,208,255,.85);border-color:rgba(var(--npl,200,160,255),.5);background:linear-gradient(180deg,rgba(28,10,58,.96),rgba(12,4,28,.96));box-shadow:none}
+.mTimer.up b{color:#efe6ff;text-shadow:none}
+.mTimer.closed{color:rgba(255,255,255,.5);border-color:rgba(255,255,255,.18);background:rgba(8,8,14,.92);box-shadow:none;letter-spacing:.24em}
+#world > .mTimer{transform:translateX(-50%)}
+#lbTimer{display:none}
+#lb.bb #lbTimer.on{display:inline-flex;position:absolute;left:50%;transform:translateX(-50%);z-index:3;height:22px;padding:0 12px;border-radius:11px;font-size:11px;gap:.6em}
+#lb.bb .lbPic{position:relative}
+@media (prefers-reduced-motion:reduce){.mTimer.live{animation:none}}
 /* live-row cascade v2 (schedule on): one continuous wave flowing down the row, 7s loop. Each live match swells to 1.04x
    and back on a sine-like curve with no hold, so neighbours overlap. Only scale/translate animate (compositor, no layout);
    a group's 4 cards scale about the frame centre (translate = offset x 0.04 at the peak, in step with scale). */
@@ -1949,7 +1964,7 @@ function renderBracket(){
     for (const row of P.rows) for (const l of row.lines) ln(l.t, l.y, l.k + (row.first && l.k === 'lb' ? ' first' : ''), l.k === 'lb' ? 22 : 30);
     frag.appendChild(box);
   }
-  liveFx(w, frag, L, R, LG);
+  liveFx(w, frag, L, R, LG); mtFx(frag, L, R);
   w.appendChild(frag); fitLabels(w);
   $('invite').hidden = T.entries.length > 0;
   w.style.opacity = T.entries.length ? '1' : '.35';
@@ -1992,6 +2007,66 @@ function liveOf(r, m){
   if (r === 'third') return T.third === null;
   return T.rounds[r + 1][m] === null;
 }
+/* ---------- per-match timers (schedule on): from matchStart() + 24h, never hardcoded ---------- */
+function mtState(r, m){ // {k:'live'|'up'|'closed', end} or null
+  if (!schedLive()) return null;
+  const s = matchStart(r, m); if (s == null) return null;
+  const n = Date.now(), dec = r === 'third' ? T.third !== null : !!(T.rounds[r + 1] && T.rounds[r + 1][m] !== null);
+  if (n >= s + SCH_DAY || (dec && n >= s)) return { k: 'closed' };
+  if (n >= s) return { k: 'live', end: s + SCH_DAY };
+  return { k: 'up', end: s };
+}
+function mtFmt(ms, days){ let t = Math.max(0, Math.ceil(ms / 1000)); const d = days ? Math.floor(t / 86400) : 0; t -= d * 86400;
+  const p = v => String(v).padStart(2, '0'); return (d ? d + 'D ' : '') + p(Math.floor(t / 3600)) + ':' + p(Math.floor(t % 3600 / 60)) + ':' + p(t % 60); }
+function mtChip(st, cls, short, days){ // markup; upcoming only within 24h on the bracket
+  if (!st) return '';
+  if (st.k === 'closed') return `<span class="mTimer closed${cls}">Closed</span>`;
+  if (st.k === 'up' && !days && st.end - Date.now() > SCH_DAY) return '';
+  const t = `<b>${mtFmt(st.end - Date.now(), days)}</b>`;
+  return st.k === 'live' ? `<span class="mTimer live${cls}" data-end="${st.end}" data-d="${days ? 1 : ''}" aria-label="Time left">${t}${short ? '' : ' Left'}</span>`
+    : `<span class="mTimer up${cls}" data-end="${st.end}" data-d="${days ? 1 : ''}" aria-label="Starts in">${short ? '' : 'Starts in '}${t}</span>`;
+}
+function mtFx(frag, L, R){ // groups: on the frame's bottom edge (joins the cascade with its frame); later rounds: under the match
+  if (!schedLive() || !isBrand()) return;
+  const add = (st, x, y, fr, oy) => { const h = mtChip(st, '', false); if (!h) return; const t = document.createElement('template'); t.innerHTML = h; const el = t.content.firstElementChild;
+    el.style.left = x + 'px'; el.style.top = y + 'px';
+    if (fr && fr.classList.contains('csc')){ el.classList.add('csc'); el.style.setProperty('--cd', fr.style.getPropertyValue('--cd')); el.style.setProperty('--oy', oy.toFixed(1) + 'px'); }
+    frag.appendChild(el); };
+  for (const G of L.groups) add(mtState(0, G.g), G.x + G.w / 2, G.y + G.h - 6, frag.querySelector(`.gframe[data-g="${G.g}"]`), G.h / 2 + 1);
+  for (let r = 1; r < R; r++) for (let m = 0; m < T.rounds[r + 1].length; m++){
+    const a = L.slots[r][2 * m], b = L.slots[r][2 * m + 1]; if (!a || !b) continue;
+    const st = mtState(r, m); if (!st) continue;
+    if (r === R - 1) add(st, L.vsPos.x, a.y + a.h + 7); else add(st, b.x + b.w / 2, b.y + b.h + 6);
+  }
+  if (L.third){ const [a] = L.third.slots; add(mtState('third', 0), L.third.vs.x, a.y + a.h + 8); }
+}
+function lbMatchOf(id){ // the match this BullBear is in right now: its furthest round
+  const R = T.rounds.length - 1;
+  for (let r = R - 1; r >= 0; r--){ const i = T.rounds[r].indexOf(id); if (i >= 0) return [r, par(r, i)]; }
+  return null;
+}
+function lbTimerSet(e){
+  let el = document.getElementById('lbTimer'); const v = document.getElementById('lbVote'); if (!v) return;
+  if (!el){ el = document.createElement('span'); el.id = 'lbTimer'; el.className = 'mTimer'; v.insertAdjacentElement('afterend', el); }
+  const mm = e && isG4() ? lbMatchOf(e.id) : null, st = mm ? mtState(mm[0], mm[1]) : null;
+  if (!st){ el.className = 'mTimer'; el.innerHTML = ''; delete el.dataset.end; return; }
+  const tmp = document.createElement('div'); tmp.innerHTML = mtChip(st, '', false, true); const c = tmp.firstElementChild;
+  el.className = c.className + ' on'; el.innerHTML = st.k === 'closed' ? 'Voting closed' : c.innerHTML;
+  if (c.dataset.end){ el.dataset.end = c.dataset.end; el.dataset.d = '1'; } else delete el.dataset.end;
+  el.style.top = (v.offsetTop + v.offsetHeight + 5) + 'px';
+}
+let MT_BUSY = 0;
+function mtTick(){
+  const n = Date.now(); let flip = false;
+  document.querySelectorAll('#world .mTimer[data-end], #lbTimer[data-end]').forEach(el => {
+    const left = +el.dataset.end - n; if (left <= 0){ flip = true; return; }
+    const b = el.querySelector('b'), t = mtFmt(left, !!el.dataset.d); if (b && b.textContent !== t) b.textContent = t;
+  });
+  const lt = document.getElementById('lbTimer'), v = document.getElementById('lbVote');
+  if (lt && v && lt.classList.contains('on')) lt.style.top = (v.offsetTop + v.offsetHeight + 5) + 'px';
+  if (flip && geo && !MT_BUSY){ MT_BUSY = 1; renderBracket(); if (!$('lb').hidden && LB.list[LB.k] != null) lbTimerSet(byId(LB.list[LB.k])); setTimeout(() => { MT_BUSY = 0; }, 1500); }
+}
+(function mtLoop(){ mtTick(); setTimeout(mtLoop, 1000 - Date.now() % 1000 + 20); })();
 /* cascade v3 timing: n live matches, each swell lasts D s, the next starts s later; (n-1)*s + D = 7 (the pass), then 7s rest */
 function cscTiming(n){ const D = Math.max(3.5, 7 - Math.max(0, n - 1) * .7); return { D, s: n > 1 ? (7 - D) / (n - 1) : 0 }; }
 function cscKeyframes(w, n){
@@ -2737,7 +2812,7 @@ function lbShow(){
   const st = lbStatus(e.id), im = $('lbImg');
   im.src = src(e); im.alt = e.name; $('lbName').textContent = e.name; $('lbSeed').textContent = ''; $('lbSeed').hidden = true; // no 1-64 seed number in the popup
   if (e.imgHi){ const hi = new Image(), want = e.id; hi.onload = () => { if (LB.list[LB.k] === want && !$('lb').hidden) im.src = hi.src; }; hi.src = (typeof PUB_BASE !== 'undefined' ? PUB_BASE : '') + e.imgHi; }
-  bbInfo(e); voteHref(e); $('lb').scrollTop = 0;
+  bbInfo(e); voteHref(e); $('lb').scrollTop = 0; requestAnimationFrame(() => lbTimerSet(e));
   $('lbStat').textContent = st[0]; $('lbStat').className = 'st ' + st[1]; $('lb').dataset.st = st[1];
   const many = LB.list.length > 1; $('lbPrev').hidden = $('lbNext').hidden = !many;
 }
@@ -2805,7 +2880,7 @@ function renderExtras(){
   sb.hidden = !sx; if (sx) $('swapTxt').textContent = `Swapping in "${sx.name}": click the entry it should replace (list or bracket). Esc cancels.`;
   document.body.classList.toggle('swapMode', !!sx);
 }
-function openLBExtra(x){ if (!x.img) return; LB.list = [x.id]; LB.k = 0; const im = $('lbImg'); im.src = x.img; im.alt = x.name; $('lbName').textContent = x.name; bbInfo(null); voteHref(null); $('lbSeed').textContent = 'Waiting list'; $('lbSeed').hidden = false; $('lbStat').textContent = DUPS.has(x.id) ? 'Possible duplicate' : 'Not in the bracket'; $('lbStat').className = 'st ' + (DUPS.has(x.id) ? 'out' : ''); $('lb').dataset.st = ''; $('lbPrev').hidden = $('lbNext').hidden = true; $('lb').hidden = false; }
+function openLBExtra(x){ if (!x.img) return; LB.list = [x.id]; LB.k = 0; const im = $('lbImg'); im.src = x.img; im.alt = x.name; $('lbName').textContent = x.name; bbInfo(null); voteHref(null); lbTimerSet(null); $('lbSeed').textContent = 'Waiting list'; $('lbSeed').hidden = false; $('lbStat').textContent = DUPS.has(x.id) ? 'Possible duplicate' : 'Not in the bracket'; $('lbStat').className = 'st ' + (DUPS.has(x.id) ? 'out' : ''); $('lb').dataset.st = ''; $('lbPrev').hidden = $('lbNext').hidden = true; $('lb').hidden = false; }
 function startSwap(xid){ SWAP.id = SWAP.id === xid ? null : xid; renderExtras(); if (SWAP.id != null) flash('Now click the entry to replace, in the list or on the bracket.'); }
 function endSwap(){ SWAP.id = null; renderExtras(); }
 async function addExtra(xid){
