@@ -1188,6 +1188,25 @@ html,body{background:#05040a}
 .slot .pkStar.sm b{font-size:9px}
 .slot.lost .pkStar{filter:saturate(.35) brightness(.8)}.slot.lost .pkStar::after{display:none}
 .slot .pkStar.new{animation:pkPop .75s cubic-bezier(.2,1.45,.4,1) both}
+/* ---- Pick pop: the picked card lifts forward, its rivals step back ---- */
+#world .slot.pkMine{z-index:7;transform:scale(1.08);border-color:#ffe066;box-shadow:0 0 0 2px #ffcf1a,0 0 0 3px rgba(255,246,200,.55),0 0 16px 4px rgba(255,196,0,.78),0 0 40px 12px rgba(255,150,0,.36),0 22px 34px -8px rgba(0,0,0,.92),0 10px 14px -6px rgba(0,0,0,.75)}
+#world .slot.pkMine.pkSm{transform:scale(1.05);box-shadow:0 0 0 1.5px #ffcf1a,0 0 10px 2px rgba(255,196,0,.75),0 0 24px 6px rgba(255,150,0,.32),0 12px 20px -6px rgba(0,0,0,.9)}
+#world .slot.pkMine.lost{transform:none}
+#world > .mTimer{z-index:8} /* match timers stay readable over a lifted pick */
+#world .slot.pkMine.tilt:not(.lost){transform:perspective(560px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(-2px) scale(1.1)}
+#world .slot.pkDim{opacity:.55;filter:saturate(.6)}
+#world .slot.pkDim:hover,#world .slot.pkDim:focus-visible{opacity:.9;filter:none}
+.slot .pkAura{box-shadow:inset 0 0 0 2px rgba(255,240,170,.95),inset 0 0 22px 4px rgba(255,195,0,.62)}
+.slot .im .pkSweep{position:absolute;inset:0;z-index:3;pointer-events:none;overflow:hidden}
+.slot .im .pkSweep::before{content:"";position:absolute;top:-12%;bottom:-12%;left:0;width:42%;background:linear-gradient(105deg,transparent 0%,rgba(255,226,120,.12) 30%,rgba(255,244,196,.46) 50%,rgba(255,226,120,.12) 70%,transparent 100%);transform:translateX(-150%) skewX(-14deg);animation:pkSweepK 7s cubic-bezier(.45,.05,.55,.95) infinite}
+@keyframes pkSweepK{0%,38%{transform:translateX(-150%) skewX(-14deg)}88%,100%{transform:translateX(360%) skewX(-14deg)}}
+.slot.lost .pkSweep{display:none}
+.slot .pkStar{top:6px;height:21px;padding:0 9px 0 7px;gap:4px;font-size:9.5px;letter-spacing:.1em;color:#140b00;border:1px solid #fff4b0;
+  background:linear-gradient(180deg,#ffec7a 0%,#ffd21a 48%,#ffbb00 100%);box-shadow:0 0 0 1px rgba(0,0,0,.6),0 0 14px 2px rgba(255,190,0,.8),0 4px 10px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.75)}
+.slot .pkStar b{font-size:12px;color:#4a2400;text-shadow:0 0 3px rgba(255,255,255,.7)}
+.slot .pkStar.sm{top:4px;height:17px;padding:0 6px 0 5px;gap:3px;font-size:8px;letter-spacing:.08em}
+.slot .pkStar.sm b{font-size:10px}
+@media (prefers-reduced-motion:reduce){.slot .im .pkSweep{display:none}#world .slot.pkMine{transition:none}}
 @keyframes pkPop{0%{scale:.3;opacity:0}60%{scale:1.18;opacity:1}100%{scale:1;opacity:1}}
 @keyframes pkSheen{0%{transform:translateX(-130%) skewX(-14deg)}45%,100%{transform:translateX(330%) skewX(-14deg)}}
 #pkPill{overflow:hidden}
@@ -2242,12 +2261,15 @@ function pkVoteHref(e, r){ // same intent as the popup VOTE button for Battle Ro
   return pid ? 'https://x.com/intent/post?in_reply_to=' + pid + '&text=' + encodeURIComponent('BullBear #' + (k % 4 + 1)) : VOTE_DEF;
 }
 function pkMarks(root){ // gold MY PICK tag on the picked card of each match (inside the card, so it rides the cascade)
-  if (!root) return; root.querySelectorAll('.pkStar,.pkAura').forEach(x => x.remove()); root.querySelectorAll('.slot.pkMine').forEach(x => x.classList.remove('pkMine')); if (!pkOn()) return;
+  if (!root) return; root.querySelectorAll('.pkStar,.pkAura,.pkSweep').forEach(x => x.remove()); root.querySelectorAll('.slot.pkMine,.slot.pkDim').forEach(x => x.classList.remove('pkMine', 'pkSm', 'pkDim')); if (!pkOn()) return;
   for (const k of Object.keys(pkAll())){
     const s = pkStatus(k); if (!s || s.j < 0) continue;
     const el = s.r === 'third' ? root.querySelector(`.slot.third[data-third="${s.j}"]`) : root.querySelector(`.slot[data-r="${s.r}"][data-i="${s.c.ks[s.j]}"]`); if (!el) continue;
     const b = document.createElement('span'); b.className = 'pkStar' + ((parseFloat(el.style.width) || 99) < 80 ? ' sm' : '') + (PK_NEW === k ? ' new' : ''); b.title = 'My pick'; b.setAttribute('aria-label', 'My pick');
     b.innerHTML = '<b aria-hidden="true">\u2605</b>My pick'; const au = document.createElement('span'); au.className = 'pkAura'; el.classList.add('pkMine'); el.append(au, b);
+    if (b.classList.contains('sm')) el.classList.add('pkSm');
+    const im = el.querySelector('.im'); if (im){ const sw = document.createElement('i'); sw.className = 'pkSweep'; sw.setAttribute('aria-hidden', 'true'); im.appendChild(sw); }
+    if (s.k !== 'out' && s.k !== 'void') (s.r === 'third' ? s.c.ids.map((_, i) => root.querySelector(`.slot.third[data-third="${i}"]`)) : s.c.ks.map(i => root.querySelector(`.slot[data-r="${s.r}"][data-i="${i}"]`))).forEach(o => { if (o && o !== el) o.classList.add('pkDim'); }); // rivals step back so the pick pops
   }
 }
 function pkBurst(el){ // one-shot celebration from the button: sparks, confetti, a star pop and a soft ring (skipped for reduced motion)
