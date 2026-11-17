@@ -1108,6 +1108,126 @@ html,body{background:#05040a}
 #world .rdate .dd::after{content:"";display:block;width:40px;height:1px;margin:5px auto 1px;background:linear-gradient(90deg,transparent,rgba(254,215,0,.75),transparent)}
 #world .rdate .dn{font:700 13px/1.25 "Plus Jakarta Sans",Inter,sans-serif;letter-spacing:.01em;color:rgba(255,242,205,.9);text-shadow:0 1px 2px rgba(0,0,0,.85);white-space:nowrap}
 </style>
+<style id="pkCSS">
+/* ===== personal pick tracker (view-only page): calm gold, no flashing ===== */
+#pkPill{position:fixed;right:14px;bottom:48px;z-index:54;display:inline-flex;align-items:center;gap:8px;min-height:46px;padding:0 7px 0 14px;border-radius:999px;cursor:pointer;
+  font:800 11px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.2em;text-transform:uppercase;color:#fed700;
+  background:linear-gradient(180deg,rgba(30,24,6,.94),rgba(8,8,14,.95));border:1px solid rgba(254,215,0,.55);
+  box-shadow:0 0 0 1px rgba(0,0,0,.6),0 8px 22px rgba(0,0,0,.45),0 0 18px -4px rgba(254,215,0,.45),inset 0 1px 0 rgba(255,240,170,.18);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:border-color .3s,box-shadow .3s}
+#pkPill .pkSI{font-size:15px;letter-spacing:0;text-shadow:0 0 8px rgba(254,215,0,.6)}
+#pkPill i{font-style:normal;min-width:30px;height:30px;padding:0 9px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(180deg,#fff3b0,#fed700 55%,#d6a400);color:#1a1000;letter-spacing:.04em;font-size:12px;font-variant-numeric:tabular-nums}
+#pkPill:hover,#pkPill[aria-expanded="true"]{border-color:#fed700;box-shadow:0 0 0 1px rgba(0,0,0,.6),0 8px 22px rgba(0,0,0,.45),0 0 24px -4px rgba(254,215,0,.7),inset 0 1px 0 rgba(255,240,170,.25)}
+#pkPill:focus-visible{outline:2px solid #fff;outline-offset:3px}
+@media (max-width:400px){#pkPill{gap:6px;padding-left:11px;letter-spacing:.14em}#pkPill .pkW{display:none}}
+#pkPanel{position:fixed;right:14px;bottom:104px;z-index:57;width:min(390px,calc(100vw - 20px));max-height:min(72vh,600px);display:flex;flex-direction:column;border-radius:16px;overflow:hidden;color:#fff;
+  font-family:"Plus Jakarta Sans",Inter,system-ui,sans-serif;background:linear-gradient(180deg,rgba(18,14,30,.97),rgba(6,6,10,.98));border:1px solid rgba(254,215,0,.45);
+  box-shadow:0 22px 60px rgba(0,0,0,.65),0 0 34px -10px rgba(254,215,0,.45),inset 0 1px 0 rgba(255,240,170,.12)}
+#pkPanel[hidden]{display:none}
+#pkPanel::before{content:"";position:absolute;left:18px;right:18px;top:0;height:1px;background:linear-gradient(90deg,transparent,#fed700,transparent);opacity:.8}
+@media (max-width:480px){#pkPanel{left:10px;right:10px;width:auto;max-height:min(70vh,560px)}}
+#pkPanel .pkTop{display:flex;align-items:center;gap:10px;padding:14px 12px 10px 16px}
+#pkPanel .pkTop h2{margin:0;font:800 15px/1 "Plus Jakarta Sans",Inter,sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#fed700;text-shadow:0 0 12px rgba(254,215,0,.35)}
+#pkPanel .pkRec{font:700 10px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.75);padding:5px 9px;border-radius:999px;border:1px solid rgba(254,215,0,.35);background:rgba(254,215,0,.06)}
+#pkPanel .pkRec b{color:#fed700;font-size:11px}
+#pkPanel .pkCl{margin-left:auto;width:34px;height:34px;min-height:0;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;color:#fff;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.18);cursor:pointer}
+#pkPanel .pkNote{margin:0 16px 10px;padding:9px 11px;border-radius:10px;font-size:11.5px;line-height:1.45;color:rgba(255,255,255,.72);background:rgba(254,215,0,.05);border:1px solid rgba(254,215,0,.18)}
+#pkPanel .pkNote b{color:#fed700}
+#pkPanel .pkNote a{color:#fed700;text-decoration:none;border-bottom:1px solid rgba(254,215,0,.4)}
+#pkPanel .pkList{flex:1 1 auto;min-height:0;overflow:auto;padding:2px 10px 6px;-webkit-overflow-scrolling:touch}
+#pkPanel .pkEmpty{padding:18px 10px 22px;text-align:center;font-size:13px;line-height:1.5;color:rgba(255,255,255,.6)}
+#pkPanel .pkEmpty b{color:#fed700}
+#pkPanel .pkRow{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:10px;padding:8px 6px;border-top:1px solid rgba(255,255,255,.07)}
+#pkPanel .pkRow:first-child{border-top:0}
+#pkPanel .pkImg{width:46px;height:46px;border-radius:9px;object-fit:cover;display:block;border:1px solid rgba(254,215,0,.4);background:#0b0a12}
+#pkPanel .pkRow.out .pkImg{filter:grayscale(.8) brightness(.6)}
+#pkPanel .pkM{font:700 9px/1.2 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:rgba(254,215,0,.75)}
+#pkPanel .pkN{margin-top:3px;font-weight:800;font-size:13.5px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pkPanel .pkA{margin-top:5px;display:flex;gap:6px}
+#pkPanel .pkA button{min-height:26px;padding:0 10px;border-radius:999px;font:700 9.5px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;color:#fed700;background:rgba(254,215,0,.07);border:1px solid rgba(254,215,0,.4)}
+#pkPanel .pkA button.pkDel{color:rgba(255,255,255,.65);border-color:rgba(255,255,255,.2);background:transparent}
+.pkSt{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 9px;border-radius:999px;font:800 9px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;white-space:nowrap;border:1px solid}
+.pkSt.live{color:#fed700;border-color:rgba(254,215,0,.6);background:rgba(254,215,0,.08)}
+.pkSt.live::before{content:"";width:6px;height:6px;border-radius:50%;background:#fed700;box-shadow:0 0 6px #fed700}
+.pkSt.up{color:#cdb8ff;border-color:rgba(170,140,255,.45);background:rgba(120,90,220,.1)}
+.pkSt.pend{color:rgba(255,255,255,.75);border-color:rgba(255,255,255,.28);background:rgba(255,255,255,.05)}
+.pkSt.won{color:#1a1000;border-color:#fff3b0;background:linear-gradient(180deg,#fff3b0,#fed700 55%,#d6a400)}
+.pkSt.out{color:#ff9a9a;border-color:rgba(255,110,110,.45);background:rgba(255,80,80,.07)}
+.pkSt.void{color:rgba(255,255,255,.5);border-color:rgba(255,255,255,.2)}
+#pkPanel .pkFt{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px 12px;border-top:1px solid rgba(254,215,0,.15);font:600 10.5px/1.3 "Plus Jakarta Sans",Inter,sans-serif;color:rgba(255,255,255,.5)}
+#pkPanel .pkFt button{min-height:28px;padding:0 11px;border-radius:999px;font:700 9.5px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;cursor:pointer;color:rgba(255,255,255,.7);background:transparent;border:1px solid rgba(255,255,255,.22)}
+#pkPanel .pkFt button.arm{color:#ff9a9a;border-color:rgba(255,110,110,.6)}
+#lbPick{margin-top:14px;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:default}
+#lbPick[hidden]{display:none}
+#lb.bb #lbPick{align-items:flex-start}
+#lbPick .pkHd{font:700 9.5px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.22em;text-transform:uppercase;color:rgba(254,215,0,.72)}
+#lbPick .pkS{font-size:17px;letter-spacing:0}
+#lbPick .pkX{width:14px;height:13px;fill:currentColor;flex:none}
+#lbPick .pkSub{font:600 12px/1.45 "Plus Jakarta Sans",Inter,sans-serif;color:rgba(255,255,255,.66)}
+#lbPick .pkSub b{color:#fed700}
+#lbPick .pkClr{min-height:0;padding:0;margin-left:4px;background:none;border:0;border-bottom:1px solid rgba(255,255,255,.35);border-radius:0;font:inherit;color:rgba(255,255,255,.8);cursor:pointer}
+#lbPick .pkWait,#lbPick .pkRes{display:inline-flex;align-items:center;gap:8px;min-height:36px;padding:0 14px;border-radius:10px;font:700 11px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.7);border:1px dashed rgba(255,255,255,.25)}
+#lbPick .pkRes{border-style:solid;border-color:rgba(254,215,0,.4);color:#fed700}
+#lbPick .pkRes.out{border-color:rgba(255,110,110,.45);color:#ff9a9a}
+@media (max-width:860px){#lb.bb #lbPick{align-items:center;text-align:center}#lbPick .pkBtn{font-size:12.5px;padding:0 15px}}
+@media (max-width:360px){#lbPick .pkBtn{font-size:11.5px;padding:0 12px;letter-spacing:.04em}}
+/* ---- My Pick FX ---- */
+#world .slot.pkMine{z-index:4;border-color:#ffe26a;box-shadow:0 0 0 2px #fed700,0 0 12px 2px rgba(255,200,0,.7),0 0 30px 6px rgba(255,150,0,.35),0 12px 22px -8px rgba(0,0,0,.8)}
+#world .slot.pkMine.lost{z-index:auto;border-color:rgba(254,215,0,.45);box-shadow:0 0 0 1px rgba(254,215,0,.35)}
+.slot .pkAura{position:absolute;inset:0;z-index:4;pointer-events:none;border-radius:inherit;opacity:.5;
+  box-shadow:inset 0 0 0 2px rgba(255,240,170,.95),inset 0 0 16px 2px rgba(255,195,0,.6);background:radial-gradient(130% 70% at 50% 0%,rgba(255,215,0,.22),transparent 62%);
+  will-change:opacity;animation:pkBreath 7s cubic-bezier(.37,0,.63,1) infinite}
+.slot.lost .pkAura{display:none}
+@keyframes pkBreath{0%,100%{opacity:.42}50%{opacity:1}}
+.slot .pkStar{position:absolute;left:50%;top:5px;translate:-50% 0;z-index:9;height:18px;padding:0 8px 0 6px;border-radius:999px;display:inline-flex;align-items:center;gap:4px;pointer-events:none;overflow:hidden;
+  font:800 8.5px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.14em;text-transform:uppercase;color:#1a0f00;white-space:nowrap;
+  background:linear-gradient(100deg,#fff4b8 0%,#ffd400 40%,#ffb000 75%,#ff9a00 100%);border:1px solid #fff3c0;
+  box-shadow:0 0 0 1px rgba(0,0,0,.55),0 0 12px 1px rgba(255,190,0,.75),0 3px 8px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.7)}
+.slot .pkStar b{font-size:11px;line-height:1;letter-spacing:0;color:#7a3d00;text-shadow:0 0 4px rgba(255,255,255,.8)}
+.slot .pkStar::after{content:"";position:absolute;top:-20%;bottom:-20%;left:0;width:45%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.85) 50%,transparent);transform:translateX(-130%) skewX(-14deg);animation:pkSheen 5s cubic-bezier(.45,.05,.55,.95) infinite}
+.slot .pkStar.sm{height:15px;padding:0 5px 0 4px;gap:3px;font-size:7px;letter-spacing:.08em;top:4px}
+.slot .pkStar.sm b{font-size:9px}
+.slot.lost .pkStar{filter:saturate(.35) brightness(.8)}.slot.lost .pkStar::after{display:none}
+.slot .pkStar.new{animation:pkPop .75s cubic-bezier(.2,1.45,.4,1) both}
+@keyframes pkPop{0%{scale:.3;opacity:0}60%{scale:1.18;opacity:1}100%{scale:1;opacity:1}}
+@keyframes pkSheen{0%{transform:translateX(-130%) skewX(-14deg)}45%,100%{transform:translateX(330%) skewX(-14deg)}}
+#pkPill{overflow:hidden}
+#pkPill::after{content:"";position:absolute;top:0;bottom:0;left:0;width:34%;pointer-events:none;background:linear-gradient(105deg,transparent,rgba(255,236,150,.32) 50%,transparent);transform:translateX(-140%) skewX(-14deg);animation:pkSheenP 7s cubic-bezier(.45,.05,.55,.95) infinite}
+@keyframes pkSheenP{0%,30%{transform:translateX(-140%) skewX(-14deg)}75%,100%{transform:translateX(420%) skewX(-14deg)}}
+#pkPill i.pop{animation:pkCount .8s cubic-bezier(.2,1.5,.4,1)}
+@keyframes pkCount{0%{scale:1;box-shadow:0 0 0 rgba(255,200,0,0)}35%{scale:1.45;box-shadow:0 0 16px 4px rgba(255,200,0,.75)}100%{scale:1;box-shadow:0 0 0 rgba(255,200,0,0)}}
+#lbPick .pkBtn{position:relative;isolation:isolate;display:inline-flex;align-items:center;gap:8px;min-height:50px;padding:0 20px;border-radius:13px;text-decoration:none;white-space:nowrap;
+  font:800 13.5px/1 "Plus Jakarta Sans",Inter,sans-serif;letter-spacing:.07em;text-transform:uppercase;color:#1a0f00;text-shadow:0 1px 0 rgba(255,255,255,.45);
+  background:linear-gradient(100deg,#fff0a0 0%,#ffd400 34%,#ffb300 68%,#ff9a00 100%);border:1px solid #fff0b0;
+  box-shadow:0 0 0 1px rgba(0,0,0,.55),0 8px 22px -8px rgba(255,150,0,.85),inset 0 1px 0 rgba(255,255,255,.75),inset 0 -2px 0 rgba(140,70,0,.35);transition:filter .3s}
+#lbPick .pkBtn > *{position:relative;z-index:1}
+#lbPick .pkBtn::after{content:"";position:absolute;inset:-7px;border-radius:19px;z-index:-1;pointer-events:none;box-shadow:0 0 22px 3px rgba(255,190,0,.6),0 0 48px rgba(255,150,0,.32);opacity:.35;will-change:opacity;animation:pkGlow 7s cubic-bezier(.37,0,.63,1) infinite}
+@keyframes pkGlow{0%,100%{opacity:.3}50%{opacity:.95}}
+#lbPick .pkBtn .pkClip{position:absolute;inset:0;z-index:0;border-radius:inherit;overflow:hidden;pointer-events:none}
+#lbPick .pkBtn .pkSheen{position:absolute;top:-10%;bottom:-10%;left:0;width:36%;background:linear-gradient(105deg,transparent,rgba(255,255,255,.75) 50%,transparent);transform:translateX(-130%) skewX(-14deg);animation:pkSheen 5s cubic-bezier(.45,.05,.55,.95) infinite}
+#lbPick .pkBtn:hover{filter:brightness(1.07) saturate(1.06)}
+#lbPick .pkBtn:focus-visible{outline:2px solid #fff;outline-offset:6px}
+#lbPick .pkBtn .pkS{font-size:18px;letter-spacing:0;color:#6b3400;text-shadow:0 0 6px rgba(255,255,255,.7)}
+#lbPick .pkBtn.on{background:linear-gradient(100deg,#fffbe2 0%,#ffe45c 36%,#ffc400 72%,#ffa800 100%);border-color:#fffbe0}
+#lbPick .pkBtn.on .pkS{color:#8a4500}
+#lbPick .pkBtn .pkRing{position:absolute;left:-5px;top:-5px;width:calc(100% + 10px);height:calc(100% + 10px);overflow:visible;pointer-events:none;z-index:2}
+#lbPick .pkRing rect{fill:none}
+#lbPick .pkRing .rB{stroke:rgba(255,215,0,.35);stroke-width:1}
+#lbPick .pkRing .rT{stroke:#ffb400;stroke-width:2.4;stroke-linecap:round;stroke-dasharray:20 80;opacity:.9;filter:drop-shadow(0 0 4px rgba(255,180,0,.9));animation:vRunT 10s linear infinite}
+#lbPick .pkRing .rH{stroke:#fffbe6;stroke-width:2.6;stroke-linecap:round;stroke-dasharray:8 92;filter:drop-shadow(0 0 5px #fed700);animation:vRunH 10s linear infinite}
+#lbPick .pkBtn.settle{animation:pkSettle .7s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pkSettle{0%{scale:.9}55%{scale:1.06}100%{scale:1}}
+.pkBurst{position:fixed;inset:0;z-index:62;pointer-events:none;overflow:hidden}
+.pkBurst i{position:absolute;left:0;top:0;display:block;font-style:normal;will-change:transform,opacity}
+.pkBurst .pkSpark{width:7px;height:7px;border-radius:50%;box-shadow:0 0 8px 2px rgba(255,200,0,.9)}
+.pkBurst .pkConf{width:6px;height:12px;border-radius:1px;box-shadow:0 0 4px rgba(255,200,0,.5)}
+.pkBurst .pkPopS{font:900 56px/1 "Plus Jakarta Sans",sans-serif;color:#ffd400;text-shadow:0 0 16px rgba(255,200,0,.9),0 2px 0 #a86400}
+.pkBurst .pkWave{width:70px;height:70px;border-radius:50%;border:2px solid rgba(255,225,110,.95);box-shadow:0 0 18px rgba(255,200,0,.6),inset 0 0 12px rgba(255,200,0,.4)}
+@media (max-width:860px){#lbPick .pkBtn{font-size:12.5px;padding:0 16px}}
+@media (max-width:360px){#lbPick .pkBtn{font-size:11.5px;padding:0 12px;letter-spacing:.04em}}
+@media (prefers-reduced-motion:reduce){.slot .pkAura,#lbPick .pkBtn::after{animation:none;opacity:.7}.slot .pkStar::after,#pkPill::after,#lbPick .pkBtn .pkSheen{animation:none;display:none}
+  .slot .pkStar.new,#pkPill i.pop,#lbPick .pkBtn.settle{animation:none}#lbPick .pkRing .rT{display:none}#lbPick .pkRing .rH{animation:none;stroke-dasharray:none;stroke-width:1.5;opacity:.8}.pkBurst{display:none}}
+body.og #pkPill,body.og #pkPanel,body.soon #pkPill,body.soon #pkPanel{display:none!important}
+</style>
 </head>
 <body>
 <div id="artbg"></div><canvas id="bgfx"></canvas><canvas id="fxl"></canvas><div id="sweep"></div><div id="scan"></div>
@@ -1964,7 +2084,7 @@ function renderBracket(){
     for (const row of P.rows) for (const l of row.lines) ln(l.t, l.y, l.k + (row.first && l.k === 'lb' ? ' first' : ''), l.k === 'lb' ? 22 : 30);
     frag.appendChild(box);
   }
-  liveFx(w, frag, L, R, LG); mtFx(frag, L, R);
+  liveFx(w, frag, L, R, LG); mtFx(frag, L, R); pkFx(frag);
   w.appendChild(frag); fitLabels(w);
   $('invite').hidden = T.entries.length > 0;
   w.style.opacity = T.entries.length ? '1' : '.35';
@@ -2067,6 +2187,173 @@ function mtTick(){
   if (flip && geo && !MT_BUSY){ MT_BUSY = 1; renderBracket(); if (!$('lb').hidden && LB.list[LB.k] != null) lbTimerSet(byId(LB.list[LB.k])); setTimeout(() => { MT_BUSY = 0; }, 1500); }
 }
 (function mtLoop(){ mtTick(); setTimeout(mtLoop, 1000 - Date.now() % 1000 + 20); })();
+/* ---------- personal pick tracker (view-only page): one pick per match, saved on this device only (just for fun);
+   the official votes stay the X replies, so "Make my pick" also opens the match's X vote reply. Picks are keyed by stable
+   match keys (br-A..br-P, r<round>-m<match>, third) and the BullBear's mint (name if no mint), never by entry ids. ---------- */
+const PK_KEY = 'soc_bracket_picks_v1', PK_RX = /^(br-[A-P]|r\d{1,2}-m\d{1,3}|third)$/;
+const PK_X = '<svg class="pkX" viewBox="1.254 2.25 21.492 19.5" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>';
+let PK = null;
+function pkLoad(){
+  try { const o = JSON.parse(localStorage.getItem(PK_KEY) || 'null'), p = {};
+    if (o && typeof o === 'object' && o.picks && typeof o.picks === 'object' && !Array.isArray(o.picks))
+      for (const k of Object.keys(o.picks)){ const v = o.picks[k]; if (PK_RX.test(k) && v && typeof v.t === 'string' && v.t.length < 200) p[k] = { t: v.t, n: String(v.n || '').slice(0, 80), at: +v.at || 0 }; }
+    return p;
+  } catch (e){ return {}; }
+}
+const pkAll = () => PK || (PK = pkLoad());
+function pkSave(){ try { localStorage.setItem(PK_KEY, JSON.stringify({ v: 1, picks: pkAll() })); } catch (e){} }
+const pkOn = () => document.body.classList.contains('ro') && !document.body.classList.contains('og') && !!(T && T.rounds && T.rounds.length > 1 && T.entries && T.entries.length);
+const pkEsc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const pkTok = e => !e ? '' : e.bb && e.bb.mint ? 'mint:' + e.bb.mint : 'name:' + e.name;
+const pkByTok = t => (t && T.entries.find(e => pkTok(e) === t)) || null;
+const pkKey = (r, m) => r === 'third' ? 'third' : r === 0 && isG4() ? 'br-' + String.fromCharCode(65 + m) : 'r' + r + '-m' + m;
+function pkRM(k){ if (k === 'third') return ['third', 0]; let x = /^br-([A-P])$/.exec(k); if (x) return isG4() ? [0, x[1].charCodeAt(0) - 65] : null; x = /^r(\d+)-m(\d+)$/.exec(k); return x ? [+x[1], +x[2]] : null; }
+function pkComp(r, m){ // the match's seats: { ids, lab(j), ok: every competitor known }
+  if (r === 'third'){ if (!(geo && geo.third)) return null; const Ls = semiLosers(); return { ids: Ls.slice(), lab: j => 'BullBear ' + (j + 1), ok: Ls.length === 2 && Ls.every(v => v !== null) }; }
+  const R = T.rounds.length - 1; if (!(r >= 0 && r < R && T.rounds[r + 1] && m >= 0 && m < T.rounds[r + 1].length)) return null;
+  const D = deadMap(), ks = kidsOf(r, m).filter(k => !D[r][k]), ids = ks.map(k => T.rounds[r][k]);
+  return { ids, ks, lab: j => seatLabel(r, ks[j]), ok: ks.length >= 2 && ids.every(v => v !== null) };
+}
+const pkWin = (r, m) => r === 'third' ? T.third : T.rounds[r + 1][m];
+function pkLabel(r, m){
+  if (r === 'third') return '3rd Place Match';
+  const N = T.rounds[0].length; if (r === 0 && isG4()) return 'Match ' + (m + 1) + ' \u00b7 Battle Royale';
+  return rnameOf(N, r) + (T.rounds[r + 1].length > 1 ? ' \u00b7 Match ' + (m + 1) : '');
+}
+function pkStatus(k){
+  const rm = pkRM(k), p = pkAll()[k]; if (!rm || !p) return null;
+  const [r, m] = rm, c = pkComp(r, m), e = pkByTok(p.t), j = c && e ? c.ids.indexOf(e.id) : -1, base = { r, m, e, c, j };
+  if (j < 0) return { ...base, k: 'void', t: 'Not in this match' };
+  const w = pkWin(r, m), R = T.rounds.length - 1;
+  if (w !== null && w !== undefined) return w === e.id ? { ...base, k: 'won', t: r === 'third' ? 'Won \u00b7 3rd' : r === R - 1 ? 'Won \u00b7 Champ' : 'Won \u00b7 Advanced' } : { ...base, k: 'out', t: 'Out' };
+  const st = mtState(r, m);
+  return st && st.k === 'live' ? { ...base, k: 'live', t: 'Live' } : st && st.k === 'up' ? { ...base, k: 'up', t: 'Upcoming' } : { ...base, k: 'pend', t: 'Pending' };
+}
+function pkOrder(k){ const rm = pkRM(k); return !rm ? 1e9 : rm[0] === 'third' ? 1e8 : rm[0] * 1000 + rm[1]; }
+function pkRecord(){ let w = 0, l = 0, n = 0; for (const k of Object.keys(pkAll())){ const s = pkStatus(k); if (!s) continue; n++; if (s.k === 'won') w++; else if (s.k === 'out') l++; } return { w, l, n }; }
+function pkMatchFor(id){ // the match this BullBear is in now (3rd place match once the semis are done)
+  if (geo && geo.third && T.third === null){ const Ls = semiLosers(); if (Ls.includes(id) && Ls.every(v => v !== null)) return ['third', 0]; }
+  return lbMatchOf(id);
+}
+function pkVoteHref(e, r){ // same intent as the popup VOTE button for Battle Royale matches; later rounds: @BullBearsX until they get posts
+  if (r !== 0 || !isG4() || !e) return VOTE_DEF;
+  const k = T.rounds[0].indexOf(e.id), gl = k < 0 ? '' : String.fromCharCode(65 + Math.floor(k / 4));
+  const pid = gl && Object.assign({}, VOTE_POSTS, (T && T.votePosts) || {})[gl];
+  return pid ? 'https://x.com/intent/post?in_reply_to=' + pid + '&text=' + encodeURIComponent('BullBear #' + (k % 4 + 1)) : VOTE_DEF;
+}
+function pkMarks(root){ // gold MY PICK tag on the picked card of each match (inside the card, so it rides the cascade)
+  if (!root) return; root.querySelectorAll('.pkStar,.pkAura').forEach(x => x.remove()); root.querySelectorAll('.slot.pkMine').forEach(x => x.classList.remove('pkMine')); if (!pkOn()) return;
+  for (const k of Object.keys(pkAll())){
+    const s = pkStatus(k); if (!s || s.j < 0) continue;
+    const el = s.r === 'third' ? root.querySelector(`.slot.third[data-third="${s.j}"]`) : root.querySelector(`.slot[data-r="${s.r}"][data-i="${s.c.ks[s.j]}"]`); if (!el) continue;
+    const b = document.createElement('span'); b.className = 'pkStar' + ((parseFloat(el.style.width) || 99) < 80 ? ' sm' : '') + (PK_NEW === k ? ' new' : ''); b.title = 'My pick'; b.setAttribute('aria-label', 'My pick');
+    b.innerHTML = '<b aria-hidden="true">\u2605</b>My pick'; const au = document.createElement('span'); au.className = 'pkAura'; el.classList.add('pkMine'); el.append(au, b);
+  }
+}
+function pkBurst(el){ // one-shot celebration from the button: sparks, confetti, a star pop and a soft ring (skipped for reduced motion)
+  if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches || !Element.prototype.animate) return;
+  const r = el.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, lay = document.createElement('div'); lay.className = 'pkBurst'; lay.setAttribute('aria-hidden', 'true'); document.body.appendChild(lay);
+  const C = ['#fff6c4', '#ffd400', '#ffb300', '#ff9500', '#ffffff'], R = Math.random;
+  const add = (cls, x, y, t) => { const d = document.createElement('i'); d.className = cls; d.style.left = x + 'px'; d.style.top = y + 'px'; if (t) d.textContent = t; lay.appendChild(d); return d; };
+  const w = add('pkWave', cx, cy); w.animate([{ transform: 'translate(-50%,-50%) scale(.3)', opacity: .9 }, { transform: 'translate(-50%,-50%) scale(4)', opacity: 0 }], { duration: 1000, easing: 'cubic-bezier(.2,.7,.3,1)', fill: 'forwards' });
+  for (let k = 0; k < 40; k++){ const a = R() * Math.PI * 2, sp = 90 + R() * 150, d = add('pkSpark', cx + (R() - .5) * r.width * .8, cy + (R() - .5) * r.height * .4); d.style.background = C[k % 5];
+    d.animate([{ transform: 'translate(-50%,-50%) scale(.6)', opacity: .85 }, { transform: `translate(calc(-50% + ${(Math.cos(a) * sp).toFixed(1)}px),calc(-50% + ${(Math.sin(a) * sp * .8 - 24).toFixed(1)}px)) scale(.25)`, opacity: 0 }], { duration: 750 + R() * 550, easing: 'cubic-bezier(.12,.7,.3,1)', fill: 'forwards' }); }
+  for (let k = 0; k < 24; k++){ const dx = (R() - .5) * 320, up = 90 + R() * 110, rot = (R() < .5 ? -1 : 1) * (360 + R() * 360), d = add('pkConf', cx + (R() - .5) * r.width * .6, cy); d.style.background = C[(k + 1) % 4];
+    d.animate([{ transform: 'translate(-50%,-50%) rotate(0deg)', opacity: 1 }, { transform: `translate(calc(-50% + ${(dx * .6).toFixed(1)}px),calc(-50% - ${up.toFixed(1)}px)) rotate(${(rot * .5).toFixed(0)}deg)`, opacity: 1, offset: .45 },
+      { transform: `translate(calc(-50% + ${dx.toFixed(1)}px),calc(-50% + ${(40 + R() * 50).toFixed(1)}px)) rotate(${rot.toFixed(0)}deg)`, opacity: 0 }], { duration: 1200 + R() * 400, easing: 'cubic-bezier(.25,.6,.45,1)', fill: 'forwards' }); }
+  const s = add('pkPopS', cx, cy, '\u2605'); s.animate([{ transform: 'translate(-50%,-50%) scale(.3)', opacity: 0 }, { transform: 'translate(-50%,-90%) scale(1.35)', opacity: 1, offset: .35 }, { transform: 'translate(-50%,-150%) scale(1.1)', opacity: 0 }], { duration: 1000, easing: 'cubic-bezier(.2,.8,.3,1)', fill: 'forwards' });
+  setTimeout(() => lay.remove(), 1800);
+}
+let PK_NEW = null;
+function pkPopup(e){
+  let box = document.getElementById('lbPick');
+  if (!pkOn() || !e){ if (box) box.hidden = true; return; }
+  if (!box){ box = document.createElement('div'); box.id = 'lbPick'; const mt = document.querySelector('#lb .lbMeta'); if (!mt) return; mt.insertAdjacentElement('afterend', box);
+    box.addEventListener('click', ev => {
+      const go = ev.target.closest('#pkGo'), clr = ev.target.closest('#pkClr'); if (!go && !clr) return;
+      const k = box.dataset.k, x = byId(LB.list[LB.k]); if (!k || !x) return;
+      if (go){ // open the X vote reply first (synchronously, so popup blockers allow it), then save + celebrate
+        const plain = !(ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.button);
+        if (plain){ ev.preventDefault(); try { window.open(go.href, '_blank', 'noopener'); } catch (er){} }
+        pkAll()[k] = { t: pkTok(x), n: x.name, at: Date.now() }; pkSave(); PK_NEW = k; pkBurst(go);
+        if (plain) pkRefresh(); else setTimeout(pkRefresh, 0);
+        clearTimeout(pkPopup.t); pkPopup.t = setTimeout(() => { PK_NEW = null; }, 1500); }
+      else { delete pkAll()[k]; pkSave(); pkRefresh(); }
+    }); }
+  const mm = pkMatchFor(e.id), c = mm && pkComp(mm[0], mm[1]); if (!c){ box.hidden = true; return; }
+  const [r, m] = mm, k = pkKey(r, m), cur = pkAll()[k], curE = cur && pkByTok(cur.t), mine = !!cur && cur.t === pkTok(e), w = pkWin(r, m);
+  const curLab = curE && c.ids.includes(curE.id) ? c.lab(c.ids.indexOf(curE.id)) : '';
+  let h = `<div class="pkHd">My pick \u00b7 ${pkEsc(pkLabel(r, m))}</div>`;
+  if (w !== null && w !== undefined){ // decided: picks are locked, show how mine did
+    const s = cur ? pkStatus(k) : null; if (!s || s.j < 0){ box.hidden = true; return; }
+    h += `<div class="pkRes ${s.k}">\u2605 ${mine ? 'My pick' : 'My pick: ' + pkEsc(curLab)} \u00b7 ${pkEsc(s.t)}</div>`;
+  } else if (!c.ok) h += '<div class="pkWait">Picks open when this matchup is set</div>';
+  else {
+    h += `<a class="pkBtn${mine ? ' on' : ''}${mine && PK_NEW === k ? ' settle' : ''}" id="pkGo" href="${pkEsc(pkVoteHref(e, r))}" target="_blank" rel="noopener" aria-label="${mine ? 'My pick. Vote on X' : 'Make my pick and vote on X'}"><span class="pkClip" aria-hidden="true"><i class="pkSheen"></i></span>${mine ? '<svg class="pkRing" aria-hidden="true" focusable="false"><rect class="rB"/><rect class="rT" pathLength="100"/><rect class="rH" pathLength="100"/></svg>' : ''}<span class="pkS" aria-hidden="true">${mine ? '\u2605' : '\u2606'}</span><span>${mine ? 'My pick \u00b7 Vote on' : cur ? 'Switch pick + Vote on' : 'Make my pick + Vote on'}</span>${PK_X}</a>`;
+    h += `<div class="pkSub"><b>Your vote counts on X.</b> ${mine ? 'Saved on this device. <button type="button" class="pkClr" id="pkClr">Clear pick</button>' : curLab ? 'Current pick: ' + pkEsc(curLab) + '.' : 'Picks save on this device, just for fun.'}</div>`;
+  }
+  box.dataset.k = k; box.innerHTML = h; box.hidden = false;
+  if (mine) requestAnimationFrame(() => { const a = box.querySelector('.pkBtn.on'); if (!a) return; const W = a.offsetWidth + 10, H = a.offsetHeight + 10; // size the traveling outline
+    a.querySelectorAll('.pkRing rect').forEach(q => { q.setAttribute('x', 1); q.setAttribute('y', 1); q.setAttribute('width', Math.max(0, W - 2)); q.setAttribute('height', Math.max(0, H - 2)); q.setAttribute('rx', 17); }); });
+}
+function pkPlace(){ // bottom-right, level with the music pill; lifted above the zoom box when they would meet
+  const p = document.getElementById('pkPill'); if (!p) return;
+  const vh = innerHeight || document.documentElement.clientHeight, gap = matchMedia('(max-width:480px)').matches ? 10 : 14, foot = document.getElementById('foot'), zc = document.querySelector('.zoomctl');
+  let b = (foot ? Math.max(0, vh - foot.getBoundingClientRect().top) : 0) + gap; const pr = p.getBoundingClientRect(), L = innerWidth - gap - pr.width;
+  if (zc && zc.offsetParent){ const z = zc.getBoundingClientRect(); if (L < z.right && innerWidth - gap > z.left && z.top < vh) b = Math.max(b, vh - z.top + 10); }
+  p.style.right = gap + 'px'; p.style.bottom = Math.round(b) + 'px';
+  const pn = document.getElementById('pkPanel'); if (pn){ pn.style.bottom = Math.round(b + pr.height + 10) + 'px'; if (gap === 14) pn.style.right = gap + 'px'; else pn.style.removeProperty('right'); }
+}
+function pkPill(){
+  const p = document.getElementById('pkPill'); if (!p) return; const R = pkRecord();
+  const c = p.querySelector('i'), t = R.w + R.l ? R.w + '-' + R.l : String(R.n);
+  if (pkPill.n != null && R.n > pkPill.n && !matchMedia('(prefers-reduced-motion: reduce)').matches){ c.classList.remove('pop'); void c.offsetWidth; c.classList.add('pop'); clearTimeout(pkPill.t); pkPill.t = setTimeout(() => c.classList.remove('pop'), 900); }
+  pkPill.n = R.n; c.textContent = t;
+  p.setAttribute('aria-label', 'My picks: ' + R.n + (R.w + R.l ? ', record ' + R.w + '-' + R.l : ''));
+}
+function pkPanelRender(){
+  const pn = document.getElementById('pkPanel'); if (!pn || pn.hidden) return;
+  const R = pkRecord(), keys = Object.keys(pkAll()).filter(k => pkRM(k)).sort((a, b) => pkOrder(a) - pkOrder(b));
+  let rows = '';
+  for (const k of keys){ const s = pkStatus(k); if (!s) continue; const p = pkAll()[k], e = s.e, open = s.j >= 0 && s.c.ok && pkWin(s.r, s.m) === null;
+    rows += `<div class="pkRow ${s.k}" data-k="${k}">${e && e.img ? `<img class="pkImg" alt="" src="${pkEsc(src(e))}">` : '<span class="pkImg"></span>'}<div><div class="pkM">${pkEsc(pkLabel(s.r, s.m))}${s.j >= 0 ? ' \u00b7 ' + pkEsc(s.c.lab(s.j)) : ''}</div><div class="pkN">${pkEsc(e ? e.name : p.n)}</div>`
+      + `<div class="pkA">${open ? '<button type="button" class="pkChg">Change</button>' : ''}${pkWin(s.r, s.m) === null || s.j < 0 ? '<button type="button" class="pkDel">Clear</button>' : ''}</div></div><span class="pkSt ${s.k}">${pkEsc(s.t)}</span></div>`; }
+  pn.innerHTML = `<div class="pkTop"><h2>\u2605 My picks</h2><span class="pkRec">${R.w + R.l ? `Record <b>${R.w}-${R.l}</b>` : `<b>${R.n}</b> pick${R.n === 1 ? '' : 's'}`}</span><button type="button" class="pkCl" aria-label="Close my picks">\u00d7</button></div>`
+    + `<div class="pkNote">Picks are <b>saved on this device</b> and are just for fun. They are not votes: <a href="${VOTE_DEF}" target="_blank" rel="noopener">vote on X</a> for your pick to count.</div>`
+    + `<div class="pkList">${rows || '<div class="pkEmpty">No picks yet.<br>Tap any BullBear, then <b>\u2606 Make my pick + Vote on X</b>.</div>'}</div>`
+    + `<div class="pkFt"><span>Won = advanced \u00b7 Out = eliminated</span>${keys.length ? '<button type="button" class="pkAll">Clear all</button>' : ''}</div>`;
+}
+function pkToggle(open){
+  const pn = document.getElementById('pkPanel'), p = document.getElementById('pkPill'); if (!pn || !p) return;
+  pn.hidden = !open; p.setAttribute('aria-expanded', open ? 'true' : 'false'); if (open){ pkPanelRender(); pkPlace(); }
+}
+function pkUI(){
+  if (document.getElementById('pkPill') || !pkOn()) return;
+  const p = document.createElement('button'); p.type = 'button'; p.id = 'pkPill'; p.setAttribute('aria-haspopup', 'dialog'); p.setAttribute('aria-controls', 'pkPanel'); p.setAttribute('aria-expanded', 'false');
+  p.innerHTML = '<span class="pkSI" aria-hidden="true">\u2605</span><span><span class="pkW">My </span>picks</span><i>0</i>';
+  const pn = document.createElement('div'); pn.id = 'pkPanel'; pn.hidden = true; pn.setAttribute('role', 'dialog'); pn.setAttribute('aria-label', 'My picks');
+  document.body.append(p, pn);
+  p.onclick = () => pkToggle(pn.hidden);
+  pn.addEventListener('click', ev => {
+    const t = ev.target, row = t.closest('.pkRow'), k = row && row.dataset.k;
+    if (t.closest('.pkCl')) return pkToggle(false);
+    if (t.closest('.pkAll')){ if (!t.classList.contains('arm')){ t.classList.add('arm'); t.textContent = 'Tap again to clear all'; return; } PK = {}; pkSave(); pkRefresh(); return; }
+    if (t.closest('.pkDel') && k){ delete pkAll()[k]; pkSave(); pkRefresh(); return; }
+    if (t.closest('.pkChg') && k){ const s = pkStatus(k); if (!s || s.j < 0) return; const ids = s.c.ids.filter(id => { const x = byId(id); return x && x.img; }); if (!ids.length) return;
+      LB.list = ids; LB.k = Math.max(0, ids.indexOf(s.e.id)); lbShow(); $('lb').hidden = false; $('lbX').focus({ preventScroll: true }); }
+  });
+  document.addEventListener('pointerdown', ev => { if (pn.hidden || !$('lb').hidden) return; if (!ev.target.closest('#pkPanel,#pkPill')) pkToggle(false); }, true);
+  addEventListener('keydown', ev => { if (ev.key === 'Escape' && !pn.hidden && $('lb').hidden) pkToggle(false); });
+  addEventListener('resize', pkPlace); if (window.visualViewport) visualViewport.addEventListener('resize', pkPlace);
+  document.addEventListener('scroll', () => requestAnimationFrame(pkPlace), { passive: true, capture: true });
+  if (window.ResizeObserver){ const f = document.getElementById('foot'); if (f) new ResizeObserver(pkPlace).observe(f); }
+  pkPlace(); setTimeout(pkPlace, 300);
+}
+function pkRefresh(){
+  pkMarks(document.getElementById('world')); pkPill(); pkPanelRender();
+  if (!$('lb').hidden && LB.list[LB.k] != null) pkPopup(byId(LB.list[LB.k]));
+}
+function pkFx(frag){ if (!pkOn()) return; pkMarks(frag); pkUI(); pkPill(); pkPanelRender(); }
 /* cascade v3 timing: n live matches, each swell lasts D s, the next starts s later; (n-1)*s + D = 7 (the pass), then 7s rest */
 function cscTiming(n){ const D = Math.max(3.5, 7 - Math.max(0, n - 1) * .7); return { D, s: n > 1 ? (7 - D) / (n - 1) : 0 }; }
 function cscKeyframes(w, n){
@@ -2812,7 +3099,7 @@ function lbShow(){
   const st = lbStatus(e.id), im = $('lbImg');
   im.src = src(e); im.alt = e.name; $('lbName').textContent = e.name; $('lbSeed').textContent = ''; $('lbSeed').hidden = true; // no 1-64 seed number in the popup
   if (e.imgHi){ const hi = new Image(), want = e.id; hi.onload = () => { if (LB.list[LB.k] === want && !$('lb').hidden) im.src = hi.src; }; hi.src = (typeof PUB_BASE !== 'undefined' ? PUB_BASE : '') + e.imgHi; }
-  bbInfo(e); voteHref(e); $('lb').scrollTop = 0; requestAnimationFrame(() => lbTimerSet(e));
+  bbInfo(e); voteHref(e); $('lb').scrollTop = 0; requestAnimationFrame(() => lbTimerSet(e)); pkPopup(e);
   $('lbStat').textContent = st[0]; $('lbStat').className = 'st ' + st[1]; $('lb').dataset.st = st[1];
   const many = LB.list.length > 1; $('lbPrev').hidden = $('lbNext').hidden = !many;
 }
@@ -2880,7 +3167,7 @@ function renderExtras(){
   sb.hidden = !sx; if (sx) $('swapTxt').textContent = `Swapping in "${sx.name}": click the entry it should replace (list or bracket). Esc cancels.`;
   document.body.classList.toggle('swapMode', !!sx);
 }
-function openLBExtra(x){ if (!x.img) return; LB.list = [x.id]; LB.k = 0; const im = $('lbImg'); im.src = x.img; im.alt = x.name; $('lbName').textContent = x.name; bbInfo(null); voteHref(null); lbTimerSet(null); $('lbSeed').textContent = 'Waiting list'; $('lbSeed').hidden = false; $('lbStat').textContent = DUPS.has(x.id) ? 'Possible duplicate' : 'Not in the bracket'; $('lbStat').className = 'st ' + (DUPS.has(x.id) ? 'out' : ''); $('lb').dataset.st = ''; $('lbPrev').hidden = $('lbNext').hidden = true; $('lb').hidden = false; }
+function openLBExtra(x){ if (!x.img) return; LB.list = [x.id]; LB.k = 0; const im = $('lbImg'); im.src = x.img; im.alt = x.name; $('lbName').textContent = x.name; bbInfo(null); voteHref(null); lbTimerSet(null); pkPopup(null); $('lbSeed').textContent = 'Waiting list'; $('lbSeed').hidden = false; $('lbStat').textContent = DUPS.has(x.id) ? 'Possible duplicate' : 'Not in the bracket'; $('lbStat').className = 'st ' + (DUPS.has(x.id) ? 'out' : ''); $('lb').dataset.st = ''; $('lbPrev').hidden = $('lbNext').hidden = true; $('lb').hidden = false; }
 function startSwap(xid){ SWAP.id = SWAP.id === xid ? null : xid; renderExtras(); if (SWAP.id != null) flash('Now click the entry to replace, in the list or on the bracket.'); }
 function endSwap(){ SWAP.id = null; renderExtras(); }
 async function addExtra(xid){
