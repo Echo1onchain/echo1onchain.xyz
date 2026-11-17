@@ -1072,6 +1072,7 @@ html,body{background:#05040a}
 @media (prefers-reduced-motion:reduce){#world .cdown .cdGlow{animation:none;opacity:.7}}
 /* countdown done: LET'S RUMBLE in the same gold digit style (the 7s breathing glow behind it stays) */
 #world .cdown.done .cdL{display:none}
+#lbSeed[hidden]{display:none!important}
 #world .cdown .cdN em.cdRum{font-size:50px;letter-spacing:.06em;padding-left:.06em;line-height:1.1}
 /* ===== popup vote bar v9: 'VOTE ON [X] @BullBearsX' ===== */
 #lbVote .lvIn i.lvOn{margin-left:0;margin-right:0}
@@ -2024,8 +2025,7 @@ function slotEl(r, i, g, R, D){
   const nm = document.createElement('div'); nm.className = 'nm'; nm.style.height = nh + 'px'; nm.style.fontSize = fs + 'px';
   const sp = document.createElement('span'); sp.textContent = seatLabel(r, i); nm.appendChild(sp);
   d.title = e.name; d.append(im, nm);
-  if (!g.champ){ const sb = document.createElement('span'); sb.className = 'sdb'; sb.textContent = seedOf(id); d.appendChild(sb); }
-  else d.classList.add('filled');
+  if (g.champ) d.classList.add('filled'); // no 1-64 seed badge on the cards
   const st = slotState(r, i); if (st) d.classList.add(st);
   if (r < R && kidsOf(r, par(r, i)).every(k => k === i || D[r][k])) d.classList.add('locked');
   if (anim && anim.r === r && anim.i === i) d.classList.add('pop');
@@ -2058,8 +2058,7 @@ function thirdEl(k, g, Ls){
   else { im.textContent = initials(e.name); im.style.fontSize = Math.round(g.w * .34) + 'px'; }
   const nm = document.createElement('div'); nm.className = 'nm'; nm.style.height = nh + 'px'; nm.style.fontSize = fs + 'px';
   const sp = document.createElement('span'); sp.textContent = 'BullBear ' + (k + 1); nm.appendChild(sp);
-  const sb = document.createElement('span'); sb.className = 'sdb'; sb.textContent = seedOf(id);
-  d.title = e.name; d.append(im, nm, sb); addCard3d(d, id, e);
+  d.title = e.name; d.append(im, nm); // no 1-64 seed badge addCard3d(d, id, e);
   const st = thirdState(k, Ls); if (st) d.classList.add(st);
   if (anim && anim.third === k) d.classList.add('pop');
   d.onclick = () => { if (panMoved) return; pickThird(k); };
@@ -2521,11 +2520,6 @@ async function buildPNG(){
       g.font = `600 ${nfs}px Inter, sans-serif`; g.fillStyle = st === 'lost' ? 'rgba(255,255,255,.5)' : th.text;
       let f2 = nfs; while (g.measureText(s.lbl).width > s.w - 10 && f2 > 7){ f2 -= .5; g.font = `600 ${f2}px Inter, sans-serif`; }
       g.fillText(s.lbl, s.x + s.w / 2, s.y + s.w + nh / 2 + 1); }
-      if (!s.champ){
-        const sd = String(seedOf(id)); g.font = '700 10.5px Inter, sans-serif'; const bw = Math.max(18, g.measureText(sd).width + 8);
-        rr(g, s.x + 4, s.y + 4, bw, 18, 9); g.fillStyle = 'rgba(0,0,0,.72)'; g.fill(); g.strokeStyle = rgba(th.glow, .5); g.lineWidth = 1; g.stroke();
-        g.fillStyle = th.glow; g.fillText(sd, s.x + 4 + bw / 2, s.y + 13.5);
-      }
     } else if (r0){ g.font = `600 ${Math.max(10, Math.round(nh * .46))}px Inter, sans-serif`; g.fillStyle = th.muted; g.fillText('BYE', s.x + s.w / 2, s.y + s.w + nh / 2); }
     else if (s.champ){ g.font = `${th.fw} 60px ${hf}`; g.fillStyle = rgba(th.muted, .4); g.fillText('?', s.x + s.w / 2, s.y + s.w / 2); }
     g.restore();
@@ -2715,7 +2709,7 @@ function voteHref(e){
 function lbShow(){
   const e = byId(LB.list[LB.k]); if (!e) return;
   const st = lbStatus(e.id), im = $('lbImg');
-  im.src = src(e); im.alt = e.name; $('lbName').textContent = e.name; $('lbSeed').textContent = 'Seed ' + seedOf(e.id);
+  im.src = src(e); im.alt = e.name; $('lbName').textContent = e.name; $('lbSeed').textContent = ''; $('lbSeed').hidden = true; // no 1-64 seed number in the popup
   if (e.imgHi){ const hi = new Image(), want = e.id; hi.onload = () => { if (LB.list[LB.k] === want && !$('lb').hidden) im.src = hi.src; }; hi.src = (typeof PUB_BASE !== 'undefined' ? PUB_BASE : '') + e.imgHi; }
   bbInfo(e); voteHref(e); $('lb').scrollTop = 0;
   $('lbStat').textContent = st[0]; $('lbStat').className = 'st ' + st[1]; $('lb').dataset.st = st[1];
@@ -2785,7 +2779,7 @@ function renderExtras(){
   sb.hidden = !sx; if (sx) $('swapTxt').textContent = `Swapping in "${sx.name}": click the entry it should replace (list or bracket). Esc cancels.`;
   document.body.classList.toggle('swapMode', !!sx);
 }
-function openLBExtra(x){ if (!x.img) return; LB.list = [x.id]; LB.k = 0; const im = $('lbImg'); im.src = x.img; im.alt = x.name; $('lbName').textContent = x.name; bbInfo(null); voteHref(null); $('lbSeed').textContent = 'Waiting list'; $('lbStat').textContent = DUPS.has(x.id) ? 'Possible duplicate' : 'Not in the bracket'; $('lbStat').className = 'st ' + (DUPS.has(x.id) ? 'out' : ''); $('lb').dataset.st = ''; $('lbPrev').hidden = $('lbNext').hidden = true; $('lb').hidden = false; }
+function openLBExtra(x){ if (!x.img) return; LB.list = [x.id]; LB.k = 0; const im = $('lbImg'); im.src = x.img; im.alt = x.name; $('lbName').textContent = x.name; bbInfo(null); voteHref(null); $('lbSeed').textContent = 'Waiting list'; $('lbSeed').hidden = false; $('lbStat').textContent = DUPS.has(x.id) ? 'Possible duplicate' : 'Not in the bracket'; $('lbStat').className = 'st ' + (DUPS.has(x.id) ? 'out' : ''); $('lb').dataset.st = ''; $('lbPrev').hidden = $('lbNext').hidden = true; $('lb').hidden = false; }
 function startSwap(xid){ SWAP.id = SWAP.id === xid ? null : xid; renderExtras(); if (SWAP.id != null) flash('Now click the entry to replace, in the list or on the bracket.'); }
 function endSwap(){ SWAP.id = null; renderExtras(); }
 async function addExtra(xid){
