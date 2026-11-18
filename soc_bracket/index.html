@@ -1106,7 +1106,7 @@ body.brand .slot.calc{background:rgba(10,10,16,.28);border-color:rgba(200,200,22
 body.brand .slot.calc .nm{color:rgba(255,255,255,.55)!important;border-top-color:rgba(255,255,255,.12)}
 body.brand .gframe.calc{border-color:rgba(180,180,210,.35);background:linear-gradient(180deg,rgba(16,14,24,.22),rgba(10,8,16,.1));box-shadow:0 0 10px rgba(140,140,180,.12),inset 0 0 16px rgba(0,0,0,.12)}
 body.brand .gframe.calc .glab{border-color:rgba(200,200,220,.4);color:rgba(230,230,240,.8);text-shadow:none;box-shadow:none}
-.calcTag{position:absolute;display:inline-flex;align-items:center;justify-content:center;gap:0;pointer-events:none;z-index:6;
+.calcTag{position:absolute;display:inline-flex;align-items:center;justify-content:center;gap:0;pointer-events:none;z-index:24;isolation:isolate;
   font:800 11px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#f6f2ff;
   text-shadow:0 1px 2px rgba(0,0,0,.9),0 0 8px rgba(200,180,255,.3);white-space:nowrap;
   padding:8px 14px 8px 16px;border-radius:999px;background:linear-gradient(180deg,rgba(22,16,36,.92),rgba(8,6,16,.94));
@@ -1131,6 +1131,24 @@ body.brand .slot.empty.wait:not(.champ):not(.bye) .im::after{animation:none;opac
 .slot.empty.wait .nm::before{content:none!important}
 #world .rdate.wait .dwai{font:800 9px/1.2 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:rgba(236,230,255,.9);
   text-shadow:0 1px 2px rgba(0,0,0,.85),0 0 8px rgba(180,160,230,.3);margin-top:4px;white-space:nowrap}
+/* picked card in a calculating group: MY PICK stays visible at ~55% strength, not fully grayed */
+#world .slot.calc.pkDim{opacity:1;filter:none}
+#world .slot.calc.pkDim:hover,#world .slot.calc.pkDim:focus-visible{opacity:1;filter:none}
+#world .slot.calc.pkMine .im,#world .slot.calc.pkMine .nm{opacity:.88;filter:grayscale(.22) saturate(.8)}
+#world .slot.calc.pkMine .im img,body.brand .slot.calc.pkMine .im img{filter:grayscale(.22) brightness(.94) saturate(.8)}
+body.brand .slot.calc.pkMine{background:rgba(12,10,16,.2);border-color:rgba(255,210,80,.45)}
+body.brand .slot.calc.pkMine .nm{color:rgba(255,250,220,.82)!important;border-top-color:rgba(255,220,120,.28)}
+#world .slot.calc.pkMine{z-index:5;transform:scale(1.04);
+  border-color:#e0c056;
+  box-shadow:0 0 0 2px rgba(254,215,0,.55),0 0 0 3px rgba(255,246,200,.28),0 0 10px 2px rgba(255,196,0,.42),0 0 22px 6px rgba(255,150,0,.2),0 12px 20px -8px rgba(0,0,0,.7)}
+#world .slot.calc.pkMine.pkSm{transform:scale(1.025);box-shadow:0 0 0 1.5px rgba(255,207,26,.55),0 0 6px 2px rgba(255,196,0,.4),0 0 14px 4px rgba(255,150,0,.18),0 8px 14px -6px rgba(0,0,0,.7)}
+#world .slot.calc.pkMine.tilt:not(.lost){transform:perspective(560px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg)) translateY(-1px) scale(1.05)}
+.slot.calc.pkMine .pkAura{opacity:.28;box-shadow:inset 0 0 0 2px rgba(255,240,170,.52),inset 0 0 22px 4px rgba(255,195,0,.34);
+  animation:pkBreathCalc 7s cubic-bezier(.37,0,.63,1) infinite}
+@keyframes pkBreathCalc{0%,100%{opacity:.22}50%{opacity:.34}}
+.slot.calc.pkMine .pkStar{opacity:.58;filter:saturate(.75) brightness(.92)}
+.slot.calc.pkMine .pkStar::after{opacity:.55}
+.slot.calc.pkMine .pkSweep{opacity:.55}
 @media (prefers-reduced-motion:reduce){
   .calcTag .dots i,.mTimer.calc .dots i{animation:none;opacity:.7;transform:none}
 }
@@ -2142,7 +2160,7 @@ function renderBracket(){
     for (const row of P.rows) for (const l of row.lines) ln(l.t, l.y, l.k + (row.first && l.k === 'lb' ? ' first' : ''), l.k === 'lb' ? 22 : 30);
     frag.appendChild(box);
   }
-  liveFx(w, frag, L, R, LG); mtFx(frag, L, R); calcFx(frag, L, R); pkFx(frag);
+  liveFx(w, frag, L, R, LG); mtFx(frag, L, R); pkFx(frag); calcFx(frag, L, R);
   w.appendChild(frag); fitLabels(w);
   $('invite').hidden = T.entries.length > 0;
   w.style.opacity = T.entries.length ? '1' : '.35';
