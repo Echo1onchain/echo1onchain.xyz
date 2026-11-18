@@ -1098,6 +1098,43 @@ html,body{background:#05040a}
 #world .cdown.done .cdL{display:none}
 #lbSeed[hidden]{display:none!important}
 #world .cdown .cdN em.cdRum{font-size:50px;letter-spacing:.06em;padding-left:.06em;line-height:1.1}
+
+/* ===== calculating (timer ended, no official winner yet) and waiting slots ===== */
+.slot.calc .im,.slot.calc .nm{opacity:.42;filter:grayscale(.82) saturate(.25)}
+.slot.calc .im img,body.brand .slot.calc .im img{filter:grayscale(.82) brightness(.78) saturate(.3)}
+body.brand .slot.calc{background:rgba(10,10,16,.28);border-color:rgba(200,200,220,.22);box-shadow:none}
+body.brand .slot.calc .nm{color:rgba(255,255,255,.55)!important;border-top-color:rgba(255,255,255,.12)}
+body.brand .gframe.calc{border-color:rgba(180,180,210,.35);background:linear-gradient(180deg,rgba(16,14,24,.22),rgba(10,8,16,.1));box-shadow:0 0 10px rgba(140,140,180,.12),inset 0 0 16px rgba(0,0,0,.12)}
+body.brand .gframe.calc .glab{border-color:rgba(200,200,220,.4);color:rgba(230,230,240,.8);text-shadow:none;box-shadow:none}
+.calcTag{position:absolute;display:inline-flex;align-items:center;justify-content:center;gap:0;pointer-events:none;z-index:6;
+  font:800 11px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#f6f2ff;
+  text-shadow:0 1px 2px rgba(0,0,0,.9),0 0 8px rgba(200,180,255,.3);white-space:nowrap;
+  padding:8px 14px 8px 16px;border-radius:999px;background:linear-gradient(180deg,rgba(22,16,36,.92),rgba(8,6,16,.94));
+  border:1px solid rgba(220,210,255,.38);box-shadow:0 6px 18px rgba(0,0,0,.55),0 0 16px rgba(150,130,220,.22),inset 0 1px 0 rgba(255,255,255,.08);
+  transform:translate(-50%,-50%)}
+.calcTag.grp,.calcTag.pair{margin:0}
+.calcTag .dots{display:inline-flex;align-items:flex-end;gap:3px;margin-left:.4em;height:8px}
+.calcTag .dots i,.mTimer.calc .dots i{display:block;width:4px;height:4px;border-radius:50%;background:currentColor;opacity:.22;animation:calcDot 1.8s cubic-bezier(.37,0,.63,1) infinite}
+.calcTag .dots i:nth-child(2),.mTimer.calc .dots i:nth-child(2){animation-delay:.25s}
+.calcTag .dots i:nth-child(3),.mTimer.calc .dots i:nth-child(3){animation-delay:.5s}
+@keyframes calcDot{0%,100%{opacity:.2;transform:translateY(0)}45%{opacity:1;transform:translateY(-2px)}}
+.mTimer.calc{color:rgba(235,225,255,.85);border-color:rgba(200,190,230,.4);background:linear-gradient(180deg,rgba(20,16,32,.96),rgba(10,8,18,.96));letter-spacing:.16em;box-shadow:none}
+.mTimer.calc .dots{display:inline-flex;align-items:flex-end;gap:3px;margin-left:.35em;height:8px}
+/* empty next-round seats waiting on a calculating match: replace STANDBY */
+.slot.empty.wait:not(.champ):not(.bye) .nm::before{content:"WAITING FOR WINNER";letter-spacing:.06em;font-size:7px;padding-left:.06em;white-space:nowrap;color:rgba(230,220,255,.8)}
+body.brand .slot.empty.wait:not(.champ):not(.bye) .nm::before{color:rgba(235,228,255,.9);text-shadow:0 0 6px rgba(160,140,220,.45)}
+.slot.empty.wait:not(.champ):not(.bye)::after,body.brand .slot.empty.wait:not(.champ):not(.bye)::after{animation:none;opacity:.35;background:none;box-shadow:inset 0 0 10px rgba(var(--np),.25)}
+body.brand .slot.empty.wait:not(.champ):not(.bye) .im::after{animation:none;opacity:0}
+.slot.empty.wait .waitTag{position:absolute;inset:12% 6% 28%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none;z-index:3;
+  font:800 8px/1.25 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.12em;text-transform:uppercase;color:rgba(236,230,255,.92);
+  text-shadow:0 1px 2px rgba(0,0,0,.85),0 0 8px rgba(180,160,230,.35)}
+.slot.empty.wait .nm::before{content:none!important}
+#world .rdate.wait .dwai{font:800 9px/1.2 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.16em;text-transform:uppercase;color:rgba(236,230,255,.9);
+  text-shadow:0 1px 2px rgba(0,0,0,.85),0 0 8px rgba(180,160,230,.3);margin-top:4px;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){
+  .calcTag .dots i,.mTimer.calc .dots i{animation:none;opacity:.7;transform:none}
+}
+
 /* ===== popup vote bar v9: 'VOTE ON [X] @BullBearsX' ===== */
 #lbVote .lvIn i.lvOn{margin-left:0;margin-right:0}
 #lbVote .lvX{margin-left:.28em;margin-right:.28em}
@@ -1851,8 +1888,8 @@ function layout(N){
   if (SCH){
     for (const lb of labels){ if (typeof lb.r !== 'number' || lb.r > R - 2) continue;
       const left = lb.x < cS + cW / 2, key = lb.t === 'Battle Royale' ? 'Battle Royale ' + (left ? 'L' : 'R') : lb.t;
-      if (SCHED[key]) dates.push({ x: lb.x, y: top - 56, w: lb.w, lines: SCHED[key] }); }
-    dates.push({ x: cS + cW / 2, y: top - 56, w: 240, lines: SCHED['Championship'], center: 1 });
+      if (SCHED[key]) dates.push({ x: lb.x, y: top - 56, w: lb.w, lines: SCHED[key], r: lb.r, left }); }
+    dates.push({ x: cS + cW / 2, y: top - 56, w: 240, lines: SCHED['Championship'], center: 1, r: R - 1 });
   }
   if (third) labels.push({ x: third.label.x, y: third.label.y, t: '3rd Place Match', w: cW, r: 'third' });
   const edges = [];
@@ -2069,6 +2106,7 @@ function renderBracket(){
     d.style.left = dt.x + 'px'; d.style.top = dt.y + 'px'; d.style.width = dt.w + 'px';
     const [day, ...rest] = dt.lines, sp = day.indexOf(' '); const w = document.createElement('span'); w.className = 'dw'; w.textContent = day.slice(0, sp) + ' '; const a = document.createElement('span'); a.className = 'dd'; a.textContent = day.slice(sp + 1); d.append(w, a);
     for (const t of rest){ const s = document.createElement('span'); s.className = 'dn'; s.textContent = t; d.appendChild(s); }
+    if (typeof dt.r === 'number' && roundWaiting(dt.r, dt.left)){ d.classList.add('wait'); const s = document.createElement('span'); s.className = 'dwai'; s.textContent = 'Waiting for winner'; d.appendChild(s); }
     frag.appendChild(d); }
   const cur = curRound();
   for (const lb of L.labels){ const d = document.createElement('div'); d.className = 'rlabel ' + (labelOn(lb, cur, L) ? 'on' : 'off'); d.style.left = lb.x + 'px'; d.style.top = lb.y + 'px'; d.style.width = lb.w + 'px'; d.textContent = lb.t; frag.appendChild(d); }
@@ -2082,8 +2120,9 @@ function renderBracket(){
     + [[-14,62,0],[24,4,1.75],[76,8,3.5],[112,60,5.25]].map(([x,y,d]) => `<i class="spk" style="left:${x}%;top:${y}px;--sk:${d}s"></i>`).join(''); frag.appendChild(ct);
   const D = deadMap(), LG = [];
   for (const G of L.groups){ // v13: group of 4 in one neon frame; lit while it is being voted on, calm once decided
-    const fr = document.createElement('div'), won = T.rounds[1] && T.rounds[1][G.g], live = !won && mActive(0, G.g) && kidsOf(0, G.g).filter(k => !D[0][k]).length >= 2;
-    fr.className = 'gframe hudc' + (won != null ? ' done' : live ? ' live' : ' idle') + (G.side === 'R' ? ' rt' : '');
+    const fr = document.createElement('div'), won = T.rounds[1] && T.rounds[1][G.g], live = !won && mActive(0, G.g) && kidsOf(0, G.g).filter(k => !D[0][k]).length >= 2, calc = !won && mtCalc(0, G.g);
+    fr.className = 'gframe hudc' + (won != null ? ' done' : live ? ' live' : calc ? ' calc' : ' idle') + (G.side === 'R' ? ' rt' : '');
+    if (calc) fr.dataset.g = G.g;
     Object.assign(fr.style, { left: G.x + 'px', top: G.y + 'px', width: G.w + 'px', height: G.h + 'px' });
     const lb = document.createElement('span'); lb.className = 'glab'; lb.textContent = G.t; fr.appendChild(lb); frag.appendChild(fr);
     if (live && schedLive()){ lb.insertAdjacentHTML('beforeend', LV_PILL); LG.push(G); fr.dataset.g = G.g; } // live: LIVE pill on the header
@@ -2103,7 +2142,7 @@ function renderBracket(){
     for (const row of P.rows) for (const l of row.lines) ln(l.t, l.y, l.k + (row.first && l.k === 'lb' ? ' first' : ''), l.k === 'lb' ? 22 : 30);
     frag.appendChild(box);
   }
-  liveFx(w, frag, L, R, LG); mtFx(frag, L, R); pkFx(frag);
+  liveFx(w, frag, L, R, LG); mtFx(frag, L, R); calcFx(frag, L, R); pkFx(frag);
   w.appendChild(frag); fitLabels(w);
   $('invite').hidden = T.entries.length > 0;
   w.style.opacity = T.entries.length ? '1' : '.35';
@@ -2147,23 +2186,49 @@ function liveOf(r, m){
   return T.rounds[r + 1][m] === null;
 }
 /* ---------- per-match timers (schedule on): from matchStart() + 24h, never hardcoded ---------- */
-function mtState(r, m){ // {k:'live'|'up'|'closed', end} or null
+function mtDecided(r, m){ return r === 'third' ? T.third !== null : !!(T.rounds[r + 1] && T.rounds[r + 1][m] != null); }
+function mtState(r, m){ // {k:'live'|'up'|'closed'|'calc', end} or null
   if (!schedLive()) return null;
   const s = matchStart(r, m); if (s == null) return null;
-  const n = Date.now(), dec = r === 'third' ? T.third !== null : !!(T.rounds[r + 1] && T.rounds[r + 1][m] !== null);
-  if (n >= s + SCH_DAY || (dec && n >= s)) return { k: 'closed' };
+  const n = Date.now(), dec = mtDecided(r, m);
+  if (n >= s + SCH_DAY) return { k: dec ? 'closed' : 'calc' }; // timer ended: calculating until a winner is set in bracket.json
+  if (dec && n >= s) return { k: 'closed' };
   if (n >= s) return { k: 'live', end: s + SCH_DAY };
   return { k: 'up', end: s };
 }
+const mtCalc = (r, m) => { const st = mtState(r, m); return !!(st && st.k === 'calc'); };
+function roundWaiting(r, left){ // empty slots in round r whose previous match is calculating
+  if (!schedLive() || r < 1 || !T.rounds[r]) return false;
+  const n = T.rounds[r].length, a = left === false ? n / 2 : 0, b = left === false ? n : (left === true ? n / 2 : n);
+  for (let i = a; i < b; i++) if (T.rounds[r][i] == null && mtCalc(r - 1, i)) return true;
+  return false;
+}
+const CALC_MARK = '<span class="calcTag" aria-label="Calculating">CALCULATING<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span></span>';
+const CALC_DOTS = '<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>';
 function mtFmt(ms, days){ let t = Math.max(0, Math.ceil(ms / 1000)); const d = days ? Math.floor(t / 86400) : 0; t -= d * 86400;
   const p = v => String(v).padStart(2, '0'); return (d ? d + 'D ' : '') + p(Math.floor(t / 3600)) + ':' + p(Math.floor(t % 3600 / 60)) + ':' + p(t % 60); }
 function mtChip(st, cls, short, days){ // markup; upcoming only within 24h on the bracket
   if (!st) return '';
+  if (st.k === 'calc') return `<span class="mTimer calc${cls}" aria-label="Calculating">Calculating${CALC_DOTS}</span>`;
   if (st.k === 'closed') return `<span class="mTimer closed${cls}">Closed</span>`;
   if (st.k === 'up' && !days && st.end - Date.now() > SCH_DAY) return '';
   const t = `<b>${mtFmt(st.end - Date.now(), days)}</b>`;
   return st.k === 'live' ? `<span class="mTimer live${cls}" data-end="${st.end}" data-d="${days ? 1 : ''}" aria-label="Time left">${t}${short ? '' : ' Left'}</span>`
     : `<span class="mTimer up${cls}" data-end="${st.end}" data-d="${days ? 1 : ''}" aria-label="Starts in">${short ? '' : 'Starts in '}${t}</span>`;
+}
+function calcFx(frag, L, R){ // centered CALCULATING mark on a group or later-round match; mtTick re-renders this when a timer hits 0
+  if (!schedLive() || !isBrand()) return;
+  const mark = (x, y, w, h, cls) => { const el = document.createElement('div'); el.className = 'calcTag ' + cls; el.setAttribute('aria-label', 'Calculating');
+    el.style.left = (x + w / 2) + 'px'; el.style.top = (y + h / 2) + 'px';
+    el.innerHTML = 'CALCULATING<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>'; frag.appendChild(el); };
+  for (const G of L.groups) if (mtCalc(0, G.g)) mark(G.x, G.y, G.w, G.h, 'grp');
+  for (let r = 1; r < R; r++) for (let m = 0; m < T.rounds[r + 1].length; m++){
+    if (!mtCalc(r, m)) continue;
+    const a = L.slots[r][2 * m], b = L.slots[r][2 * m + 1]; if (!a || !b) continue;
+    const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y), w = Math.max(a.x + a.w, b.x + b.w) - x, h = Math.max(a.y + a.h, b.y + b.h) - y;
+    mark(x, y, w, h, 'pair');
+  }
+  if (L.third && mtCalc('third', 0)){ const [a, b] = L.third.slots; const x = Math.min(a.x, b.x), y = Math.min(a.y, b.y), w = Math.max(a.x + a.w, b.x + b.w) - x, h = Math.max(a.y + a.h, b.y + b.h) - y; mark(x, y, w, h, 'pair'); }
 }
 function mtFx(frag, L, R){ // groups: on the frame's bottom edge (joins the cascade with its frame); later rounds: under the match
   if (!schedLive() || !isBrand()) return;
@@ -2190,7 +2255,7 @@ function lbTimerSet(e){
   const mm = e && isG4() ? lbMatchOf(e.id) : null, st = mm ? mtState(mm[0], mm[1]) : null;
   if (!st){ el.className = 'mTimer'; el.innerHTML = ''; delete el.dataset.end; return; }
   const tmp = document.createElement('div'); tmp.innerHTML = mtChip(st, '', false, true); const c = tmp.firstElementChild;
-  el.className = c.className + ' on'; el.innerHTML = st.k === 'closed' ? 'Voting closed' : c.innerHTML;
+  el.className = c.className + ' on'; el.innerHTML = st.k === 'calc' ? c.innerHTML : st.k === 'closed' ? 'Voting closed' : c.innerHTML;
   if (c.dataset.end){ el.dataset.end = c.dataset.end; el.dataset.d = '1'; } else delete el.dataset.end;
   el.style.top = (v.offsetTop + v.offsetHeight + 5) + 'px';
 }
@@ -2203,7 +2268,7 @@ function mtTick(){
   });
   const lt = document.getElementById('lbTimer'), v = document.getElementById('lbVote');
   if (lt && v && lt.classList.contains('on')) lt.style.top = (v.offsetTop + v.offsetHeight + 5) + 'px';
-  if (flip && geo && !MT_BUSY){ MT_BUSY = 1; renderBracket(); if (!$('lb').hidden && LB.list[LB.k] != null) lbTimerSet(byId(LB.list[LB.k])); setTimeout(() => { MT_BUSY = 0; }, 1500); }
+  if (flip && geo && !MT_BUSY){ MT_BUSY = 1; renderBracket(); if (!$('lb').hidden && LB.list[LB.k] != null) lbTimerSet(byId(LB.list[LB.k])); setTimeout(() => { MT_BUSY = 0; }, 1500); } // live: a just-ended match becomes calculating until a winner is set
 }
 (function mtLoop(){ mtTick(); setTimeout(mtLoop, 1000 - Date.now() % 1000 + 20); })();
 /* ---------- personal pick tracker (view-only page): one pick per match, saved on this device only (just for fun);
@@ -2425,8 +2490,10 @@ function slotEl(r, i, g, R, D){
   if (!e){
     d.classList.add('empty');
     const bye = r === 0 && T.entries.length > 0;
+    const wait = !bye && !g.champ && r > 0 && mtCalc(r - 1, i);
     if (bye) d.classList.add('bye'); else d.style.setProperty('--sd', (-((r * 1.3 + i * .77) % 3.8)).toFixed(2) + 's');
-    d.innerHTML = `<div class="im">${g.champ ? '<span class="q">?</span>' : ''}</div><div class="nm" style="height:${nh}px;font-size:${fs}px">${bye ? 'BYE' : ''}</div><i class="bev"></i>`;
+    if (wait) d.classList.add('wait');
+    d.innerHTML = `<div class="im">${g.champ ? '<span class="q">?</span>' : ''}${wait ? '<span class="waitTag">Waiting<br>for winner</span>' : ''}</div><div class="nm" style="height:${nh}px;font-size:${fs}px">${bye ? 'BYE' : ''}</div><i class="bev"></i>`;
     return d;
   }
   const im = document.createElement('div'); im.className = 'im';
@@ -2437,6 +2504,7 @@ function slotEl(r, i, g, R, D){
   d.title = e.name; d.append(im, nm);
   if (g.champ) d.classList.add('filled'); // no 1-64 seed badge on the cards
   const st = slotState(r, i); if (st) d.classList.add(st);
+  if (r < R && mtCalc(r, par(r, i))) d.classList.add('calc');
   if (r < R && kidsOf(r, par(r, i)).every(k => k === i || D[r][k])) d.classList.add('locked');
   if (anim && anim.r === r && anim.i === i) d.classList.add('pop');
   d.onclick = () => { if (panMoved) return; if (SWAP.id != null){ swapWith(id); return; } pick(r, i); };
