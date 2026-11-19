@@ -13,7 +13,6 @@ const store={get(k,d){try{return localStorage.getItem(k)??d;}catch(_){return d;}
 const images={},crop={},backgrounds=['crystal_forest','bull_arena','upside_down','spooky_island','crypto_trading','slime_lab','mars_colony'];
 const bgNames=['Crystal Forest','Bull Arena','Upside Down','Spooky Island','Crypto Trading','Slime Lab','Mars Colony'];
 const colors={magnet:'#ff7fe0',boost:'#6dff9a',double_coins:'#ffd56a',shield:'#7ad8ff',zap:'#8ee4ff'};
-const order=[0,4,1,5,2,6,3,7];
 let ready=false,mode='loading',lastFrame=0,wall=0,sceneClock=0,dpr=1,uiClock=0,id=0;
 let frozen=false;
 let best=Math.max(0,Number(store.get(BEST_KEY,'0'))||0),lastRun=null,paused=false;
@@ -76,7 +75,7 @@ function chain(){s.combo=s.comboLeft>0?s.combo+1:1;s.comboLeft=COMBO_MS;s.maxCom
 function mult(){return Math.min(5,1+Math.floor(s.combo/5));}
 function grant(type){
   s.powerups++;p.effects[type]=type==='zap'?ZAP_MS:POWER_MS;if(type==='zap')p.charges=3;
-  textFloat(type==='double_coins'?'COINS x2':type==='zap'?'BEAR ZAP x3':type.toUpperCase(),200,475,colors[type]);tone(type==='zap'?920:784,.25,'sine',1120);
+  textFloat(type==='double_coins'?'SoC DOUBLE COIN':type==='zap'?'BEAR ZAP x3':type.toUpperCase(),200,475,colors[type]);tone(type==='zap'?920:784,.25,'sine',1120);
 }
 function levelCheck(){const lev=Math.floor(s.distance/500)+1;if(lev>s.level){s.level=lev;banner(`LEVEL ${lev}`,'ROAD SPEED UP');tone(523,.25,'triangle',1046);}}
 function lane(dir){
@@ -185,7 +184,7 @@ function buildCaches(){
   cache.spr.arrow_barrier=stepScale(images.arrow_barrier,0,0,images.arrow_barrier.width,images.arrow_barrier.height,22*k,21*k);
   for(const d of ['left','right','both'])cache.spr['arrow_blk_'+d]=stepScale(images['arrow_blk_'+d],0,0,images['arrow_blk_'+d].width,images['arrow_blk_'+d].height,36*k,23*k);
   cache.spr.soc=stepScale(images.soc,0,0,images.soc.width,images.soc.height,130*dpr,130*dpr);
-  cache.frames=[];for(let f=0;f<8;f++)cache.frames[f]=stepScale(images.runner,(f%4)*384,Math.floor(f/4)*512,384,512,384*RUNNER_SCALE*dpr,512*RUNNER_SCALE*dpr);
+  cache.frames=[];for(let f=0;f<16;f++)cache.frames[f]=stepScale(images.runner,(f%4)*384,Math.floor(f/4)*512,384,512,384*RUNNER_SCALE*dpr,512*RUNNER_SCALE*dpr);
   const v=document.createElement('canvas');v.width=W*dpr;v.height=H*dpr;const g=v.getContext('2d');g.scale(dpr,dpr);
   const vg=g.createRadialGradient(200,315,210,200,350,560);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.23)');g.fillStyle=vg;g.fillRect(0,0,W,H);
   cache.vignette=v;const fc=document.createElement('canvas');fc.width=80*dpr;fc.height=90*dpr;const fg=fc.getContext('2d');fg.scale(dpr,dpr);fg.translate(-160,-256);
@@ -243,7 +242,7 @@ function drawObject(o){
   if(o.type==='coin'){const w=26*r;glow(x,y-43*r,w*.9,'#ffd56a',.2);sprite('coin',x,y,w,30*r);}
   else if(o.type==='portal'){
     const radius=94*r;ctx.save();ctx.translate(x,y-radius*.9);ctx.scale(1,.90);drawPortal(0,0,radius/35.28,1,wall);ctx.restore();
-    if(r>.3){ctx.save();ctx.font=`${Math.max(9,22*r)}px 'Lilita One',sans-serif`;ctx.textAlign='center';ctx.lineWidth=4*r;ctx.lineJoin='round';ctx.strokeStyle='#18082c';ctx.fillStyle='#ffe68c';ctx.strokeText('Solana Portal',x,y-radius*1.95);ctx.fillText('Solana Portal',x,y-radius*1.95);ctx.restore();}
+    if(r>.3){ctx.save();ctx.font=`${Math.max(9,22*r)}px 'Lilita One',sans-serif`;ctx.textAlign='center';ctx.lineWidth=4*r;ctx.lineJoin='round';ctx.strokeStyle='#18082c';ctx.fillStyle='#ffe68c';ctx.strokeText('SolOnChain Portal',x,y-radius*1.95);ctx.fillText('SolOnChain Portal',x,y-radius*1.95);ctx.restore();}
   }else if(o.type==='overhead'){
     const bw=100*r,bh=26*r,top=y-116*r,pw=9*r;
     ctx.drawImage(cache.spr.post,x-bw/2+3*r,top+bh*.3,pw,109*r);ctx.drawImage(cache.spr.post,x+bw/2-12*r,top+bh*.3,pw,109*r);
@@ -278,7 +277,7 @@ function drawRunner(){
     ctx.drawImage(im,-w/2,-h,w,h);
   }else{
     if(p.slide>0)ctx.scale(1.13,.52);
-    const frame=order[Math.floor(gameClock/(p.effects.boost>0?80:100))%8];
+    const frame=Math.floor(gameClock/(p.effects.boost>0?40:50))%16;
     const fc=cache.frames[frame],fh=(p.jump>2||p.slide>0||warp)?350:512;ctx.drawImage(fc,0,0,fc.width,fc.height*fh/512,-192*scale,-362*scale,384*scale,fh*scale);
   }
   ctx.restore();
@@ -544,7 +543,7 @@ function drawCard(g,score){
   if(score){label('SCORE',78,272,24,'#9fe9ff');g.font="900 112px Orbitron,sans-serif";g.lineWidth=9;g.strokeStyle='#080c16';g.strokeText(String(score.score),72,392);g.fillStyle='#ffd56a';g.shadowColor='rgba(255,213,106,.45)';g.shadowBlur=22;g.fillText(String(score.score),72,392);g.shadowBlur=0;
     label(`${score.distance}m   ·   ${score.coins} COINS   ·   COMBO x${score.combo}`,78,452,24,'#f4f7ff');}
   else{label('DODGE, DASH AND STACK THE SOLANA',78,250,26,'#5ce1ff');if(images.coin){for(let i=0;i<5;i++)g.drawImage(images.coin,78+i*86,300,70,70);}
-    label('3 LANES  ·  SOLANA PORTAL  ·  BEAR ZAP',78,440,22,'#f4f7ff');}
+    label('3 LANES  ·  SOLONCHAIN PORTAL  ·  BEAR ZAP',78,440,22,'#f4f7ff');}
   label('REMASTERED BY GALACTIC GAME LABZ',78,560,18,'#ffd84a');
 }
 async function shareScore(){
@@ -587,7 +586,7 @@ function load(key,path){return new Promise((resolve,reject)=>{const im=new Image
 function trimBounds(key){const im=images[key],c=document.createElement('canvas');c.width=im.width;c.height=im.height;const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(im,0,0);const d=g.getImageData(0,0,c.width,c.height).data;let x0=c.width,y0=c.height,x1=0,y1=0;for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++)if(d[(y*c.width+x)*4+3]>8){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}crop[key]={x:x0,y:y0,w:x1-x0+1,h:y1-y0+1};}
 async function boot(){
   try{
-    const paths={runner:'runner_sheet.png',road:'road_tile.png',coin:'solana_coin.png',soc:'soc_coin.png',barrier:'ob_low_barrier.png',beam:'ob_overhead_beam.png',post:'ob_overhead_post.png',blocker:'ob_tall_blocker.png',pu_magnet:'pu_magnet.png',pu_boost:'pu_boost.png',pu_shield:'pu_shield.png',pu_double_coins:'pu_double_coins.png',pu_zap:'pu_zap.webp',light_beam:'light_beam.png',arrow_barrier:'arrow_barrier.png',arrow_blk_left:'arrow_blk_left.png',arrow_blk_right:'arrow_blk_right.png',arrow_blk_both:'arrow_blk_both.png'};
+    const paths={runner:'runner_sheet16.png',road:'road_tile.png',coin:'solana_coin.png',soc:'soc_coin.png',barrier:'ob_low_barrier.png',beam:'ob_overhead_beam.png',post:'ob_overhead_post.png',blocker:'ob_tall_blocker.png',pu_magnet:'pu_magnet.png',pu_boost:'pu_boost.png',pu_shield:'pu_shield.png',pu_double_coins:'pu_double_coins.png',pu_zap:'pu_zap.webp',light_beam:'light_beam.png',arrow_barrier:'arrow_barrier.png',arrow_blk_left:'arrow_blk_left.png',arrow_blk_right:'arrow_blk_right.png',arrow_blk_both:'arrow_blk_both.png'};
     backgrounds.forEach(k=>paths['bg_'+k]='bg_'+k+'.webp');
     await Promise.all(Object.entries(paths).map(([k,v])=>load(k,'assets/'+v)));
     await Promise.all([load('runner_goggles','assets/runner_goggles.webp'),load('runner_slide','assets/runner_slide.webp')]);
