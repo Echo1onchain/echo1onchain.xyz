@@ -118,6 +118,14 @@
   const howClose = document.getElementById("how-close");
   const howBody = document.getElementById("how-body");
   let howOpen = false;
+  const goActions = document.getElementById("go-actions");
+  const lbPanel = document.getElementById("lb-panel");
+  const lbList = document.getElementById("lb-list");
+  const lbClose = document.getElementById("lb-close");
+  let lbOpen = false;
+  let lastRun = null;
+  const TOP_KEY = "bullbear_bounce_v2_top10";
+  const SHARE_URL = "https://echo1onchain.xyz/bullbear_bounce_test/";
 
   const images = { character: null, cloud: null, cloudBoost: null, cloudCracked: null, coin: null, shield: null, rocket: null, weed: null, solonchain: null, storm: null, hole: null, holeRing: null, zap: null, bg: {}, lm: {} };
   const décor = { earth: [], air: [], clouds: [], atmosphere: [], space: [] };
@@ -2809,6 +2817,8 @@
     btnPlay.textContent = "Play";
     btnPlay.classList.remove("btn-again");
     if (btnHow) btnHow.hidden = false;
+    if (goActions) goActions.hidden = true;
+    closeLb();
     document.getElementById("ov-controls").hidden = false;
     hud.classList.remove("show");
     seedWorld();
@@ -2829,6 +2839,8 @@
     btnPlay.hidden = true;
     btnPlay.classList.remove("btn-again");
     if (btnHow) btnHow.hidden = true;
+    if (goActions) goActions.hidden = true;
+    closeLb();
     closeHow();
     document.getElementById("ov-controls").hidden = true;
     const num = document.getElementById("count-num");
@@ -2930,6 +2942,7 @@
     sfxOver();
     const score = getScore();
     const isNew = saveBest(score);
+    lastRun = addTopScore(score);
     showGameOver(score, isNew);
   }
 
@@ -2961,6 +2974,7 @@
     btnPlay.textContent = "Play Again";
     btnPlay.classList.add("btn-again");
     if (btnHow) btnHow.hidden = true;
+    if (goActions) goActions.hidden = false;
     closeHow();
     document.getElementById("ov-controls").hidden = true;
     hud.classList.remove("show");
@@ -2976,6 +2990,11 @@
     if (isTyping(e.target)) return;
     if (e.code === "ArrowLeft" || e.code === "KeyA") input.left = true;
     if (e.code === "ArrowRight" || e.code === "KeyD") input.right = true;
+    if (e.code === "Escape" && lbOpen) {
+      e.preventDefault();
+      closeLb();
+      return;
+    }
     if (e.code === "Escape" && howOpen) {
       e.preventDefault();
       closeHow();
@@ -2983,7 +3002,7 @@
     }
     if ((e.code === "Space" || e.code === "Enter") && (uiMode === "start" || uiMode === "gameover")) {
       e.preventDefault();
-      if (howOpen) return;
+      if (howOpen || lbOpen) return;
       beginFromUi();
       return;
     }
@@ -3042,7 +3061,7 @@
   window.addEventListener("mouseup", () => { input.touch = 0; });
 
   function beginFromUi() {
-    if (howOpen) return;
+    if (howOpen || lbOpen) return;
     if (uiMode === "countdown") return;
     ensureAudio();
     const songSync = !muted && trackIndex === 1 && music && (!musicStarted || music.paused);
@@ -3064,6 +3083,76 @@
     if (howPanel) howPanel.classList.remove("open");
   }
   btnPlay.addEventListener("click", beginFromUi);
+
+  /* ---------- game over: local leaderboard, share, home ---------- */
+  function loadTop() {
+    let list = [];
+    try { list = JSON.parse(localStorage.getItem(TOP_KEY) || "[]"); } catch (e) { list = []; }
+    if (!Array.isArray(list)) list = [];
+    list = list.filter((r) => r && typeof r.s === "number" && r.s > 0);
+    if (!list.length && bestScore > 0) list = [{ s: bestScore, t: 0 }];
+    return list;
+  }
+  function addTopScore(score) {
+    const list = loadTop();
+    if (score <= 0) return null;
+    const entry = { s: score, t: Date.now() };
+    list.push(entry);
+    list.sort((a, b) => b.s - a.s || a.t - b.t);
+    const top = list.slice(0, 10);
+    try { localStorage.setItem(TOP_KEY, JSON.stringify(top)); } catch (e) {}
+    return top.includes(entry) ? entry.t : null;
+  }
+  function fmtDate(t) {
+    if (!t) return "";
+    const d = new Date(t);
+    return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+  }
+  function renderLb() {
+    if (!lbList) return;
+    const list = loadTop();
+    if (!list.length) {
+      lbList.innerHTML = '<li class="lb-empty">No scores yet. Go bounce!</li>';
+      return;
+    }
+    lbList.innerHTML = list.map((r, i) =>
+      `<li class="lb-row${lastRun && r.t === lastRun ? " me" : ""}"><span class="lb-rank">#${i + 1}</span><span class="lb-score">${r.s}m</span><span class="lb-date">${fmtDate(r.t)}</span></li>`
+    ).join("");
+  }
+  function openLb() {
+    if (uiMode !== "gameover") return;
+    renderLb();
+    lbOpen = true;
+    if (lbPanel) lbPanel.classList.add("open");
+    if (lbClose) lbClose.focus();
+  }
+  function closeLb() {
+    lbOpen = false;
+    if (lbPanel) lbPanel.classList.remove("open");
+  }
+  async function shareScore() {
+    const score = getScore();
+    const text = `I scored ${score}m in BullBear Bounce. Can you beat it?`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "BullBear Bounce", text, url: SHARE_URL });
+        return;
+      } catch (e) {
+        if (e && e.name === "AbortError") return;
+      }
+    }
+    const intent = `https://x.com/intent/post?text=${encodeURIComponent(text + "\n" + SHARE_URL)}`;
+    window.open(intent, "_blank", "noopener,width=550,height=420");
+  }
+  const btnLb = document.getElementById("btn-lb");
+  const btnShare = document.getElementById("btn-share");
+  const btnHome = document.getElementById("btn-home");
+  function stopUi(e) { e.preventDefault(); e.stopPropagation(); }
+  if (btnLb) btnLb.addEventListener("click", (e) => { stopUi(e); openLb(); });
+  if (btnShare) btnShare.addEventListener("click", (e) => { stopUi(e); shareScore(); });
+  if (btnHome) btnHome.addEventListener("click", (e) => { stopUi(e); if (uiMode === "gameover") showStart(); });
+  if (lbClose) lbClose.addEventListener("click", (e) => { stopUi(e); closeLb(); });
+  if (lbPanel) lbPanel.addEventListener("click", (e) => { if (e.target === lbPanel) closeLb(); });
   if (btnHow) btnHow.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
