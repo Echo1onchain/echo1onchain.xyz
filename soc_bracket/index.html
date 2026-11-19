@@ -3196,7 +3196,7 @@ function bbInfo(e){ // v15: BullBear card under the picture (kind, rarity, trait
 /* per-group X vote posts (Battle Royale): the popup's VOTE button on a bear in a listed group opens a reply to that group's
    X post, prefilled "BullBear #<seat>" (seat 1-4 = the "BullBear N" label on its card). Add later groups here by letter;
    optional per-bracket override: T.votePosts = { B: '<post id>' }. Unlisted groups keep the @BullBearsX link. */
-const VOTE_POSTS = { A: '2122676125986136398', B: '2122691230102643154', C: '2122706335703912630', D: '2122721430689157505', E: '2122736533690294509', F: '2122751626523865434', G: '2122766729508237330', H: '2122781821574291938', I: '2123400911821402230', J: '2123416005355679916', K: '2123431105118314821', L: '2123446204348395624' }, VOTE_DEF = 'https://x.com/BullBearsX';
+const VOTE_POSTS = { A: '2122676125986136398', B: '2122691230102643154', C: '2122706335703912630', D: '2122721430689157505', E: '2122736533690294509', F: '2122751626523865434', G: '2122766729508237330', H: '2122781821574291938', I: '2123400911821402230', J: '2123416005355679916', K: '2123431105118314821', L: '2123446204348395624', M: '2123461302102405205' }, VOTE_DEF = 'https://x.com/BullBearsX';
 function voteHref(e){
   const a = document.getElementById('lbVote'); if (!a) return;
   const k = e && isG4() ? T.rounds[0].indexOf(e.id) : -1, gl = k < 0 ? '' : String.fromCharCode(65 + Math.floor(k / 4));
