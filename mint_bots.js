@@ -1,6 +1,6 @@
 /* ECHO Botz mint banner bot. One of the chosen ECHO Botz peekers (Hammer Peeker, Magnifier Peek or Scan Drone, each in 1 of 4 colours) is picked at random on each load and peeks over the top edge of the "ECHO BOTZ MINT" banner (#mintCdPanel).
    Same behaviour as the home page card bots: with a mouse, head and eyes follow the cursor and a click gives a quick stronger look; taps turn it toward the tap. Every 6 to 12 s it looks up at the viewer. The Scan Drone glides sideways after the mouse, slowly, staying clear of the page title above.
-   Decorative only: no pointer events, hidden from screen readers. Off screen: nothing runs. Reduced motion: eyes only, no idle animation.
+   Decorative only: no pointer events, hidden from screen readers. Off screen: nothing runs. A mouse is followed even if the browser reports no hover or a coarse pointer. Reduced motion: idle animations off; mouse follow still turns the head, eased.
    Preview hooks (harmless): ?mbb=hp|p2|p4 forces the bot, ?mbc=a-d forces the colour. */
 (function(){
   var panel=document.getElementById("mintCdPanel");
@@ -58,7 +58,18 @@
     glide:key==="p4",gx:0,gv:0,gt:0,gb:0,gmin:0,gmax:0,gc:0,gf:1};
   var bots=[b];
 
-  var mq=window.matchMedia("(prefers-reduced-motion: reduce)"), hov=window.matchMedia("(hover: hover) and (pointer: fine)");
+  var mq=window.matchMedia("(prefers-reduced-motion: reduce)");
+  var lastTouch=0;
+  function markTouch(){ lastTouch=Date.now() }
+  function isMouse(e){
+    if(e.pointerType==="mouse") return true;
+    if(e.pointerType) return false;
+    if(Date.now()-lastTouch<1100) return false;
+    return e.type==="mousemove"||e.type==="mousedown"||e.type==="pointermove"||e.type==="pointerdown";
+  }
+  window.addEventListener("touchstart",markTouch,{passive:true,capture:true});
+  window.addEventListener("touchmove",markTouch,{passive:true,capture:true});
+  window.addEventListener("touchend",markTouch,{passive:true,capture:true});
   var raf=0,last=0,following=false,still=0,kick=0,mx=0,my=0,tapT=0,tapping=false,tx=0,ty=0;
   function now(){return performance.now()}
   function cl(v,a,b){return v<a?a:v>b?b:v}
@@ -91,7 +102,7 @@
     if(!b.home) measure(b);
     if(b.glide) b.gt=mq.matches?0:cl(x-b.gc,b.gmin,b.gmax);
     if(b.look) return;
-    var n=aim(x,y,b.home.x-scrollX,b.home.y-scrollY),nx=n[0],ny=n[1],m=mq.matches?0:1,d=b.d,t=b.tgt;
+    var n=aim(x,y,b.home.x-scrollX,b.home.y-scrollY),nx=n[0],ny=n[1],m=(mq.matches&&!following)?0:1,d=b.d,t=b.tgt;
     t.ex=cl(nx*d.ex*k,-d.ex*1.3,d.ex*1.3); t.ey=cl(ny*d.ey*k,-d.ey*1.3,d.ey*1.3);
     t.x=m*nx*d.hx*k; t.y=m*ny*d.hy*k; t.r=m*nx*d.hr*k; t.ds=0; t.eg=0;
   }
@@ -150,16 +161,17 @@
   function stopFollow(){following=false;clearTimeout(still);home0();go()}
   function anyVis(){return bots.some(function(b){return b.vis})}
   function move(e){
-    if(e.pointerType!=="mouse"||!hov.matches||!anyVis()) return;
+    if(!isMouse(e)||!anyVis()) return;
     mx=e.clientX; my=e.clientY;
     if(!following){following=true;tapping=false;clearTimeout(tapT);bots.forEach(measure)}
     bots.forEach(function(b){target(b,mx,my,1+.3*kick)}); go();
     clearTimeout(still); still=setTimeout(stopFollow,3000);
   }
   document.addEventListener("pointermove",move,{passive:true});
+  document.addEventListener("mousemove",move,{passive:true});
   document.addEventListener("pointerdown",function(e){
     bots.forEach(function(b){if(b.look) endLook(b)}); /* a click or tap wins over a look-up */
-    if(e.pointerType==="mouse"&&hov.matches){if(!anyVis())return; move(e); kick=1; bots.forEach(function(b){target(b,mx,my,1.3)}); go(); return}
+    if(isMouse(e)){if(!anyVis())return; move(e); kick=1; bots.forEach(function(b){target(b,mx,my,1.3)}); go(); return}
     if(following){clearTimeout(still);following=false}
     if(!anyVis()) return;
     tapping=true; tx=e.clientX; ty=e.clientY; bots.forEach(function(b){measure(b);target(b,tx,ty,1)}); go();

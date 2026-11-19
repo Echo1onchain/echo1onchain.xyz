@@ -865,12 +865,22 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
   if (reduce) draw(); else loop();
 })();
 </script>
-<script>/* Hero bot watches: on touch, a tap turns the head toward the tap point, holds, then eases back (CSS transitions). With a hovering mouse, the head and eyes follow the cursor (eased in rAF, only while moving or settling); a click gives a quick stronger look. Still for 3 s or pointer leaves: ease back to the idle look around. Off screen: nothing runs. Passive listeners only. Reduced motion: eyes only. */
+<script>/* Hero bot watches: on touch, a tap turns the head toward the tap point, holds, then eases back (CSS transitions). With a mouse, the head and eyes follow the cursor (eased in rAF, only while moving or settling), even if the browser reports no hover or a coarse pointer; a click gives a quick stronger look. Still for 3 s or pointer leaves: ease back to the idle look around. Off screen: nothing runs. Passive listeners only. Reduced motion: idle animations off; mouse follow still turns the head, eased. */
 (function(){
   var wrap=document.querySelector('.hero .wrap'), visor=wrap&&wrap.querySelector('.visor');
   if(!visor) return;
   var mq=window.matchMedia('(prefers-reduced-motion: reduce)'), timer=0;
-  var hov=window.matchMedia('(hover: hover) and (pointer: fine)');
+  var lastTouch=0;
+  function markTouch(){ lastTouch=Date.now() }
+  function isMouse(e){
+    if(e.pointerType==='mouse') return true;
+    if(e.pointerType) return false;
+    if(Date.now()-lastTouch<1100) return false;
+    return e.type==='mousemove'||e.type==='mousedown'||e.type==='pointermove'||e.type==='pointerdown';
+  }
+  window.addEventListener('touchstart',markTouch,{passive:true,capture:true});
+  window.addEventListener('touchmove',markTouch,{passive:true,capture:true});
+  window.addEventListener('touchend',markTouch,{passive:true,capture:true});
   var VARS=['--htx','--hry','--hrx','--hrz','--hex','--hey'];
   function cl(v,a,b){return v<a?a:v>b?b:v}
   function set(k,v){wrap.style.setProperty(k,v)}
@@ -900,7 +910,7 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
   function measure(){ if(following) return; var r=visor.getBoundingClientRect(); home={x:r.left+r.width/2+scrollX, y:r.top+r.height/2+scrollY} }
   function target(){
     if(!home) measure();
-    var n=aim(mx,my,home.x-scrollX,home.y-scrollY), nx=n[0], ny=n[1], k=1+.3*kick, m=mq.matches?0:1;
+    var n=aim(mx,my,home.x-scrollX,home.y-scrollY), nx=n[0], ny=n[1], k=1+.3*kick, m=1;
     tgt.ex=cl(nx*12*k,-13,13); tgt.ey=cl(ny*(ny>0?13:8)*k,-9,13);
     tgt.ry=m*nx*15*k; tgt.rx=m*(-ny*12*k-2.5*kick); tgt.rz=m*nx*1.2*k; tgt.tx=m*nx*4; tgt.idle=0;
   }
@@ -923,15 +933,16 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
   function go(){ if(!raf){ last=0; raf=requestAnimationFrame(frame) } }
   function stopFollow(){ following=false; clearTimeout(still); home0(); go() }
   function move(e){
-    if(e.pointerType!=='mouse'||!hov.matches||!vis) return;
+    if(!isMouse(e)||!vis) return;
     mx=e.clientX; my=e.clientY;
     if(!following){ clearTimeout(timer); rest(); measure(); following=true; wrap.classList.add('following') }
     target(); go();
     clearTimeout(still); still=setTimeout(stopFollow,3000);
   }
   document.addEventListener('pointermove',move,{passive:true});
+  document.addEventListener('mousemove',move,{passive:true});
   document.addEventListener('pointerdown',function(e){
-    if(e.pointerType==='mouse'&&hov.matches){ if(!vis) return; move(e); kick=1; target(); go(); return }
+    if(isMouse(e)){ if(!vis) return; move(e); kick=1; target(); go(); return }
     if(following){ clearTimeout(still); following=false; if(raf) cancelAnimationFrame(raf); raf=0; clear() }
     tap(e);
   },{passive:true});
@@ -949,7 +960,7 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
 
 <script>/* ECHO Botz card bots. Hammer Peeker (featured card) in 1 of 4 colours; on the Glitch Hunt card either Magnifier Peek or Scan Drone, each in 1 of 4 colours, picked at random per load.
    Preview hooks (harmless): ?botc=a-d forces the Hammer Peeker colour, ?ghb=p2|p4 and ?ghc=a-d force the Glitch Hunt bot and colour.
-   Watching works like the hero bot: with a hovering mouse heads and eyes follow the cursor (eased in rAF, only while moving or settling), a click gives a quick stronger look, still for 3 s or pointer leaves: ease back. Touch/pen taps turn them toward the tap, hold, then ease back.
+   Watching works like the hero bot: with a mouse, heads and eyes follow the cursor (eased in rAF, only while moving or settling), even if the browser reports no hover or a coarse pointer; a click gives a quick stronger look, still for 3 s or pointer leaves: ease back. Touch/pen taps turn them toward the tap, hold, then ease back.
    Every 6-12 s (staggered, never both at once) each bot looks straight out at the viewer for ~1.6-2 s: head level and facing front, lifted and a touch bigger, eyes centred and a little wider, one blink, then back to following.
    The Scan Drone also glides sideways after the mouse x (or toward a tap) within its card, slowly, banking as it goes, and drifts home when the mouse rests.
    Heads are clipped at the card edge (they peek from behind it), so bigger moves never open gaps. Off screen: nothing runs. Reduced motion: eyes only, no idle animation. */
@@ -987,7 +998,18 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
   }
   if(!bots.length) return;
 
-  var mq=window.matchMedia("(prefers-reduced-motion: reduce)"), hov=window.matchMedia("(hover: hover) and (pointer: fine)");
+  var mq=window.matchMedia("(prefers-reduced-motion: reduce)");
+  var lastTouch=0;
+  function markTouch(){ lastTouch=Date.now() }
+  function isMouse(e){
+    if(e.pointerType==="mouse") return true;
+    if(e.pointerType) return false;
+    if(Date.now()-lastTouch<1100) return false;
+    return e.type==="mousemove"||e.type==="mousedown"||e.type==="pointermove"||e.type==="pointerdown";
+  }
+  window.addEventListener("touchstart",markTouch,{passive:true,capture:true});
+  window.addEventListener("touchmove",markTouch,{passive:true,capture:true});
+  window.addEventListener("touchend",markTouch,{passive:true,capture:true});
   var raf=0,last=0,following=false,still=0,kick=0,mx=0,my=0,tapT=0,tapping=false,tx=0,ty=0;
   function now(){return performance.now()}
   function cl(v,a,b){return v<a?a:v>b?b:v}
@@ -1010,7 +1032,7 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
     if(!b.home) measure(b);
     if(b.glide) b.gt=mq.matches?0:cl(x-b.gc,b.gmin,b.gmax);
     if(b.look) return;
-    var n=aim(x,y,b.home.x-scrollX,b.home.y-scrollY),nx=n[0],ny=n[1],m=mq.matches?0:1,d=b.d,t=b.tgt;
+    var n=aim(x,y,b.home.x-scrollX,b.home.y-scrollY),nx=n[0],ny=n[1],m=(mq.matches&&!following)?0:1,d=b.d,t=b.tgt;
     t.ex=cl(nx*d.ex*k,-d.ex*1.3,d.ex*1.3); t.ey=cl(ny*d.ey*k,-d.ey*1.3,d.ey*1.3);
     t.x=m*nx*d.hx*k; t.y=m*ny*d.hy*k; t.r=m*nx*d.hr*k; t.ds=0; t.eg=0;
   }
@@ -1079,16 +1101,17 @@ setInterval(function(){if(!r.classList.contains('halloween')||document.hidden)re
   function stopFollow(){following=false;clearTimeout(still);home0();go()}
   function anyVis(){return bots.some(function(b){return b.vis})}
   function move(e){
-    if(e.pointerType!=="mouse"||!hov.matches||!anyVis()) return;
+    if(!isMouse(e)||!anyVis()) return;
     mx=e.clientX; my=e.clientY;
     if(!following){following=true;tapping=false;clearTimeout(tapT);bots.forEach(measure)}
     bots.forEach(function(b){target(b,mx,my,1+.3*kick)}); go();
     clearTimeout(still); still=setTimeout(stopFollow,3000);
   }
   document.addEventListener("pointermove",move,{passive:true});
+  document.addEventListener("mousemove",move,{passive:true});
   document.addEventListener("pointerdown",function(e){
     bots.forEach(function(b){if(b.look) endLook(b)}); /* a click or tap wins over a look-up */
-    if(e.pointerType==="mouse"&&hov.matches){if(!anyVis())return; move(e); kick=1; bots.forEach(function(b){target(b,mx,my,1.3)}); go(); return}
+    if(isMouse(e)){if(!anyVis())return; move(e); kick=1; bots.forEach(function(b){target(b,mx,my,1.3)}); go(); return}
     if(following){clearTimeout(still);following=false}
     if(!anyVis()) return;
     tapping=true; tx=e.clientX; ty=e.clientY; bots.forEach(function(b){measure(b);target(b,tx,ty,1)}); go();
