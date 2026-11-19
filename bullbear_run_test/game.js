@@ -6,7 +6,7 @@
 'use strict';
 const W=400,H=700,HOME_URL='https://www.bullbeargames.com/';
 const BEST_KEY='bullbear_run_v1_best',TOP_KEY='bullbear_run_v1_top10',MUTE_KEY='bullbear_run_v1_mute',TRACK_KEY='bullbear_run_v1_track';
-const COMBO_MS=2600,POWER_MS=5000,ZAP_MS=25000,PLAYER_Z=26,RUNNER_SCALE=.24,SLIDE_H=62.5;
+const COMBO_MS=2600,POWER_MS=5000,ZAP_MS=25000,PLAYER_Z=26,RUNNER_SCALE=.24,SLIDE_H=62.5,PORTAL_R=70.5;
 const $=id=>document.getElementById(id), canvas=$('game'),ctx=canvas.getContext('2d',{alpha:false});
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),ease=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
 const store={get(k,d){try{return localStorage.getItem(k)??d;}catch(_){return d;}},set(k,v){try{localStorage.setItem(k,v);}catch(_){}}};
@@ -100,7 +100,7 @@ for(let i=0;i<72;i++)STREAKS.push({a:i*2.39996+((i*7919)%13)*.05,o:((i*0.618034)
 function warpRush(u){return u<WARP_J?ease(u/WARP_J):1-ease((u-WARP_J)/(WARP_T-WARP_J));}
 function beginWarp(o){
   o.done=true;s.warps++;s.powerups++;chain();const q=proj(o.z,o.lane);
-  const radius=94*q.r;warp={time:0,applied:false,x:q.x,y:q.y-radius*.9,scale:radius/35.28,exitX:proj(PLAYER_Z,p.target).x};
+  const radius=PORTAL_R*q.r;warp={time:0,applied:false,x:q.x,y:q.y-radius*.9,scale:radius/35.28,exitX:proj(PLAYER_Z,p.target).x};
   textFloat('+225m',200,430,'#ffe17d');tone(523,.5,'sine',1046);
 }
 function updateWarp(dt){
@@ -215,10 +215,10 @@ function glow(x,y,r,color,opacity=.25){
   const b=.5+.5*Math.sin(wall*Math.PI*2/7000);const g=ctx.createRadialGradient(x,y,r*.1,x,y,r*(1+.035*b));
   g.addColorStop(0,color+Math.round((opacity+.07*b)*255).toString(16).padStart(2,'0'));g.addColorStop(1,color+'00');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r*1.04,0,Math.PI*2);ctx.fill();
 }
-function arrowPulse(){return .5+.5*Math.sin(wall*Math.PI*2/2500);}
-function drawArrowGlow(img,dx,dy,dw,dh,rgb,k=1){
+function arrowPulse(ms=2500){return .5+.5*Math.sin(wall*Math.PI*2/ms);}
+function drawArrowGlow(img,dx,dy,dw,dh,rgb,k=1,ms=2500){
   if(!img||dw<1.5||dh<1.5)return;
-  const p=arrowPulse(),s=Math.min(dw,dh);
+  const p=arrowPulse(ms),s=Math.min(dw,dh);
   ctx.save();
   ctx.shadowColor=`rgba(${rgb},${Math.min(1,(.3+.5*p)*k).toFixed(3)})`;
   ctx.shadowBlur=Math.max(2,(4+10*p)*k*s/26);
@@ -229,10 +229,10 @@ function drawArrowGlow(img,dx,dy,dw,dh,rgb,k=1){
   ctx.drawImage(img,dx,dy,dw,dh);
   ctx.restore();
 }
-function arrowOn(srcKey,arrowKey,dx,dy,dw,dh,rgb,box,k=1){
+function arrowOn(srcKey,arrowKey,dx,dy,dw,dh,rgb,box,k=1,ms=2500){
   const im=images[srcKey],c=crop[srcKey]||{x:0,y:0,w:im.width,h:im.height};
   const [x0,y0,x1,y1]=box;
-  drawArrowGlow(cache.spr[arrowKey],dx+(x0-c.x)/c.w*dw,dy+(y0-c.y)/c.h*dh,(x1-x0)/c.w*dw,(y1-y0)/c.h*dh,rgb,k);
+  drawArrowGlow(cache.spr[arrowKey],dx+(x0-c.x)/c.w*dw,dy+(y0-c.y)/c.h*dh,(x1-x0)/c.w*dw,(y1-y0)/c.h*dh,rgb,k,ms);
 }
 // Big block arrows point to the open lane: left lane points right, right lane points left, center points both ways unless a side lane is also blocked.
 function blockDir(o){if(o.lane<-.5)return 'right';if(o.lane>.5)return 'left';let L=false,R=false;for(const q of objects)if(q!==o&&q.type==='blocker'&&!q.done&&Math.abs(q.z-o.z)<60){if(q.lane<-.5)L=true;else if(q.lane>.5)R=true;}return L&&!R?'right':R&&!L?'left':'both';}
@@ -241,7 +241,7 @@ function drawObject(o){
   if(o.z<0||o.z>1500)return;const {x,y,r}=proj(o.z,o.lane),b=.5+.5*Math.sin(wall*Math.PI*2/7000);
   if(o.type==='coin'){const w=26*r;glow(x,y-43*r,w*.9,'#ffd56a',.2);sprite('coin',x,y,w,30*r);}
   else if(o.type==='portal'){
-    const radius=94*r;ctx.save();ctx.translate(x,y-radius*.9);ctx.scale(1,.90);drawPortal(0,0,radius/35.28,1,wall);ctx.restore();
+    const radius=PORTAL_R*r;ctx.save();ctx.translate(x,y-radius*.9);ctx.scale(1,.90);drawPortal(0,0,radius/35.28,1,wall);ctx.restore();
     if(r>.3){ctx.save();ctx.font=`${Math.max(9,22*r)}px 'Lilita One',sans-serif`;ctx.textAlign='center';ctx.lineWidth=4*r;ctx.lineJoin='round';ctx.strokeStyle='#18082c';ctx.fillStyle='#ffe68c';ctx.strokeText('SolOnChain Portal',x,y-radius*1.95);ctx.fillText('SolOnChain Portal',x,y-radius*1.95);ctx.restore();}
   }else if(o.type==='overhead'){
     const bw=100*r,bh=26*r,top=y-116*r,pw=9*r;
@@ -253,7 +253,7 @@ function drawObject(o){
     arrowOn('barrier','arrow_barrier',x-w/2,y-h,w,h,'255,200,40',[157,157,278,270]);
   }else if(o.type==='blocker'){
     const w=60*r,h=sprite('blocker',x,y,w);
-    arrowOn('blocker','arrow_blk_'+blockDir(o),x-w/2,y-h,w,h,'255,255,255',[30,280,316,460]);
+    arrowOn('blocker','arrow_blk_'+blockDir(o),x-w/2,y-h,w,h,'255,214,10',[24,274,322,466],1,1750);
   }
   else{const key='pu_'+o.type;glow(x,y-62*r,34*r,colors[o.type],.25);sprite(key,x,y,44*r,40*r);}
 }
@@ -412,7 +412,7 @@ function drawFX(){
 function drawWarpPortals(){
   const u=warp.time;
   if(u<WARP_J+.06){const a=1-ease((u-WARP_J+.12)/.18);ctx.save();ctx.translate(warp.x,warp.y);ctx.scale(1,.9);drawPortal(0,0,warp.scale*(1+.25*ease(u/WARP_J)),a,wall);ctx.restore();}
-  if(u>WARP_J){const grow=ease((u-WARP_J)/.14),a=1-ease((u-WARP_T+.24)/.24);ctx.save();ctx.translate(warp.exitX,555);ctx.scale(1,.9);drawPortal(0,0,Math.max(.02,2*grow),a,wall);ctx.restore();}
+  if(u>WARP_J){const grow=ease((u-WARP_J)/.14),a=1-ease((u-WARP_T+.24)/.24);ctx.save();ctx.translate(warp.exitX,555);ctx.scale(1,.9);drawPortal(0,0,Math.max(.02,1.5*grow),a,wall);ctx.restore();}
 }
 function warpCentre(){const u=warp.time,t=ease((u-WARP_J+.04)/.12);return[warp.x+(warp.exitX-warp.x)*t,warp.y+(470-warp.y)*t];}
 function warpZoom(){return 1+.13*warpRush(warp.time);}
