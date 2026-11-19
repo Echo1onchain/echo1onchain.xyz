@@ -1161,6 +1161,7 @@ body.brand .slot.calc.pkMine .nm{color:rgba(255,250,220,.82)!important;border-to
 #world .rdate .dw{font:700 14px/1.1 "Plus Jakarta Sans",Inter,sans-serif;letter-spacing:.04em;color:rgba(255,236,170,.85);text-shadow:0 1px 2px rgba(0,0,0,.85);white-space:nowrap}
 #world .rdate .dd{font:800 21px/1.05 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.02em;color:#fed700;text-shadow:0 1px 2px rgba(0,0,0,.85),0 0 10px rgba(254,215,0,.35);white-space:nowrap}
 #world .rdate .dd::after{content:"";display:block;width:40px;height:1px;margin:5px auto 1px;background:linear-gradient(90deg,transparent,rgba(254,215,0,.75),transparent)}
+#world .rdate .upNx{display:inline-block;margin-bottom:4px;padding:4px 10px 4px 11px;border-radius:999px;font:800 11px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.24em;text-transform:uppercase;color:#1a1200;background:linear-gradient(180deg,#ffe36a,#fed700);box-shadow:0 0 10px rgba(254,215,0,.4);white-space:nowrap}
 #world .rdate .dn{font:700 13px/1.25 "Plus Jakarta Sans",Inter,sans-serif;letter-spacing:.01em;color:rgba(255,242,205,.9);text-shadow:0 1px 2px rgba(0,0,0,.85);white-space:nowrap}
 </style>
 <style id="pkCSS">
@@ -1906,7 +1907,7 @@ function layout(N){
   if (SCH){
     for (const lb of labels){ if (typeof lb.r !== 'number' || lb.r > R - 2) continue;
       const left = lb.x < cS + cW / 2, key = lb.t === 'Battle Royale' ? 'Battle Royale ' + (left ? 'L' : 'R') : lb.t;
-      if (SCHED[key]) dates.push({ x: lb.x, y: top - 56, w: lb.w, lines: SCHED[key], r: lb.r, left }); }
+      if (SCHED[key]) dates.push({ x: lb.x, y: top - 56, w: lb.w, lines: SCHED[key], r: lb.r, left, key }); }
     dates.push({ x: cS + cW / 2, y: top - 56, w: 240, lines: SCHED['Championship'], center: 1, r: R - 1 });
   }
   if (third) labels.push({ x: third.label.x, y: third.label.y, t: '3rd Place Match', w: cW, r: 'third' });
@@ -2122,6 +2123,7 @@ function renderBracket(){
   }
   for (const dt of (L.dates || [])){ const d = document.createElement('div'); d.className = 'rdate' + (dt.center ? ' ctr' : '');
     d.style.left = dt.x + 'px'; d.style.top = dt.y + 'px'; d.style.width = dt.w + 'px';
+    if (dt.key === 'Battle Royale R' && Date.now() < Date.UTC(2026, 10, 19, 13, 0, 0)){ const u = document.createElement('span'); u.className = 'upNx'; u.textContent = 'Up Next'; d.appendChild(u); }
     const [day, ...rest] = dt.lines, sp = day.indexOf(' '); const w = document.createElement('span'); w.className = 'dw'; w.textContent = day.slice(0, sp) + ' '; const a = document.createElement('span'); a.className = 'dd'; a.textContent = day.slice(sp + 1); d.append(w, a);
     for (const t of rest){ const s = document.createElement('span'); s.className = 'dn'; s.textContent = t; d.appendChild(s); }
     if (typeof dt.r === 'number' && roundWaiting(dt.r, dt.left)){ d.classList.add('wait'); const s = document.createElement('span'); s.className = 'dwai'; s.textContent = 'Waiting for winner'; d.appendChild(s); }
@@ -2172,13 +2174,12 @@ function renderBracket(){
 }
 /* v14: seats are labelled by position (Battle Royale groups: BullBear 1-4; every later matchup: BullBear 1 top / 2 bottom).
    The real names stay in the data, the editor list, tooltips and the enlarge popup. */
-/* countdown to Tue Nov 17 2026 08:00 America/New_York (EST, UTC-5) = 13:00 UTC; same moment in every viewer's timezone */
-const CD_END = Date.UTC(2026, 10, 17, 13, 0, 0);
+/* countdown to Thu Nov 19 2026 08:00 America/New_York (EST, UTC-5) = 13:00 UTC; same moment in every viewer's timezone */
+const CD_END = Date.UTC(2026, 10, 19, 13, 0, 0);
 function cdTick(force){
   const n = document.querySelector('#world .cdown .cdN'); if (!n) return;
   let s = Math.max(0, Math.floor((CD_END - Date.now()) / 1000));
-  if (!s){ if (force || n.dataset.k !== 'R'){ n.dataset.k = 'R'; const cd = n.parentElement; cd.classList.add('done'); cd.setAttribute('role', 'status'); cd.setAttribute('aria-label', "Let's rumble");
-    n.innerHTML = '<b><em class="cdRum">LET\u2019S RUMBLE</em></b>'; } return; } // countdown reached zero
+  if (!s){ const cd = n.parentElement; if (cd.style.display !== 'none'){ cd.style.display = 'none'; document.querySelectorAll('#world .rdate .upNx').forEach(x => x.remove()); } return; } // countdown reached zero: hide it (no LET'S RUMBLE)
   const d = Math.floor(s / 86400); s %= 86400; const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60, p = v => String(v).padStart(2, '0');
   const segs = (d ? [[p(d), d === 1 ? 'Day' : 'Days']] : []).concat([[p(h), 'Hrs'], [p(m), 'Min'], [p(sec), 'Sec']]);
   const key = segs.map(x => x[0]).join(':'); if (!force && n.dataset.k === key) return; n.dataset.k = key;
