@@ -95,6 +95,10 @@ function fireZap(){
   const q=proj(target.z,target.lane);bolts.push({x0:proj(PLAYER_Z,p.lane).x,y0:560,x1:q.x,y1:q.y-35*q.r,life:.55,max:.55,seed:target.id,target});
   s.zapped++;chain();s.score+=15*mult();textFloat('+15 ZAPPED',q.x,q.y-80*q.r,'#a7edff');tone(1000,.3,'sawtooth',180);return true;
 }
+// Light speed warp: world accelerates into the portal, one soft bloom at the jump, drop out at speed. Total WARP_T seconds.
+const WARP_J=.4,WARP_T=.9,STREAKS=[];
+for(let i=0;i<72;i++)STREAKS.push({a:i*2.39996+((i*7919)%13)*.05,o:((i*0.618034)%1),v:.9+((i*37)%11)/11*.8,w:.7+((i*53)%7)/7*1.4,c:i%5===0?'153,69,255':i%5===2?'20,241,149':'235,245,255'});
+function warpRush(u){return u<WARP_J?ease(u/WARP_J):1-ease((u-WARP_J)/(WARP_T-WARP_J));}
 function beginWarp(o){
   o.done=true;s.warps++;s.powerups++;chain();const q=proj(o.z,o.lane);
   const radius=94*q.r;warp={time:0,applied:false,x:q.x,y:q.y-radius*.9,scale:radius/35.28,exitX:proj(PLAYER_Z,p.target).x};
@@ -102,9 +106,9 @@ function beginWarp(o){
 }
 function updateWarp(dt){
   warp.time+=dt;
-  worldScroll+=dt*60*(1-ease(warp.time/.5));
-  if(warp.time>=.72&&!warp.applied){warp.applied=true;s.distance+=225;s.score+=22.5;worldScroll+=750;objects=[];spawnClock=-.6;sceneClock=(Math.floor(sceneClock/17000)+1)*17000;levelCheck();}
-  if(warp.time>=1.5){warp=null;p.effects.shield=Math.max(p.effects.shield,1200);textFloat('BACK ON THE ROAD',200,450,'#ffe17d');}
+  worldScroll+=dt*roadSpeed()*(1+5*warpRush(warp.time));
+  if(warp.time>=WARP_J&&!warp.applied){warp.applied=true;s.distance+=225;s.score+=22.5;worldScroll+=750;objects=[];spawnClock=-.6;sceneClock=(Math.floor(sceneClock/17000)+1)*17000;levelCheck();}
+  if(warp.time>=WARP_T){warp=null;p.effects.shield=Math.max(p.effects.shield,1200);textFloat('BACK ON THE ROAD',200,450,'#ffe17d');}
 }
 function banner(main,sub=''){const el=$('zone-banner');el.innerHTML=main+(sub?`<small>${sub}</small>`:'');el.classList.add('show');bannerTimer=2200;}
 function spawn(){
@@ -258,8 +262,8 @@ function drawRunner(){
   const q=proj(PLAYER_Z,p.lane);let x=q.x,foot=625-p.jump*.65,scale=RUNNER_SCALE,alpha=1;
   if(warp){const u=warp.time;
     // Pulled in: feet travel to the portal centre while he shrinks; dropped out: grows back from the exit centre.
-    if(u<.72){let t=ease(u/.62);x=x+(warp.x-x)*t;foot=625+(warp.y+62*(1-t)*RUNNER_SCALE-625)*t;scale*=1-.92*t;alpha=1-.6*ease((u-.4)/.32);}
-    else{let t=ease((u-.86)/.5);x=warp.exitX;foot=555+70*t;scale*=.08+.92*t;alpha=ease((u-.8)/.3);}}
+    if(u<WARP_J){let t=ease(u/(WARP_J*.95));x=x+(warp.x-x)*t;foot=625+(warp.y+62*(1-t)*RUNNER_SCALE-625)*t;scale*=1-.92*t;alpha=1-.7*ease((u-WARP_J*.55)/(WARP_J*.45));}
+    else{let t=ease((u-WARP_J-.03)/.36);x=warp.exitX;foot=555+70*t;scale*=.08+.92*t;alpha=ease((u-WARP_J)/.14);}}
   const k=scale/.4;
   ctx.save();ctx.fillStyle='rgba(0,0,0,.36)';ctx.beginPath();ctx.ellipse(q.x,625,34*k*(1-p.jump/300),7*k,0,0,Math.PI*2);ctx.fill();ctx.restore();
   const breathe=.5+.5*Math.sin(wall*Math.PI*2/7000);
@@ -408,22 +412,41 @@ function drawFX(){
 }
 function drawWarpPortals(){
   const u=warp.time;
-  if(u<.86){const a=1-ease((u-.6)/.26);ctx.save();ctx.globalAlpha=a;ctx.translate(warp.x,warp.y);ctx.scale(1,.9);drawPortal(0,0,warp.scale*(1+.08*ease(u/.6)),1,wall);ctx.restore();}
-  if(u>.72){const grow=ease((u-.72)/.2),a=1-ease((u-1.1)/.4);ctx.save();ctx.globalAlpha=a;ctx.translate(warp.exitX,555);ctx.scale(1,.9);drawPortal(0,0,Math.max(.02,2*grow),1,wall);ctx.restore();}
+  if(u<WARP_J+.06){const a=1-ease((u-WARP_J+.12)/.18);ctx.save();ctx.translate(warp.x,warp.y);ctx.scale(1,.9);drawPortal(0,0,warp.scale*(1+.25*ease(u/WARP_J)),a,wall);ctx.restore();}
+  if(u>WARP_J){const grow=ease((u-WARP_J)/.14),a=1-ease((u-WARP_T+.24)/.24);ctx.save();ctx.translate(warp.exitX,555);ctx.scale(1,.9);drawPortal(0,0,Math.max(.02,2*grow),a,wall);ctx.restore();}
 }
+function warpCentre(){const u=warp.time,t=ease((u-WARP_J+.04)/.12);return[warp.x+(warp.exitX-warp.x)*t,warp.y+(470-warp.y)*t];}
+function warpZoom(){return 1+.13*warpRush(warp.time);}
 function drawWarp(){
-  // Soft travel veil, like Bounce's teleport veil. Fades in and out smoothly with no flash.
-  const u=warp.time,mid=ease(1-Math.abs((u-.72)/.26));if(mid<=.01)return;
-  ctx.save();const g=ctx.createRadialGradient(200,420,30,200,420,420);
-  g.addColorStop(0,`rgba(36,10,58,${(.5*mid).toFixed(3)})`);g.addColorStop(.45,`rgba(135,0,255,${(.22*mid).toFixed(3)})`);g.addColorStop(.75,`rgba(255,213,106,${(.10*mid).toFixed(3)})`);g.addColorStop(1,`rgba(10,6,24,${(.45*mid).toFixed(3)})`);
-  ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
-  ctx.globalAlpha=.55*mid;ctx.lineCap='round';
-  for(let i=0;i<22;i++){const a=i*2.4+1.3,len=40+(i*37%90),d=(u*900+i*53)%380+30;const x=200+Math.cos(a)*d,y=420+Math.sin(a)*d*1.1;
-    ctx.strokeStyle=i%3?'rgba(92,225,255,.8)':'rgba(255,213,106,.85)';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+Math.cos(a)*len,y+Math.sin(a)*len*1.1);ctx.stroke();}
+  // Hyperspace streaks radiating from the portal, plus one smooth bloom at the jump. No repeats, no strobe.
+  const u=warp.time,rush=warpRush(u);if(rush<=.01)return;
+  const [cx,cy]=warpCentre();
+  ctx.save();
+  const veil=ctx.createRadialGradient(cx,cy,20,cx,cy,460);
+  veil.addColorStop(0,`rgba(20,8,40,${(.10*rush).toFixed(3)})`);veil.addColorStop(.6,`rgba(60,14,110,${(.28*rush).toFixed(3)})`);veil.addColorStop(1,`rgba(6,4,18,${(.55*rush).toFixed(3)})`);
+  ctx.fillStyle=veil;ctx.fillRect(0,0,W,H);
+  ctx.globalCompositeOperation='lighter';ctx.lineCap='round';
+  const speed=.6+2.6*rush,R=520;
+  for(const k of STREAKS){
+    const d=(k.o+u*speed*k.v)%1;            // 0 at centre, 1 off screen
+    const fade=Math.min(1,d*5)*Math.min(1,(1-d)*4)*rush;if(fade<.02)continue;
+    const r0=12+R*d*d,len=(.1+.75*rush)*R*d*d+10,ca=Math.cos(k.a),sa=Math.sin(k.a),lw=k.w*(1+3.4*d);
+    ctx.beginPath();ctx.moveTo(cx+ca*r0,cy+sa*r0);ctx.lineTo(cx+ca*(r0+len),cy+sa*(r0+len));
+    ctx.strokeStyle=`rgba(${k.c},${(.22*fade).toFixed(3)})`;ctx.lineWidth=lw*3.2;ctx.stroke();
+    ctx.strokeStyle=`rgba(${k.c},${(.95*fade).toFixed(3)})`;ctx.lineWidth=lw;ctx.stroke();
+  }
+  ctx.globalCompositeOperation='source-over';
+  // Single bloom: quick smooth rise into the jump, softer fade out.
+  const bloom=u<WARP_J?ease((u-WARP_J+.08)/.08):1-ease((u-WARP_J)/.26);
+  if(bloom>.01){const g=ctx.createRadialGradient(cx,cy,0,cx,cy,520);
+    g.addColorStop(0,`rgba(255,255,255,${(.92*bloom).toFixed(3)})`);g.addColorStop(.35,`rgba(225,210,255,${(.62*bloom).toFixed(3)})`);g.addColorStop(1,`rgba(150,120,255,${(.22*bloom).toFixed(3)})`);
+    ctx.fillStyle=g;ctx.fillRect(0,0,W,H);}
   ctx.restore();
 }
 function render(){
-  if(!ready)return;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);drawBg();drawRoad();
+  if(!ready)return;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
+  if(warp){const [cx,cy]=warpCentre(),z=warpZoom();ctx.translate(cx,cy);ctx.scale(z,z);ctx.translate(-cx,-cy);}
+  drawBg();drawRoad();
   const list=objects.filter(o=>!o.done),far=list.filter(o=>o.z>=PLAYER_Z).sort((a,b)=>b.z-a.z),near=list.filter(o=>o.z<PLAYER_Z).sort((a,b)=>b.z-a.z);
   for(const o of far)drawObject(o);
   if(warp)drawWarpPortals();
@@ -431,7 +454,7 @@ function render(){
   // Redraw a nearby overhead so the beam sits in front of a sliding runner and the gap stays visible.
   for(const o of far)if(o.type==='overhead'&&o.z<PLAYER_Z+80)drawObject(o);
   for(const o of near)drawObject(o);
-  if(warp)drawWarp();
+  if(warp){ctx.setTransform(dpr,0,0,dpr,0,0);drawWarp();}
   drawFX();ctx.drawImage(cache.vignette,0,0,W,H);
 }
 function resize(){
