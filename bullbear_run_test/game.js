@@ -85,7 +85,7 @@ function lane(dir){
   const win=Math.max(150,roadSpeed()*.45);for(const o of objects)if(isObstacle(o)&&!o.done&&!o.passed&&o.lane===p.target&&o.z>=32&&o.z<win)o.near=true;
   p.from=p.lane;p.target=next;p.laneT=0;tone(250,.07,'sine',400);
 }
-function jump(){if(mode!=='playing'||paused||warp||p.jump>0||p.slide>0)return;p.vy=960;p.jump=.01;tone(360,.15,'triangle',640);}
+function jump(){if(mode!=='playing'||paused||warp||p.jump>0||p.slide>0)return;p.vy=1000;p.jump=.01;tone(360,.15,'triangle',640);}
 function slide(){if(mode!=='playing'||paused||warp||p.jump>0||p.slide>0)return;p.slide=450;tone(440,.15,'sine',180);}
 function fireZap(){
   if(mode!=='playing'||paused||warp||p.effects.zap<=0||p.charges<=0)return false;
@@ -127,7 +127,7 @@ function update(dt){
   for(const k in p.effects)p.effects[k]=Math.max(0,p.effects[k]-dt*1000);
   if(warp){updateWarp(dt);tickFX(dt);return;}
   p.laneT=Math.min(1,p.laneT+dt*4.8);p.lane=p.from+(p.target-p.from)*ease(p.laneT);
-  if(p.jump>0||p.vy>0){p.vy-=2700*dt;p.jump+=p.vy*dt;if(p.jump<0){p.jump=0;p.vy=0;}}
+  if(p.jump>0||p.vy>0){p.vy-=3400*dt;p.jump+=p.vy*dt;if(p.jump<0){p.jump=0;p.vy=0;}}
   p.slide=Math.max(0,p.slide-dt*1000);
   const speed=roadSpeed(),dz=speed*dt;
   s.distance+=dz*.3;s.score+=dz*.03;worldScroll+=dz;levelCheck();
