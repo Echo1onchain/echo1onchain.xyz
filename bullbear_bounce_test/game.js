@@ -66,7 +66,7 @@
 
   const BEST_KEY = "bullbear_bounce_v2_best";
   const MUTE_KEY = "bullbear_bounce_v2_mute";
-  const TRACK_KEY = "bullbear_bounce_v2_track";
+  const TRACK_KEY = "bullbear_bounce_v2_track_m";
   const MUSIC_VOL = 0.45;
   const MUSIC_FADE_MS = 700;
   const SONG_CUE_3 = 2.75;
@@ -125,7 +125,7 @@
   let muted = localStorage.getItem(MUTE_KEY) === "1";
   let bestScore = parseInt(localStorage.getItem(BEST_KEY) || "0", 10) || 0;
   let trackIndex = (() => {
-    const v = parseInt(localStorage.getItem(TRACK_KEY) || "0", 10);
+    const v = parseInt(localStorage.getItem(TRACK_KEY) || "1", 10);
     return v === 1 ? 1 : 0;
   })();
   let audioCtx = null;
