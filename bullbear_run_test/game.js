@@ -176,7 +176,7 @@ function stepScale(src,sx,sy,sw,sh,tw,th){
 }
 function buildCaches(){
   if(cache.dpr===dpr)return;cache.dpr=dpr;cache.bg.clear();const k=1.3*dpr;
-  const spec={coin:26,barrier:84,blocker:60,pu_magnet:44,pu_boost:44,pu_shield:44,pu_double_coins:44,pu_zap:44};
+  const spec={coin:39,barrier:84,blocker:60,pu_magnet:44,pu_boost:44,pu_shield:44,pu_double_coins:44,pu_zap:44};
   for(const [key,w]of Object.entries(spec)){const c=crop[key];cache.spr[key]=stepScale(images[key],c.x,c.y,c.w,c.h,w*k,w*k*c.h/c.w);}
   cache.spr.beam=stepScale(images.beam,0,0,images.beam.width,images.beam.height,100*k,26*k);
   cache.spr.post=stepScale(images.post,0,0,images.post.width,images.post.height,9*k,109*k);
@@ -239,7 +239,7 @@ function blockDir(o){if(o.lane<-.5)return 'right';if(o.lane>.5)return 'left';let
 function sprite(key,x,bottom,w,yoff=0){const im=cache.spr[key],h=w*im.height/im.width;ctx.drawImage(im,x-w/2,bottom-h-yoff,w,h);return h;}
 function drawObject(o){
   if(o.z<0||o.z>1500)return;const {x,y,r}=proj(o.z,o.lane),b=.5+.5*Math.sin(wall*Math.PI*2/7000);
-  if(o.type==='coin'){const w=26*r;glow(x,y-43*r,w*.9,'#ffd56a',.2);sprite('coin',x,y,w,30*r);}
+  if(o.type==='coin'){const w=39*r;glow(x,y-43*r,w*.9,'#ffd56a',.2);sprite('coin',x,y,w,23.5*r);}
   else if(o.type==='portal'){
     const radius=PORTAL_R*r;ctx.save();ctx.translate(x,y-radius*.9);ctx.scale(1,.90);drawPortal(0,0,radius/35.28,1,wall);ctx.restore();
     if(r>.3){ctx.save();ctx.font=`${Math.max(9,22*r)}px 'Lilita One',sans-serif`;ctx.textAlign='center';ctx.lineWidth=4*r;ctx.lineJoin='round';ctx.strokeStyle='#18082c';ctx.fillStyle='#ffe68c';ctx.strokeText('SolOnChain Portal',x,y-radius*1.95);ctx.fillText('SolOnChain Portal',x,y-radius*1.95);ctx.restore();}
