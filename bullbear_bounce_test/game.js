@@ -2807,6 +2807,7 @@
     document.getElementById("count-num").hidden = true;
     btnPlay.hidden = false;
     btnPlay.textContent = "Play";
+    btnPlay.classList.remove("btn-again");
     if (btnHow) btnHow.hidden = false;
     document.getElementById("ov-controls").hidden = false;
     hud.classList.remove("show");
@@ -2826,6 +2827,7 @@
     document.getElementById("new-best").classList.remove("show");
     document.getElementById("go-stats").hidden = true;
     btnPlay.hidden = true;
+    btnPlay.classList.remove("btn-again");
     if (btnHow) btnHow.hidden = true;
     closeHow();
     document.getElementById("ov-controls").hidden = true;
@@ -2945,18 +2947,19 @@
     document.getElementById("go-title").hidden = false;
     const gs = document.getElementById("go-score");
     gs.hidden = false;
-    gs.innerHTML = `${score}<span>m</span>`;
+    gs.innerHTML = `${score}<span class="score-unit">m</span>`;
     document.getElementById("new-best").classList.toggle("show", isNew);
     const stats = document.getElementById("go-stats");
     stats.hidden = false;
     stats.innerHTML = `
-      <div class="stat"><b>${bestScore}m</b><span>Best</span></div>
-      <div class="stat"><b>${state.powerUps}</b><span>Power-ups</span></div>
-      <div class="stat"><b>x${state.maxCombo}</b><span>Max Combo</span></div>
+      <div class="stat-pill"><span class="lbl">BEST</span><span class="val">${bestScore}m</span></div>
+      <div class="stat-pill"><span class="lbl">POWER-UPS</span><span class="val">${state.powerUps}</span></div>
+      <div class="stat-pill"><span class="lbl">MAX COMBO</span><span class="val">x${state.maxCombo}</span></div>
     `;
     document.getElementById("count-num").hidden = true;
     btnPlay.hidden = false;
     btnPlay.textContent = "Play Again";
+    btnPlay.classList.add("btn-again");
     if (btnHow) btnHow.hidden = true;
     closeHow();
     document.getElementById("ov-controls").hidden = true;
