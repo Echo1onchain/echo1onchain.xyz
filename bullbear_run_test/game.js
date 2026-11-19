@@ -177,9 +177,9 @@ function buildCaches(){
   for(const [key,w]of Object.entries(spec)){const c=crop[key];cache.spr[key]=stepScale(images[key],c.x,c.y,c.w,c.h,w*k,w*k*c.h/c.w);}
   cache.spr.beam=stepScale(images.beam,0,0,images.beam.width,images.beam.height,100*k,26*k);
   cache.spr.post=stepScale(images.post,0,0,images.post.width,images.post.height,9*k,109*k);
-  cache.spr.arrow_beam=stepScale(images.arrow_beam,0,0,images.arrow_beam.width,images.arrow_beam.height,18*k,17*k);
+  cache.spr.light_beam=stepScale(images.light_beam,0,0,images.light_beam.width,images.light_beam.height,25*k,11*k);
   cache.spr.arrow_barrier=stepScale(images.arrow_barrier,0,0,images.arrow_barrier.width,images.arrow_barrier.height,22*k,21*k);
-  cache.spr.arrow_blocker=stepScale(images.arrow_blocker,0,0,images.arrow_blocker.width,images.arrow_blocker.height,28*k,40*k);
+  for(const d of ['left','right','both'])cache.spr['arrow_blk_'+d]=stepScale(images['arrow_blk_'+d],0,0,images['arrow_blk_'+d].width,images['arrow_blk_'+d].height,36*k,23*k);
   cache.spr.soc=stepScale(images.soc,0,0,images.soc.width,images.soc.height,130*dpr,130*dpr);
   cache.frames=[];for(let f=0;f<8;f++)cache.frames[f]=stepScale(images.runner,(f%4)*384,Math.floor(f/4)*512,384,512,384*RUNNER_SCALE*dpr,512*RUNNER_SCALE*dpr);
   const v=document.createElement('canvas');v.width=W*dpr;v.height=H*dpr;const g=v.getContext('2d');g.scale(dpr,dpr);
@@ -213,24 +213,26 @@ function glow(x,y,r,color,opacity=.25){
   g.addColorStop(0,color+Math.round((opacity+.07*b)*255).toString(16).padStart(2,'0'));g.addColorStop(1,color+'00');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r*1.04,0,Math.PI*2);ctx.fill();
 }
 function arrowPulse(){return .5+.5*Math.sin(wall*Math.PI*2/2500);}
-function drawArrowGlow(img,dx,dy,dw,dh,rgb){
+function drawArrowGlow(img,dx,dy,dw,dh,rgb,k=1){
   if(!img||dw<1.5||dh<1.5)return;
   const p=arrowPulse(),s=Math.min(dw,dh);
   ctx.save();
-  ctx.shadowColor=`rgba(${rgb},${(.3+.5*p).toFixed(3)})`;
-  ctx.shadowBlur=Math.max(2,(4+10*p)*s/26);
+  ctx.shadowColor=`rgba(${rgb},${Math.min(1,(.3+.5*p)*k).toFixed(3)})`;
+  ctx.shadowBlur=Math.max(2,(4+10*p)*k*s/26);
   ctx.drawImage(img,dx,dy,dw,dh);
   ctx.shadowBlur=0;
   ctx.globalCompositeOperation='lighter';
-  ctx.globalAlpha=.1+.3*p;
+  ctx.globalAlpha=Math.min(1,(.1+.3*p)*k);
   ctx.drawImage(img,dx,dy,dw,dh);
   ctx.restore();
 }
-function arrowOn(srcKey,arrowKey,dx,dy,dw,dh,rgb,box){
+function arrowOn(srcKey,arrowKey,dx,dy,dw,dh,rgb,box,k=1){
   const im=images[srcKey],c=crop[srcKey]||{x:0,y:0,w:im.width,h:im.height};
   const [x0,y0,x1,y1]=box;
-  drawArrowGlow(cache.spr[arrowKey],dx+(x0-c.x)/c.w*dw,dy+(y0-c.y)/c.h*dh,(x1-x0)/c.w*dw,(y1-y0)/c.h*dh,rgb);
+  drawArrowGlow(cache.spr[arrowKey],dx+(x0-c.x)/c.w*dw,dy+(y0-c.y)/c.h*dh,(x1-x0)/c.w*dw,(y1-y0)/c.h*dh,rgb,k);
 }
+// Big block arrows point to the open lane: left lane points right, right lane points left, center points both ways unless a side lane is also blocked.
+function blockDir(o){if(o.lane<-.5)return 'right';if(o.lane>.5)return 'left';let L=false,R=false;for(const q of objects)if(q!==o&&q.type==='blocker'&&!q.done&&Math.abs(q.z-o.z)<60){if(q.lane<-.5)L=true;else if(q.lane>.5)R=true;}return L&&!R?'right':R&&!L?'left':'both';}
 function sprite(key,x,bottom,w,yoff=0){const im=cache.spr[key],h=w*im.height/im.width;ctx.drawImage(im,x-w/2,bottom-h-yoff,w,h);return h;}
 function drawObject(o){
   if(o.z<0||o.z>1500)return;const {x,y,r}=proj(o.z,o.lane),b=.5+.5*Math.sin(wall*Math.PI*2/7000);
@@ -242,13 +244,13 @@ function drawObject(o){
     const bw=100*r,bh=26*r,top=y-116*r,pw=9*r;
     ctx.drawImage(cache.spr.post,x-bw/2+3*r,top+bh*.3,pw,109*r);ctx.drawImage(cache.spr.post,x+bw/2-12*r,top+bh*.3,pw,109*r);
     ctx.drawImage(cache.spr.beam,x-bw/2,top,bw,bh);
-    arrowOn('beam','arrow_beam',x-bw/2,top,bw,bh,'255,36,36',[546,59,636,142]);
+    arrowOn('beam','light_beam',x-bw/2,top,bw,bh,'255,36,36',[447,24,735,148],2.2);
   }else if(o.type==='low_barrier'){
     const w=84*r,h=sprite('barrier',x,y,w);
     arrowOn('barrier','arrow_barrier',x-w/2,y-h,w,h,'255,200,40',[157,157,278,270]);
   }else if(o.type==='blocker'){
     const w=60*r,h=sprite('blocker',x,y,w);
-    arrowOn('blocker','arrow_blocker',x-w/2,y-h,w,h,'255,255,255',[50,204,281,534]);
+    arrowOn('blocker','arrow_blk_'+blockDir(o),x-w/2,y-h,w,h,'255,255,255',[30,280,316,460]);
   }
   else{const key='pu_'+o.type;glow(x,y-62*r,34*r,colors[o.type],.25);sprite(key,x,y,44*r,40*r);}
 }
@@ -562,7 +564,7 @@ function load(key,path){return new Promise((resolve,reject)=>{const im=new Image
 function trimBounds(key){const im=images[key],c=document.createElement('canvas');c.width=im.width;c.height=im.height;const g=c.getContext('2d',{willReadFrequently:true});g.drawImage(im,0,0);const d=g.getImageData(0,0,c.width,c.height).data;let x0=c.width,y0=c.height,x1=0,y1=0;for(let y=0;y<c.height;y++)for(let x=0;x<c.width;x++)if(d[(y*c.width+x)*4+3]>8){x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x);y1=Math.max(y1,y);}crop[key]={x:x0,y:y0,w:x1-x0+1,h:y1-y0+1};}
 async function boot(){
   try{
-    const paths={runner:'runner_sheet.png',road:'road_tile.png',coin:'solana_coin.png',soc:'soc_coin.png',barrier:'ob_low_barrier.png',beam:'ob_overhead_beam.png',post:'ob_overhead_post.png',blocker:'ob_tall_blocker.png',pu_magnet:'pu_magnet.png',pu_boost:'pu_boost.png',pu_shield:'pu_shield.png',pu_double_coins:'pu_double_coins.png',pu_zap:'pu_zap.webp',arrow_beam:'arrow_beam.png',arrow_barrier:'arrow_barrier.png',arrow_blocker:'arrow_blocker.png'};
+    const paths={runner:'runner_sheet.png',road:'road_tile.png',coin:'solana_coin.png',soc:'soc_coin.png',barrier:'ob_low_barrier.png',beam:'ob_overhead_beam.png',post:'ob_overhead_post.png',blocker:'ob_tall_blocker.png',pu_magnet:'pu_magnet.png',pu_boost:'pu_boost.png',pu_shield:'pu_shield.png',pu_double_coins:'pu_double_coins.png',pu_zap:'pu_zap.webp',light_beam:'light_beam.png',arrow_barrier:'arrow_barrier.png',arrow_blk_left:'arrow_blk_left.png',arrow_blk_right:'arrow_blk_right.png',arrow_blk_both:'arrow_blk_both.png'};
     backgrounds.forEach(k=>paths['bg_'+k]='bg_'+k+'.webp');
     await Promise.all(Object.entries(paths).map(([k,v])=>load(k,'assets/'+v)));
     await Promise.all([load('runner_goggles','assets/runner_goggles.webp'),load('runner_slide','assets/runner_slide.webp')]);
