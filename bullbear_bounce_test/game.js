@@ -126,6 +126,8 @@
   let lastRun = null;
   const TOP_KEY = "bullbear_bounce_v2_top10";
   const SHARE_URL = "https://echo1onchain.xyz/bullbear_bounce_test/";
+  const HOME_URL = "https://www.bullbeargames.com/"; // main BullBear games page (original "Back to Games")
+  const startActions = document.getElementById("start-actions");
 
   const images = { character: null, cloud: null, cloudBoost: null, cloudCracked: null, coin: null, shield: null, rocket: null, weed: null, solonchain: null, storm: null, hole: null, holeRing: null, zap: null, bg: {}, lm: {} };
   const décor = { earth: [], air: [], clouds: [], atmosphere: [], space: [] };
@@ -2812,12 +2814,14 @@
     document.getElementById("go-score").hidden = true;
     document.getElementById("new-best").classList.remove("show");
     document.getElementById("go-stats").hidden = true;
+    document.getElementById("go-stats").innerHTML = "";
     document.getElementById("count-num").hidden = true;
     btnPlay.hidden = false;
     btnPlay.textContent = "Play";
     btnPlay.classList.remove("btn-again");
     if (btnHow) btnHow.hidden = false;
     if (goActions) goActions.hidden = true;
+    if (startActions) startActions.hidden = false;
     closeLb();
     document.getElementById("ov-controls").hidden = false;
     hud.classList.remove("show");
@@ -2840,6 +2844,7 @@
     btnPlay.classList.remove("btn-again");
     if (btnHow) btnHow.hidden = true;
     if (goActions) goActions.hidden = true;
+    if (startActions) startActions.hidden = true;
     closeLb();
     closeHow();
     document.getElementById("ov-controls").hidden = true;
@@ -2975,6 +2980,7 @@
     btnPlay.classList.add("btn-again");
     if (btnHow) btnHow.hidden = true;
     if (goActions) goActions.hidden = false;
+    if (startActions) startActions.hidden = true;
     closeHow();
     document.getElementById("ov-controls").hidden = true;
     hud.classList.remove("show");
@@ -3120,7 +3126,8 @@
     ).join("");
   }
   function openLb() {
-    if (uiMode !== "gameover") return;
+    if (uiMode !== "gameover" && uiMode !== "start") return;
+    if (howOpen) return;
     renderLb();
     lbOpen = true;
     if (lbPanel) lbPanel.classList.add("open");
@@ -3151,6 +3158,10 @@
   if (btnLb) btnLb.addEventListener("click", (e) => { stopUi(e); openLb(); });
   if (btnShare) btnShare.addEventListener("click", (e) => { stopUi(e); shareScore(); });
   if (btnHome) btnHome.addEventListener("click", (e) => { stopUi(e); if (uiMode === "gameover") showStart(); });
+  const btnLbStart = document.getElementById("btn-lb-start");
+  const btnHomeStart = document.getElementById("btn-home-start");
+  if (btnLbStart) btnLbStart.addEventListener("click", (e) => { stopUi(e); openLb(); });
+  if (btnHomeStart) btnHomeStart.addEventListener("click", (e) => { stopUi(e); window.location.href = HOME_URL; });
   if (lbClose) lbClose.addEventListener("click", (e) => { stopUi(e); closeLb(); });
   if (lbPanel) lbPanel.addEventListener("click", (e) => { if (e.target === lbPanel) closeLb(); });
   if (btnHow) btnHow.addEventListener("click", (e) => {
