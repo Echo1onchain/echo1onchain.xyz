@@ -939,6 +939,8 @@ body.og .okp{display:none!important}
 .okp-title{margin:0;font-size:16px;font-weight:800;line-height:1.15;color:#fff;overflow-wrap:anywhere}
 .okp-artist{display:inline-block;margin-top:4px;font:700 10px "JetBrains Mono",ui-monospace,monospace;letter-spacing:.2em;text-transform:uppercase;color:#fed700;text-decoration:none;border-bottom:1px solid rgba(254,215,0,.35);transition:color .3s,border-color .3s}
 .okp-artist:hover{color:#fff2a8;border-color:#fff2a8}
+.okp-spot{display:flex;width:fit-content;margin-top:6px;align-items:center;gap:5px}
+.okp-spot svg{width:11px;height:11px;fill:#1ed760;flex:0 0 auto}
 .okp-close{flex:0 0 auto;width:32px;height:32px;min-height:0;padding:0;border-radius:8px;border:1px solid rgba(255,255,255,.22);background:rgba(0,0,0,.4);cursor:pointer;display:grid;place-items:center;transition:border-color .3s}
 .okp-close:hover{border-color:#fed700}
 .okp-close svg{width:11px;height:11px;stroke:#fff;stroke-width:2.4;fill:none}
@@ -3402,6 +3404,7 @@ async function loadPublished(){
       <div class="okp-meta">
         <p class="okp-title" id="okp-title">In This Round</p>
         <a class="okp-artist" href="https://echo1onchain.xyz/music/" target="_blank" rel="noopener">Music by Echo1</a>
+        <a class="okp-artist okp-spot" href="https://open.spotify.com/album/41ivigQoeMfRpFEXcGrEMz" target="_blank" rel="noopener" aria-label="Listen on Spotify"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.5A10.5 10.5 0 1 0 22.5 12 10.5 10.5 0 0 0 12 1.5zm4.8 15.1a.65.65 0 0 1-.9.22c-2.47-1.5-5.58-1.85-9.24-1.01a.65.65 0 1 1-.29-1.27c4-.92 7.44-.52 10.2 1.16a.65.65 0 0 1 .23.9zm1.28-2.86a.82.82 0 0 1-1.12.27c-2.83-1.74-7.14-2.24-10.48-1.23a.82.82 0 1 1-.47-1.56c3.82-1.16 8.57-.6 11.81 1.4a.82.82 0 0 1 .26 1.12zm.11-2.98C14.8 8.75 9.2 8.56 5.95 9.55a.98.98 0 1 1-.57-1.88c3.73-1.13 9.93-.91 13.84 1.41a.98.98 0 0 1-1.03 1.68z"/></svg>Listen on Spotify</a>
       </div>
       <button type="button" class="okp-close" id="okp-close" aria-label="Collapse music player">
         <svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>
@@ -3441,7 +3444,7 @@ async function loadPublished(){
   if(!root) return;
   var TRACKS=[
     {src:'music/soc_in_this_round.mp3', title:'In This Round', artist:'Echo1', durHint:167},
-    {src:'music/soc_going_for_the_gold.mp3', title:'Going for the Gold', artist:'Echo1', durHint:136},
+    {src:'music/soc_going_for_the_gold.mp3', title:'Coming for the Gold', artist:'Echo1', durHint:136},
     {src:'music/soc_we_climbin.mp3', title:"SOC We Climbin'", artist:'Echo1', durHint:152}
   ];
   var aEl=document.getElementById('okaudio-a');
