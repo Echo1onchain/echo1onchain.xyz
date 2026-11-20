@@ -18,9 +18,9 @@
   const ROCKET_V = 28;
   const WEED_GRAVITY = 0.25;
   const MAX_FALL = 13.4;
-  const ACCEL = 0.13; // ease-in responsiveness toward target speed
-  const MAX_VX = 8.2;
-  const FRICTION = 0.86;
+  const ACCEL = 0.085; // softer ease-in so a tap never lurches
+  const MAX_VX = 5.9;
+  const FRICTION = 0.88; // gentle glide on release
   const SPRING_V = 18.78;
   const PERFECT_V = 14.31;
   const COIN_METERS = 5;
