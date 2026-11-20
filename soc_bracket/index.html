@@ -2125,7 +2125,7 @@ function renderBracket(){
   }
   for (const dt of (L.dates || [])){ const d = document.createElement('div'); d.className = 'rdate' + (dt.center ? ' ctr' : '');
     d.style.left = dt.x + 'px'; d.style.top = dt.y + 'px'; d.style.width = dt.w + 'px';
-    if (dt.key === 'Battle Royale R' && Date.now() < Date.UTC(2026, 10, 19, 13, 0, 0)){ const u = document.createElement('span'); u.className = 'upNx'; u.textContent = 'Up Next'; d.appendChild(u); }
+    if (dt.key === 'Sweet 16' && Date.now() < Date.UTC(2026, 10, 24, 13, 0, 0)){ const u = document.createElement('span'); u.className = 'upNx'; u.textContent = 'Up Next'; d.appendChild(u); }
     const [day, ...rest] = dt.lines, sp = day.indexOf(' '); const w = document.createElement('span'); w.className = 'dw'; w.textContent = day.slice(0, sp) + ' '; const a = document.createElement('span'); a.className = 'dd'; a.textContent = day.slice(sp + 1); d.append(w, a);
     for (const t of rest){ const s = document.createElement('span'); s.className = 'dn'; s.textContent = t; d.appendChild(s); }
     if (typeof dt.r === 'number' && roundWaiting(dt.r, dt.left)){ d.classList.add('wait'); const s = document.createElement('span'); s.className = 'dwai'; s.textContent = 'Waiting for winner'; d.appendChild(s); }
@@ -2176,8 +2176,8 @@ function renderBracket(){
 }
 /* v14: seats are labelled by position (Battle Royale groups: BullBear 1-4; every later matchup: BullBear 1 top / 2 bottom).
    The real names stay in the data, the editor list, tooltips and the enlarge popup. */
-/* countdown to Thu Nov 19 2026 08:00 America/New_York (EST, UTC-5) = 13:00 UTC; same moment in every viewer's timezone */
-const CD_END = Date.UTC(2026, 10, 19, 13, 0, 0);
+/* countdown to Tue Nov 24 2026 08:00 America/New_York (EST, UTC-5) = 13:00 UTC (Sweet 16 match 1, see matchStart); same moment in every viewer's timezone */
+const CD_END = Date.UTC(2026, 10, 24, 13, 0, 0);
 function cdTick(force){
   const n = document.querySelector('#world .cdown .cdN'); if (!n) return;
   let s = Math.max(0, Math.floor((CD_END - Date.now()) / 1000));
