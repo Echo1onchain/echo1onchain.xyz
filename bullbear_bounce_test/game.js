@@ -2039,6 +2039,63 @@
     return images.cloud;
   }
 
+  const CLOUD_EDGE_OFF = 6;
+  const CLOUD_EDGE_TUCK = 2;
+  const CLOUD_EDGE_PAD = 10;
+  const cloudEdgeCache = new WeakMap();
+
+  function cloudEdgeSprite(spr) {
+    if (!spr) return null;
+    if (cloudEdgeCache.has(spr)) return cloudEdgeCache.get(spr);
+    const w = spr.width;
+    const h = spr.height;
+    try {
+      const mask = document.createElement("canvas");
+      mask.width = w;
+      mask.height = h;
+      const mctx = mask.getContext("2d");
+      mctx.drawImage(spr, 0, 0);
+      const src = mctx.getImageData(0, 0, w, h);
+      const d = src.data;
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i], b = d[i + 2], a = d[i + 3];
+        if (a >= 80 && r <= b + 30) {
+          d[i] = 8;
+          d[i + 1] = 16;
+          d[i + 2] = 34;
+          d[i + 3] = 255;
+        } else {
+          d[i] = 0;
+          d[i + 1] = 0;
+          d[i + 2] = 0;
+          d[i + 3] = 0;
+        }
+      }
+      mctx.putImageData(src, 0, 0);
+
+      const lip = document.createElement("canvas");
+      lip.width = w;
+      lip.height = h + CLOUD_EDGE_PAD;
+      const lctx = lip.getContext("2d");
+      lctx.drawImage(mask, 0, CLOUD_EDGE_OFF);
+      lctx.globalCompositeOperation = "destination-out";
+      lctx.drawImage(mask, 0, -CLOUD_EDGE_TUCK);
+
+      const edge = document.createElement("canvas");
+      edge.width = w;
+      edge.height = h + CLOUD_EDGE_PAD;
+      const ectx = edge.getContext("2d");
+      ectx.globalAlpha = 0.63;
+      ectx.filter = "blur(1.2px)";
+      ectx.drawImage(lip, 0, 0);
+      cloudEdgeCache.set(spr, edge);
+      return edge;
+    } catch (err) {
+      cloudEdgeCache.set(spr, null);
+      return null;
+    }
+  }
+
   function drawPlatform(p) {
     const now = performance.now();
     const breathe = 0.5 + 0.5 * Math.sin(now * 0.00115 + p.id);
@@ -2113,11 +2170,29 @@
     if (spr) {
       // visual top lines up with the landing plane (hitbox top)
       ctx.drawImage(spr, dx, dy, dw, dh);
+      const edge = cloudEdgeSprite(spr);
+      if (edge) {
+        const eh = dh * (edge.height / spr.height);
+        ctx.save();
+        ctx.shadowBlur = 0;
+        ctx.shadowColor = "transparent";
+        ctx.beginPath();
+        ctx.rect(dx - 2, dy + dh * 0.48, dw + 4, eh - dh * 0.48 + 2);
+        ctx.clip();
+        ctx.drawImage(edge, dx, dy, dw, eh);
+        ctx.restore();
+      }
     } else {
       ctx.fillStyle = "#f4fbff";
       ctx.beginPath();
       ctx.ellipse(0, p.height / 2, p.width / 2, p.height / 2, 0, 0, Math.PI * 2);
       ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = "rgba(8, 16, 34, 0.42)";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.ellipse(0, p.height / 2, p.width / 2, p.height / 2, 0, 0.12 * Math.PI, 0.88 * Math.PI);
+      ctx.stroke();
     }
     ctx.shadowBlur = 0;
     ctx.restore();
