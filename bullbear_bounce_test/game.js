@@ -174,6 +174,7 @@
   let lastLine = 0;
 
   let player = null, platforms = [], powerUps = [], particles = [], floats = [], storms = [], coins = [], zaps = [], flashes = [];
+  let stormRollY = 0;
   let lastZapAt = 0;
   let paused = false;
   let nextCoinId = 1;
@@ -341,7 +342,7 @@
     powerUps = [];
     particles = [];
     floats = [];
-    storms = [];
+    storms = []; stormRollY = 0;
     coins = [];
     zaps = [];
     flashes = [];
@@ -434,11 +435,12 @@
     const score = state.cameraY / SCORE_DIV;
     if (score < STORM_START) return;
     let maxY = storms.reduce((m, s) => Math.max(m, s.y), 0);
-    let y = Math.max(maxY, state.cameraY + H);
+    let y = Math.max(stormRollY, maxY, state.cameraY + H);
     const target = state.cameraY + H + 300;
-    const chance = 0.012 + Math.min(0.03, (score - STORM_START) / 8000);
     while (y < target) {
-      y += 280 + Math.random() * 220;
+      const m = y / SCORE_DIV;
+      y += (m >= 4000 ? 220 : 280) + Math.random() * 220;
+      const chance = m < 1000 ? 0.33 : m < 1600 ? 0.52 : m < 2500 ? 0.72 : m < 4000 ? 0.93 : 1;
       if (Math.random() < chance) {
         const x = stormSafeX(y);
         if (x !== null) {
@@ -446,6 +448,7 @@
         }
       }
     }
+    stormRollY = y;
   }
   function cullWorld() {
     const minY = state.cameraY - 100;
@@ -3374,7 +3377,7 @@
       const h = at * SCORE_DIV;
       platforms = [];
       powerUps = [];
-      storms = [];
+      storms = []; stormRollY = 0;
       particles = [];
       floats = [];
       coins = [];
@@ -3426,7 +3429,7 @@
     platforms = [];
     powerUps = [];
     coins = [];
-    storms = [];
+    storms = []; stormRollY = 0;
     floats = [];
     particles = [];
     zaps = [];
