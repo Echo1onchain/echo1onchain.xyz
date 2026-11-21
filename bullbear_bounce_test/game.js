@@ -2085,7 +2085,7 @@
       edge.width = w;
       edge.height = h + CLOUD_EDGE_PAD;
       const ectx = edge.getContext("2d");
-      ectx.globalAlpha = 0.63;
+      ectx.globalAlpha = 0.4725;
       ectx.filter = "blur(1.2px)";
       ectx.drawImage(lip, 0, 0);
       cloudEdgeCache.set(spr, edge);
@@ -2188,7 +2188,7 @@
       ctx.ellipse(0, p.height / 2, p.width / 2, p.height / 2, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
-      ctx.strokeStyle = "rgba(8, 16, 34, 0.42)";
+      ctx.strokeStyle = "rgba(8, 16, 34, 0.315)";
       ctx.lineWidth = 2.5;
       ctx.beginPath();
       ctx.ellipse(0, p.height / 2, p.width / 2, p.height / 2, 0, 0.12 * Math.PI, 0.88 * Math.PI);
