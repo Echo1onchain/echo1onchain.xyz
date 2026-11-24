@@ -1963,7 +1963,8 @@ function focalRect(L){
 }
 /* ---------- time-based lighting (schedule on). ET is EST (UTC-5) on every date, so 8:00 AM ET = 13:00 UTC ----------
    Battle Royale: Group A Tue 11/17 8 AM, B 9 AM ... H 3 PM; Group I Thu 11/19 8 AM ... P 3 PM.
-   Sweet 16 Tue 11/24, Elite 8 Thu 11/26, Final 4 Tue 12/1: match 1 at 8 AM ET, each next match 1 hour later.
+   Sweet 16 Tue 11/24, Elite 8 Thu 11/26, Final 4 Tue 12/1: match 1 at 8 AM ET, each next match 1 hour later
+   (Sweet 16 exception: match 7 at 3 PM ET, match 8 at 4 PM ET).
    Championship Round Thu 12/3: Final 8 AM ET, 3rd place game 9 AM ET. Every match is active for 24 hours. */
 const SCH_H = 3600e3, SCH_DAY = 864e5, schD = (mo, da) => Date.UTC(2026, mo, da, 13);
 function matchStart(r, m){
@@ -1972,7 +1973,9 @@ function matchStart(r, m){
   if (r === R - 1) return schD(11, 3);
   if (r === 0) return m < 8 ? schD(10, 17) + m * SCH_H : schD(10, 19) + (m - 8) * SCH_H;
   const day = { 1: schD(10, 24), 2: schD(10, 26), 3: schD(11, 1) }[r];
-  return day == null ? null : day + m * SCH_H;
+  if (day == null) return null;
+  if (r === 1 && m >= 6) return day + (m + 1) * SCH_H; // Sweet 16 match 7 at 3 PM ET, match 8 at 4 PM ET (Echo1, Nov 24)
+  return day + m * SCH_H;
 }
 const schedLive = () => !!(T && T.rounds && T.rounds.length) && schedOn(T.rounds[0].length, isG4());
 function mActive(r, m){ // schedule off: always "in play" (old behaviour)
