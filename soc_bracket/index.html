@@ -3207,7 +3207,7 @@ function bbInfo(e){ // v15: BullBear card under the picture (kind, rarity, trait
 const VOTE_POSTS = { A: '2122676125986136398', B: '2122691230102643154', C: '2122706335703912630', D: '2122721430689157505', E: '2122736533690294509', F: '2122751626523865434', G: '2122766729508237330', H: '2122781821574291938', I: '2123400911821402230', J: '2123416005355679916', K: '2123431105118314821', L: '2123446204348395624', M: '2123461302102405205', N: '2123476403488464915', O: '2123491502991011874', P: '2123506599364903002' }, VOTE_DEF = 'https://x.com/BullBearsX';
 /* later rounds (head to head): X vote post per match, keyed by round index (1 = Sweet 16) then match number - 1.
    Reply is prefilled "BullBear #<seat>" (seat 1-2 = the "BullBear N" label on its card). Unlisted matches keep the old link. */
-const VOTE_POSTS_RN = { 1: ['2125212840072286545', '2125227952606683202', '2125243056425415112', '2125258150022697454', '2125273244491972820', '2125288342573257146'] };
+const VOTE_POSTS_RN = { 1: ['2125212840072286545', '2125227952606683202', '2125243056425415112', '2125258150022697454', '2125273244491972820', '2125288342573257146', '2125318284530627050'] };
 function rnVoteHref(e, r){
   const i = e && T.rounds[r] ? T.rounds[r].indexOf(e.id) : -1, pid = i < 0 ? '' : (VOTE_POSTS_RN[r] || [])[Math.floor(i / 2)];
   return pid ? 'https://x.com/intent/post?in_reply_to=' + pid + '&text=' + encodeURIComponent('BullBear #' + (i % 2 + 1)) : '';
