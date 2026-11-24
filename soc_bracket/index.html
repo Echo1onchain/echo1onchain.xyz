@@ -2181,7 +2181,9 @@ const CD_END = Date.UTC(2026, 10, 24, 13, 0, 0);
 function cdTick(force){
   const n = document.querySelector('#world .cdown .cdN'); if (!n) return;
   let s = Math.max(0, Math.floor((CD_END - Date.now()) / 1000));
-  if (!s){ const cd = n.parentElement; if (cd.style.display !== 'none'){ cd.style.display = 'none'; document.querySelectorAll('#world .rdate .upNx').forEach(x => x.remove()); } return; } // countdown reached zero: hide it (no LET'S RUMBLE)
+  if (!s){ if (force || n.dataset.k !== 'R'){ n.dataset.k = 'R'; const cd = n.parentElement; cd.classList.add('done'); cd.setAttribute('role', 'status'); cd.setAttribute('aria-label', "Let's rumble");
+    document.querySelectorAll('#world .rdate .upNx').forEach(x => x.remove());
+    n.innerHTML = '<b><em class="cdRum">LET\u2019S RUMBLE</em></b>'; } return; } // countdown reached zero: LET'S RUMBLE while matches are live
   const d = Math.floor(s / 86400); s %= 86400; const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60, p = v => String(v).padStart(2, '0');
   const segs = (d ? [[p(d), d === 1 ? 'Day' : 'Days']] : []).concat([[p(h), 'Hrs'], [p(m), 'Min'], [p(sec), 'Sec']]);
   const key = segs.map(x => x[0]).join(':'); if (!force && n.dataset.k === key) return; n.dataset.k = key;
