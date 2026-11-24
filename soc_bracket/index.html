@@ -2340,7 +2340,8 @@ function pkMatchFor(id){ // the match this BullBear is in now (3rd place match o
   if (geo && geo.third && T.third === null){ const Ls = semiLosers(); if (Ls.includes(id) && Ls.every(v => v !== null)) return ['third', 0]; }
   return lbMatchOf(id);
 }
-function pkVoteHref(e, r){ // same intent as the popup VOTE button for Battle Royale matches; later rounds: @BullBearsX until they get posts
+function pkVoteHref(e, r){ // same intent as the popup VOTE button for Battle Royale matches; later rounds: their post once listed in VOTE_POSTS_RN, else @BullBearsX
+  if (r !== 0 && isG4() && e && typeof r === 'number') return rnVoteHref(e, r) || VOTE_DEF;
   if (r !== 0 || !isG4() || !e) return VOTE_DEF;
   const k = T.rounds[0].indexOf(e.id), gl = k < 0 ? '' : String.fromCharCode(65 + Math.floor(k / 4));
   const pid = gl && Object.assign({}, VOTE_POSTS, (T && T.votePosts) || {})[gl];
@@ -3199,8 +3200,17 @@ function bbInfo(e){ // v15: BullBear card under the picture (kind, rarity, trait
    X post, prefilled "BullBear #<seat>" (seat 1-4 = the "BullBear N" label on its card). Add later groups here by letter;
    optional per-bracket override: T.votePosts = { B: '<post id>' }. Unlisted groups keep the @BullBearsX link. */
 const VOTE_POSTS = { A: '2122676125986136398', B: '2122691230102643154', C: '2122706335703912630', D: '2122721430689157505', E: '2122736533690294509', F: '2122751626523865434', G: '2122766729508237330', H: '2122781821574291938', I: '2123400911821402230', J: '2123416005355679916', K: '2123431105118314821', L: '2123446204348395624', M: '2123461302102405205', N: '2123476403488464915', O: '2123491502991011874', P: '2123506599364903002' }, VOTE_DEF = 'https://x.com/BullBearsX';
+/* later rounds (head to head): X vote post per match, keyed by round index (1 = Sweet 16) then match number - 1.
+   Reply is prefilled "BullBear #<seat>" (seat 1-2 = the "BullBear N" label on its card). Unlisted matches keep the old link. */
+const VOTE_POSTS_RN = { 1: ['2125212840072286545', '2125227952606683202', '2125243056425415112'] };
+function rnVoteHref(e, r){
+  const i = e && T.rounds[r] ? T.rounds[r].indexOf(e.id) : -1, pid = i < 0 ? '' : (VOTE_POSTS_RN[r] || [])[Math.floor(i / 2)];
+  return pid ? 'https://x.com/intent/post?in_reply_to=' + pid + '&text=' + encodeURIComponent('BullBear #' + (i % 2 + 1)) : '';
+}
 function voteHref(e){
   const a = document.getElementById('lbVote'); if (!a) return;
+  const mm = e && isG4() ? lbMatchOf(e.id) : null, rv = mm && mm[0] >= 1 ? rnVoteHref(e, mm[0]) : '';
+  if (rv){ a.href = rv; return; }
   const k = e && isG4() ? T.rounds[0].indexOf(e.id) : -1, gl = k < 0 ? '' : String.fromCharCode(65 + Math.floor(k / 4));
   const pid = gl && Object.assign({}, VOTE_POSTS, (T && T.votePosts) || {})[gl];
   a.href = pid ? 'https://x.com/intent/post?in_reply_to=' + pid + '&text=' + encodeURIComponent('BullBear #' + (k % 4 + 1)) : VOTE_DEF;
