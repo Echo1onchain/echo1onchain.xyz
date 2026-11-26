@@ -1098,6 +1098,7 @@ html,body{background:#05040a}
 @media (prefers-reduced-motion:reduce){#world .cdown .cdGlow{animation:none;opacity:.7}}
 /* countdown done: LET'S RUMBLE in the same gold digit style (the 7s breathing glow behind it stays) */
 #world .cdown.done .cdL{display:none}
+#world .cdown.e8wait .cdL{letter-spacing:.2em;padding-left:.2em}
 #lbSeed[hidden]{display:none!important}
 #world .cdown .cdN em.cdRum{font-size:50px;letter-spacing:.06em;padding-left:.06em;line-height:1.1}
 
@@ -1963,8 +1964,9 @@ function focalRect(L){
 }
 /* ---------- time-based lighting (schedule on). ET is EST (UTC-5) on every date, so 8:00 AM ET = 13:00 UTC ----------
    Battle Royale: Group A Tue 11/17 8 AM, B 9 AM ... H 3 PM; Group I Thu 11/19 8 AM ... P 3 PM.
-   Sweet 16 Tue 11/24, Elite 8 Thu 11/26, Final 4 Tue 12/1: match 1 at 8 AM ET, each next match 1 hour later
+   Sweet 16 Tue 11/24, Final 4 Tue 12/1: match 1 at 8 AM ET, each next match 1 hour later
    (Sweet 16 exception: match 7 at 3 PM ET, match 8 at 4 PM ET).
+   Elite 8 Thu 11/26: matches at 9 AM, 11 AM, 1 PM, 3 PM ET.
    Championship Round Thu 12/3: Final 8 AM ET, 3rd place game 9 AM ET. Every match is active for 24 hours. */
 const SCH_H = 3600e3, SCH_DAY = 864e5, schD = (mo, da) => Date.UTC(2026, mo, da, 13);
 function matchStart(r, m){
@@ -1974,6 +1976,7 @@ function matchStart(r, m){
   if (r === 0) return m < 8 ? schD(10, 17) + m * SCH_H : schD(10, 19) + (m - 8) * SCH_H;
   const day = { 1: schD(10, 24), 2: schD(10, 26), 3: schD(11, 1) }[r];
   if (day == null) return null;
+  if (r === 2) return day + (2 * m + 1) * SCH_H; // Elite 8 matches at 9 AM, 11 AM, 1 PM, 3 PM ET (Echo1, Nov 26)
   if (r === 1 && m >= 6) return day + (m + 1) * SCH_H; // Sweet 16 match 7 at 3 PM ET, match 8 at 4 PM ET (Echo1, Nov 24)
   return day + m * SCH_H;
 }
@@ -2181,15 +2184,28 @@ function renderBracket(){
    The real names stay in the data, the editor list, tooltips and the enlarge popup. */
 /* countdown to Tue Nov 24 2026 08:00 America/New_York (EST, UTC-5) = 13:00 UTC (Sweet 16 match 1, see matchStart); same moment in every viewer's timezone */
 const CD_END = Date.UTC(2026, 10, 24, 13, 0, 0);
+/* after Sweet 16 match 8 closes (matchStart(1, 7) + 24h = Wed 11/25 4:00 PM ET), count down to Elite 8 Thu 11/26 9:00 AM ET = 14:00 UTC. Let's Rumble returns when this hits zero. */
+const E8_START = Date.UTC(2026, 10, 26, 14, 0, 0);
+function s16LastClose(){
+  const s = (T && T.rounds) ? matchStart(1, 7) : null;
+  return (s != null ? s : CD_END + 8 * SCH_H) + SCH_DAY;
+}
 function cdTick(force){
   const n = document.querySelector('#world .cdown .cdN'); if (!n) return;
-  let s = Math.max(0, Math.floor((CD_END - Date.now()) / 1000));
-  if (!s){ if (force || n.dataset.k !== 'R'){ n.dataset.k = 'R'; const cd = n.parentElement; cd.classList.add('done'); cd.setAttribute('role', 'status'); cd.setAttribute('aria-label', "Let's rumble");
+  const now = Date.now(), waiting = now >= s16LastClose() && now < E8_START;
+  const end = now < CD_END ? CD_END : waiting ? E8_START : 0;
+  let s = end ? Math.max(0, Math.floor((end - now) / 1000)) : 0;
+  const cd = n.parentElement, lab = cd.querySelector('.cdL');
+  if (!s){ if (force || n.dataset.k !== 'R'){ n.dataset.k = 'R'; cd.classList.add('done'); cd.classList.remove('e8wait'); cd.setAttribute('role', 'status'); cd.setAttribute('aria-label', "Let's rumble");
+    if (lab) lab.textContent = 'Starts in';
     document.querySelectorAll('#world .rdate .upNx').forEach(x => x.remove());
-    n.innerHTML = '<b><em class="cdRum">LET\u2019S RUMBLE</em></b>'; } return; } // countdown reached zero: LET'S RUMBLE while matches are live
+    n.innerHTML = '<b><em class="cdRum">LET\u2019S RUMBLE</em></b>'; } return; } // countdown reached zero: LET'S RUMBLE while matches are live (and again when Elite 8 starts)
   const d = Math.floor(s / 86400); s %= 86400; const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60, p = v => String(v).padStart(2, '0');
   const segs = (d ? [[p(d), d === 1 ? 'Day' : 'Days']] : []).concat([[p(h), 'Hrs'], [p(m), 'Min'], [p(sec), 'Sec']]);
-  const key = segs.map(x => x[0]).join(':'); if (!force && n.dataset.k === key) return; n.dataset.k = key;
+  const key = (waiting ? 'E' : '') + segs.map(x => x[0]).join(':'); if (!force && n.dataset.k === key) return; n.dataset.k = key;
+  cd.classList.toggle('done', false); cd.classList.toggle('e8wait', waiting);
+  cd.setAttribute('role', 'timer'); cd.setAttribute('aria-label', waiting ? 'Elite 8 starts in' : 'Countdown');
+  if (lab) lab.textContent = waiting ? 'Elite 8 starts in' : 'Starts in';
   n.innerHTML = segs.map(([v, u]) => `<b><em>${v}</em><small>${u}</small></b>`).join('<i>:</i>');
 }
 (function cdLoop(){ cdTick(); setTimeout(cdLoop, 1000 - Date.now() % 1000 + 15); })();
