@@ -1896,6 +1896,41 @@ function layout(N){
     below = y3 + h3 + 40;
   }
   const prize = prizeLayout(cS, below, cW);
+  if (R >= 3){ // Final 4: larger cards, pulled closer toward the center
+    const f4w = Math.round(W * 1.32), f4h = f4w + Math.round(f4w * .26) + 6, gap = 24, tChip = 22, inX = 24;
+    const cx = cS + cW / 2, fin0 = slots[R - 1] && slots[R - 1][0];
+    const above = (fin0 ? fin0.y : midY) - 20, below = (fin0 ? fin0.y + fin0.h : midY) + 20; // sit just above and below the Final, lines from Elite 8 stretch to reach them
+    const keep = [];
+    for (const s of (slots[R - 3] || [])) keep.push(s);
+    for (const s of (slots[R - 1] || [])) keep.push(s);
+    if (slots[R] && slots[R][0]) keep.push(slots[R][0]);
+    if (champ) keep.push(champ);
+    if (third) keep.push(...third.slots);
+    if (prize) keep.push(prize);
+    if (logo) keep.push(logo, { x: logo.x + logo.w / 2 - 260, y: logo.y + logo.h + 24, w: 520, h: 140 }); // countdown under the logo
+    keep.push({ x: champ.x + champ.w / 2 - 110, y: champ.y - 96, w: 220, h: 90 }); // CHAMPION crown tag
+    const ov = (a, b, g) => a.x < b.x + b.w + g && a.x + a.w + g > b.x && a.y < b.y + b.h + g && a.y + a.h + g > b.y;
+    for (const s of slots[R - 2]){
+      const ocx = s.x + s.w / 2, ocy = s.cy;
+      const ncx = ocx + (cx > ocx ? inX : -inX), ncy = ocy < midY ? above - f4h / 2 : below + f4h / 2;
+      s.w = f4w; s.h = f4h; s.x = ncx - f4w / 2; s.y = ncy - f4h / 2; s.cy = ncy;
+    }
+    for (const s of slots[R - 2]){
+      const body = { x: s.x, y: s.y, w: s.w, h: s.h + tChip };
+      for (const k of keep){
+        if (!k || !ov(body, k, gap)) continue;
+        const left = (s.x + s.w + gap) - k.x, right = (k.x + k.w + gap) - s.x;
+        const up = (s.y + s.h + tChip + gap) - k.y, down = (k.y + k.h + gap) - s.y;
+        const m = Math.min(left, right, up, down);
+        if (m === left) s.x = k.x - s.w - gap;
+        else if (m === right) s.x = k.x + k.w + gap;
+        else if (m === up) s.y = k.y - s.h - tChip - gap;
+        else s.y = k.y + k.h + gap;
+        s.cy = s.y + s.h / 2;
+        body.x = s.x; body.y = s.y;
+      }
+    }
+  }
   const height = Math.max(...all.map(s => s.y + s.h), third ? third.slots[0].y + third.slots[0].h : 0, prize ? prize.y + prize.h : 0) + pad;
   const labels = [], lw = W + cg - 8, short = lw < 130;
   for (let r = 0; r <= R - 2; r++){
@@ -1922,7 +1957,9 @@ function layout(N){
         const G = groups[Math.floor(i / 4)], x0 = L ? G.x + G.w : G.x, xn = L ? n.x : n.x + n.w, xm = (x0 + xn) / 2;
         edges.push({ r, i, grp: 1, pts: [[x0, G.cy], [xm, G.cy], [xm, n.cy], [xn, n.cy]] }); continue;
       }
-      const x0 = L ? a.x + a.w : a.x, xm = L ? a.x + a.w + cg / 2 : a.x - cg / 2, xn = L ? n.x : n.x + n.w;
+      const x0 = L ? a.x + a.w : a.x, xn = L ? n.x : n.x + n.w;
+      let xm = L ? a.x + a.w + cg / 2 : a.x - cg / 2;
+      if ((L && xm > xn) || (!L && xm < xn)) xm = (x0 + xn) / 2; // keep the elbow in the gap when a later card sits closer
       edges.push({ r, i, pts: [[x0, a.cy], [xm, a.cy], [xm, n.cy], [xn, n.cy]] });
     }
   }
@@ -2132,6 +2169,7 @@ function renderBracket(){
   for (const dt of (L.dates || [])){ const d = document.createElement('div'); d.className = 'rdate' + (dt.center ? ' ctr' : '');
     d.style.left = dt.x + 'px'; d.style.top = dt.y + 'px'; d.style.width = dt.w + 'px';
     if (dt.key === 'Sweet 16' && Date.now() < Date.UTC(2026, 10, 24, 13, 0, 0)){ const u = document.createElement('span'); u.className = 'upNx'; u.textContent = 'Up Next'; d.appendChild(u); }
+    if (dt.center && Date.now() >= e8LastClose() && Date.now() < f4Start()){ const u = document.createElement('span'); u.className = 'upNx'; u.textContent = 'Up Next'; d.appendChild(u); }
     const [day, ...rest] = dt.lines, sp = day.indexOf(' '); const w = document.createElement('span'); w.className = 'dw'; w.textContent = day.slice(0, sp) + ' '; const a = document.createElement('span'); a.className = 'dd'; a.textContent = day.slice(sp + 1); d.append(w, a);
     for (const t of rest){ const s = document.createElement('span'); s.className = 'dn'; s.textContent = t; d.appendChild(s); }
     if (typeof dt.r === 'number' && roundWaiting(dt.r, dt.left)){ d.classList.add('wait'); const s = document.createElement('span'); s.className = 'dwai'; s.textContent = 'Waiting for winner'; d.appendChild(s); }
@@ -2186,26 +2224,37 @@ function renderBracket(){
 const CD_END = Date.UTC(2026, 10, 24, 13, 0, 0);
 /* after Sweet 16 match 8 closes (matchStart(1, 7) + 24h = Wed 11/25 4:00 PM ET), count down to Elite 8 Thu 11/26 9:00 AM ET = 14:00 UTC. Let's Rumble returns when this hits zero. */
 const E8_START = Date.UTC(2026, 10, 26, 14, 0, 0);
+/* after Elite 8 match 4 closes (matchStart(2, 3) + 24h = Fri 11/27 3:00 PM ET), count down to Final 4 Tue 12/1 8:00 AM ET = 13:00 UTC (matchStart(3, 0)). Let's Rumble returns when this hits zero. */
 function s16LastClose(){
   const s = (T && T.rounds) ? matchStart(1, 7) : null;
   return (s != null ? s : CD_END + 8 * SCH_H) + SCH_DAY;
 }
+function e8LastClose(){
+  const s = (T && T.rounds) ? matchStart(2, 3) : null;
+  return (s != null ? s : E8_START + 6 * SCH_H) + SCH_DAY;
+}
+function f4Start(){
+  const s = (T && T.rounds) ? matchStart(3, 0) : null;
+  return s != null ? s : Date.UTC(2026, 11, 1, 13, 0, 0);
+}
 function cdTick(force){
   const n = document.querySelector('#world .cdown .cdN'); if (!n) return;
-  const now = Date.now(), waiting = now >= s16LastClose() && now < E8_START;
-  const end = now < CD_END ? CD_END : waiting ? E8_START : 0;
+  const now = Date.now(), waitingE8 = now >= s16LastClose() && now < E8_START, waitingF4 = now >= e8LastClose() && now < f4Start();
+  const waiting = waitingE8 || waitingF4;
+  const end = now < CD_END ? CD_END : waitingE8 ? E8_START : waitingF4 ? f4Start() : 0;
   let s = end ? Math.max(0, Math.floor((end - now) / 1000)) : 0;
   const cd = n.parentElement, lab = cd.querySelector('.cdL');
   if (!s){ if (force || n.dataset.k !== 'R'){ n.dataset.k = 'R'; cd.classList.add('done'); cd.classList.remove('e8wait'); cd.setAttribute('role', 'status'); cd.setAttribute('aria-label', "Let's rumble");
     if (lab) lab.textContent = 'Starts in';
     document.querySelectorAll('#world .rdate .upNx').forEach(x => x.remove());
-    n.innerHTML = '<b><em class="cdRum">LET\u2019S RUMBLE</em></b>'; } return; } // countdown reached zero: LET'S RUMBLE while matches are live (and again when Elite 8 starts)
+    n.innerHTML = '<b><em class="cdRum">LET\u2019S RUMBLE</em></b>'; } return; } // countdown reached zero: LET'S RUMBLE while matches are live (and again when Elite 8 or Final 4 starts)
   const d = Math.floor(s / 86400); s %= 86400; const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), sec = s % 60, p = v => String(v).padStart(2, '0');
   const segs = (d ? [[p(d), d === 1 ? 'Day' : 'Days']] : []).concat([[p(h), 'Hrs'], [p(m), 'Min'], [p(sec), 'Sec']]);
-  const key = (waiting ? 'E' : '') + segs.map(x => x[0]).join(':'); if (!force && n.dataset.k === key) return; n.dataset.k = key;
+  const key = (waitingE8 ? 'E' : waitingF4 ? 'F' : '') + segs.map(x => x[0]).join(':'); if (!force && n.dataset.k === key) return; n.dataset.k = key;
   cd.classList.toggle('done', false); cd.classList.toggle('e8wait', waiting);
-  cd.setAttribute('role', 'timer'); cd.setAttribute('aria-label', waiting ? 'Elite 8 starts in' : 'Countdown');
-  if (lab) lab.textContent = waiting ? 'Elite 8 starts in' : 'Starts in';
+  const waitLab = waitingF4 ? 'Final 4 starts in' : waitingE8 ? 'Elite 8 starts in' : '';
+  cd.setAttribute('role', 'timer'); cd.setAttribute('aria-label', waitLab || 'Countdown');
+  if (lab) lab.textContent = waitLab || 'Starts in';
   n.innerHTML = segs.map(([v, u]) => `<b><em>${v}</em><small>${u}</small></b>`).join('<i>:</i>');
 }
 (function cdLoop(){ cdTick(); setTimeout(cdLoop, 1000 - Date.now() % 1000 + 15); })();
