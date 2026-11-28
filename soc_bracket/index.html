@@ -1166,6 +1166,9 @@ body.brand .slot.calc.pkMine .nm{color:rgba(255,250,220,.82)!important;border-to
 #world .rdate .dd::after{content:"";display:block;width:40px;height:1px;margin:5px auto 1px;background:linear-gradient(90deg,transparent,rgba(254,215,0,.75),transparent)}
 #world .rdate .upNx{display:inline-block;margin-bottom:4px;padding:4px 10px 4px 11px;border-radius:999px;font:800 11px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.24em;text-transform:uppercase;color:#1a1200;background:linear-gradient(180deg,#ffe36a,#fed700);box-shadow:0 0 10px rgba(254,215,0,.4);white-space:nowrap}
 #world .rdate .dn{font:700 13px/1.25 "Plus Jakarta Sans",Inter,sans-serif;letter-spacing:.01em;color:rgba(255,242,205,.9);text-shadow:0 1px 2px rgba(0,0,0,.85);white-space:nowrap}
+.slot.champ.hasvid .im{position:relative;overflow:hidden;background:#06070f}
+.slot.champ.hasvid .im .q{display:none}
+.slot.champ .im .cvid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;border-radius:inherit}
 </style>
 <style id="pkCSS">
 /* ===== personal pick tracker (view-only page): calm gold, no flashing ===== */
@@ -2169,7 +2172,7 @@ function renderBracket(){
   for (const dt of (L.dates || [])){ const d = document.createElement('div'); d.className = 'rdate' + (dt.center ? ' ctr' : '');
     d.style.left = dt.x + 'px'; d.style.top = dt.y + 'px'; d.style.width = dt.w + 'px';
     if (dt.key === 'Sweet 16' && Date.now() < Date.UTC(2026, 10, 24, 13, 0, 0)){ const u = document.createElement('span'); u.className = 'upNx'; u.textContent = 'Up Next'; d.appendChild(u); }
-    if (dt.center && Date.now() >= e8LastClose() && Date.now() < f4Start()){ const u = document.createElement('span'); u.className = 'upNx'; u.textContent = 'Up Next'; d.appendChild(u); }
+    if (dt.key === 'Final 4' && Date.now() >= e8LastClose() && Date.now() < f4Start()){ const u = document.createElement('span'); u.className = 'upNx'; u.textContent = 'Up Next'; d.appendChild(u); }
     const [day, ...rest] = dt.lines, sp = day.indexOf(' '); const w = document.createElement('span'); w.className = 'dw'; w.textContent = day.slice(0, sp) + ' '; const a = document.createElement('span'); a.className = 'dd'; a.textContent = day.slice(sp + 1); d.append(w, a);
     for (const t of rest){ const s = document.createElement('span'); s.className = 'dn'; s.textContent = t; d.appendChild(s); }
     if (typeof dt.r === 'number' && roundWaiting(dt.r, dt.left)){ d.classList.add('wait'); const s = document.createElement('span'); s.className = 'dwai'; s.textContent = 'Waiting for winner'; d.appendChild(s); }
@@ -2572,6 +2575,21 @@ function liveFx(w, frag, L, R, LG){
   cscKeyframes(w, LG.length || LM.length);
   if (d) w.insertAdjacentHTML('afterbegin', `<svg class="lvLines" aria-hidden="true" width="${L.width}" height="${L.height}" viewBox="0 0 ${L.width} ${L.height}"><g><g class="lg0">${d}</g><g class="lg1">${d}</g></g></svg>`);
 }
+/* champion spot hype loop: plays only while there is no champion */
+let CHAMP_VID = null;
+function champVidIn(d){
+  if (!CHAMP_VID){
+    const b = /\/[^/]*\.html?$/.test(location.pathname) ? location.pathname.replace(/[^/]*$/, '') : location.pathname.replace(/\/?$/, '/');
+    const v = document.createElement('video'); v.className = 'cvid';
+    v.muted = true; v.defaultMuted = true; v.loop = true; v.playsInline = true; v.disablePictureInPicture = true; v.preload = 'auto';
+    v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('aria-hidden', 'true'); v.poster = b + 'champ_poster.jpg';
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) v.autoplay = true;
+    v.innerHTML = `<source src="${b}champ_loop.webm" type='video/webm; codecs="vp9"'><source src="${b}champ_loop.mp4" type="video/mp4">`;
+    CHAMP_VID = v;
+  }
+  const v = CHAMP_VID; d.classList.add('hasvid'); d.querySelector('.im').appendChild(v);
+  if (v.autoplay && v.paused) requestAnimationFrame(() => { const p = v.play(); if (p && p.catch) p.catch(() => {}); });
+}
 function slotEl(r, i, g, R, D){
   const id = T.rounds[r][i], e = id !== null ? byId(id) : null;
   const d = document.createElement('div');
@@ -2586,6 +2604,7 @@ function slotEl(r, i, g, R, D){
     if (bye) d.classList.add('bye'); else d.style.setProperty('--sd', (-((r * 1.3 + i * .77) % 3.8)).toFixed(2) + 's');
     if (wait) d.classList.add('wait');
     d.innerHTML = `<div class="im">${g.champ ? '<span class="q">?</span>' : ''}${wait ? '<span class="waitTag">Waiting<br>for winner</span>' : ''}</div><div class="nm" style="height:${nh}px;font-size:${fs}px">${bye ? 'BYE' : ''}</div><i class="bev"></i>`;
+    if (g.champ) champVidIn(d);
     return d;
   }
   const im = document.createElement('div'); im.className = 'im';
